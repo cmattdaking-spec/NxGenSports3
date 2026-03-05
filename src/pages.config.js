@@ -52,6 +52,7 @@ import Roster from './pages/Roster';
 import DepthChart from './pages/DepthChart';
 import Playbook from './pages/Playbook';
 import GamePlan from './pages/GamePlan';
+import Practice from './pages/Practice';
 import __Layout from './Layout.jsx';
 
 
@@ -61,6 +62,7 @@ export const PAGES = {
     "DepthChart": DepthChart,
     "Playbook": Playbook,
     "GamePlan": GamePlan,
+    "Practice": Practice,
 }
 
 export const pagesConfig = {
