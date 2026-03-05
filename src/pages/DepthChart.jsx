@@ -16,13 +16,16 @@ export default function DepthChart() {
   const [form, setForm] = useState({});
   const [aiLoading, setAiLoading] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState("");
+  const [user, setUser] = useState(null);
 
   const load = async () => {
     const [p, d] = await Promise.all([base44.entities.Player.list(), base44.entities.DepthChart.list()]);
     setPlayers(p);
     setDepthCharts(d);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); load(); }, []);
+
+  const canEdit = user?.role !== "athletic_director";
 
   const positions = UNIT_POSITIONS[unit] || [];
   const unitPlayers = players.filter(p => p.unit === unit);
