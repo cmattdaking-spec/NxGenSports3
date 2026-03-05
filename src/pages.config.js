@@ -53,6 +53,7 @@ import DepthChart from './pages/DepthChart';
 import Playbook from './pages/Playbook';
 import GamePlan from './pages/GamePlan';
 import Practice from './pages/Practice';
+import Scouting from './pages/Scouting';
 import __Layout from './Layout.jsx';
 
 
@@ -63,6 +64,7 @@ export const PAGES = {
     "Playbook": Playbook,
     "GamePlan": GamePlan,
     "Practice": Practice,
+    "Scouting": Scouting,
 }
 
 export const pagesConfig = {
