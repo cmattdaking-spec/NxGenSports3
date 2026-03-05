@@ -49,12 +49,14 @@
  */
 import Dashboard from './pages/Dashboard';
 import Roster from './pages/Roster';
+import DepthChart from './pages/DepthChart';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Dashboard": Dashboard,
     "Roster": Roster,
+    "DepthChart": DepthChart,
 }
 
 export const pagesConfig = {
