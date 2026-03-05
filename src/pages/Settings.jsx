@@ -75,6 +75,19 @@ export default function Settings() {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const handleChangePassword = async () => {
+    setPwError("");
+    if (!pwForm.current || !pwForm.next || !pwForm.confirm) { setPwError("All fields are required."); return; }
+    if (pwForm.next.length < 6) { setPwError("New password must be at least 6 characters."); return; }
+    if (pwForm.next !== pwForm.confirm) { setPwError("Passwords do not match."); return; }
+    setPwSaving(true);
+    await base44.auth.changePassword(pwForm.current, pwForm.next);
+    setPwSaving(false);
+    setPwSuccess(true);
+    setPwForm({ current: "", next: "", confirm: "" });
+    setTimeout(() => setPwSuccess(false), 3000);
+  };
+
   const handleToggleNotifications = async () => {
     setNotifSaving(true);
     const newVal = !notificationsEnabled;
