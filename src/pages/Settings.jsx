@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings as SettingsIcon, LogOut, Palette, Check, User, Shield } from "lucide-react";
+import { Settings as SettingsIcon, LogOut, Palette, Check, User, Shield, Bell } from "lucide-react";
 
 const COLOR_SCHEMES = [
   { name: "NxDown Default", primary: "#3b82f6", secondary: "#1d4ed8", preview: "bg-blue-500" },
