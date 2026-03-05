@@ -146,6 +146,7 @@ export default function Playbook() {
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => setDiagramPlay(p)} className="text-gray-500 hover:text-blue-400 p-1" title="View Diagram"><Eye className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => { setDesignerPlay(p); setShowDesigner(true); }} className="text-gray-500 hover:text-purple-400 p-1" title="Edit Diagram"><Pen className="w-3.5 h-3.5" /></button>
                           <button onClick={() => openEdit(p)} className="text-gray-500 hover:text-orange-500 p-1"><Edit className="w-3.5 h-3.5" /></button>
                           <button onClick={() => remove(p.id)} className="text-gray-500 hover:text-red-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
