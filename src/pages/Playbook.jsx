@@ -16,6 +16,7 @@ export default function Playbook() {
   const [filterCat, setFilterCat] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [showDesigner, setShowDesigner] = useState(false);
+  const [designerPlay, setDesignerPlay] = useState(null);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
   const [aiLoading, setAiLoading] = useState(false);
