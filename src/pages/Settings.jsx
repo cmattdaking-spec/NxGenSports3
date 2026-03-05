@@ -25,6 +25,8 @@ export default function Settings() {
   const [customSecondary, setCustomSecondary] = useState("#1d4ed8");
   const [selectedScheme, setSelectedScheme] = useState(null);
   const [settings, setSettings] = useState(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notifSaving, setNotifSaving] = useState(false);
 
   const canChangeColors = user?.role === "head_coach" || user?.role === "admin";
 
