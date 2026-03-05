@@ -10,8 +10,12 @@ const STATUSES = ["active","injured","suspended","inactive"];
 const statusColor = { active: "bg-green-500/20 text-green-400", injured: "bg-red-500/20 text-red-400", suspended: "bg-yellow-500/20 text-yellow-400", inactive: "bg-gray-500/20 text-gray-400" };
 const unitColor = { offense: "bg-blue-500/20 text-blue-400", defense: "bg-red-500/20 text-red-400", special_teams: "bg-purple-500/20 text-purple-400" };
 
+const CAN_ADD = ["admin","head_coach","athletic_director","offensive_coordinator","defensive_coordinator","special_teams_coordinator"];
+const CAN_DELETE = ["admin","head_coach","athletic_director"];
+
 export default function Roster() {
   const [players, setPlayers] = useState([]);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterUnit, setFilterUnit] = useState("all");
@@ -21,7 +25,10 @@ export default function Roster() {
   const [form, setForm] = useState({});
 
   const load = () => base44.entities.Player.list().then(d => { setPlayers(d); setLoading(false); });
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+    load();
+  }, []);
 
   const filtered = players.filter(p => {
     const name = `${p.first_name} ${p.last_name}`.toLowerCase();
