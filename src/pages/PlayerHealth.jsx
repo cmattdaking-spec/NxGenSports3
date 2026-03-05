@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Edit, Trash2, X, Activity, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { Plus, Edit, Trash2, X, Activity, AlertTriangle, CheckCircle, Clock, Brain, ShieldAlert } from "lucide-react";
+import LoadingScreen from "../components/LoadingScreen";
 
 const AVAILABILITY = ["full","limited","out","day_to_day"];
 const AVAILABILITY_CONFIG = {
@@ -9,23 +10,29 @@ const AVAILABILITY_CONFIG = {
   out: { color: "bg-red-500/20 text-red-400 border-red-500/30", icon: AlertTriangle, label: "Out" },
   day_to_day: { color: "bg-orange-500/20 text-orange-400 border-orange-500/30", icon: Clock, label: "Day-to-Day" },
 };
+const RISK_COLOR = { Low: "text-green-400 bg-green-500/20 border-green-500/30", Medium: "text-yellow-400 bg-yellow-500/20 border-yellow-500/30", High: "text-red-400 bg-red-500/20 border-red-500/30", Critical: "text-red-500 bg-red-600/20 border-red-600/30" };
 
 export default function PlayerHealth() {
   const [records, setRecords] = useState([]);
   const [players, setPlayers] = useState([]);
+  const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
   const [filterAvail, setFilterAvail] = useState("all");
   const [user, setUser] = useState(null);
+  const [riskReport, setRiskReport] = useState(null);
+  const [riskLoading, setRiskLoading] = useState(false);
+  const [showRiskModal, setShowRiskModal] = useState(false);
 
   const load = async () => {
-    const [r, p] = await Promise.all([
+    const [r, p, s] = await Promise.all([
       base44.entities.PlayerHealth.list("-date"),
-      base44.entities.Player.list()
+      base44.entities.Player.list(),
+      base44.entities.PlayerStat.list("-week", 100)
     ]);
-    setRecords(r); setPlayers(p); setLoading(false);
+    setRecords(r); setPlayers(p); setStats(s); setLoading(false);
   };
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); load(); }, []);
 
@@ -46,25 +53,79 @@ export default function PlayerHealth() {
 
   const handlePlayerSelect = (playerId) => {
     const player = players.find(p => p.id === playerId);
-    if (player) {
-      setForm(f => ({ ...f, player_id: playerId, player_name: `${player.first_name} ${player.last_name}` }));
-    }
+    if (player) setForm(f => ({ ...f, player_id: playerId, player_name: `${player.first_name} ${player.last_name}` }));
+  };
+
+  const generateInjuryRiskReport = async () => {
+    setRiskLoading(true);
+    setRiskReport(null);
+    setShowRiskModal(true);
+
+    // Build per-player health context
+    const latestByPlayer = {};
+    records.forEach(r => {
+      if (!latestByPlayer[r.player_id] || new Date(r.date) > new Date(latestByPlayer[r.player_id].date))
+        latestByPlayer[r.player_id] = r;
+    });
+
+    const playerContext = players.map(p => {
+      const health = latestByPlayer[p.id];
+      const playerStats = stats.filter(s => s.player_id === p.id).sort((a,b) => b.week - a.week).slice(0, 4);
+      const avgGrade = playerStats.length ? (playerStats.reduce((sum, s) => sum + (s.grade || 0), 0) / playerStats.length).toFixed(1) : "N/A";
+      const avgSnaps = playerStats.length ? (playerStats.reduce((sum, s) => sum + (s.snap_count || 0), 0) / playerStats.length).toFixed(0) : "N/A";
+      return `${p.first_name} ${p.last_name} (${p.position}, ${p.year || "Unknown year"}, Weight: ${p.weight || "?"}lbs) — Status: ${p.status}, Availability: ${health?.availability || "unknown"}, Current Injury: ${health?.injury_type || "none"}, Avg Grade: ${avgGrade}, Avg Snaps: ${avgSnaps}, Prior injuries: ${records.filter(r => r.player_id === p.id && r.injury_type).length}`;
+    }).join("\n");
+
+    const res = await base44.integrations.Core.InvokeLLM({
+      prompt: `You are an elite sports medicine and performance AI for NxDown football. Analyze the following player data and generate a comprehensive injury risk assessment and load management report.
+
+Players:
+${playerContext}
+
+Provide a detailed risk analysis for each at-risk player, load management recommendations, and preventative protocols.`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          overall_team_risk: { type: "string", enum: ["Low", "Medium", "High", "Critical"] },
+          summary: { type: "string" },
+          at_risk_players: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                player_name: { type: "string" },
+                position: { type: "string" },
+                risk_level: { type: "string", enum: ["Low", "Medium", "High", "Critical"] },
+                risk_factors: { type: "array", items: { type: "string" } },
+                load_management: { type: "string" },
+                preventative_exercises: { type: "array", items: { type: "string" } },
+                return_to_play_notes: { type: "string" }
+              }
+            }
+          },
+          team_recommendations: { type: "array", items: { type: "string" } },
+          high_priority_actions: { type: "array", items: { type: "string" } }
+        }
+      }
+    });
+    setRiskReport(res);
+    setRiskLoading(false);
   };
 
   const filtered = records.filter(r => filterAvail === "all" || r.availability === filterAvail);
 
-  // Group by player - latest record per player
   const latestByPlayer = {};
   records.forEach(r => {
-    if (!latestByPlayer[r.player_id] || new Date(r.date) > new Date(latestByPlayer[r.player_id].date)) {
+    if (!latestByPlayer[r.player_id] || new Date(r.date) > new Date(latestByPlayer[r.player_id].date))
       latestByPlayer[r.player_id] = r;
-    }
   });
 
   const availStats = AVAILABILITY.reduce((acc, a) => {
     acc[a] = Object.values(latestByPlayer).filter(r => r.availability === a).length;
     return acc;
   }, {});
+
+  if (loading) return <LoadingScreen />;
 
   return (
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
@@ -73,11 +134,18 @@ export default function PlayerHealth() {
           <h1 className="text-2xl font-black text-white">Player <span className="text-orange-500">Health</span></h1>
           <p className="text-gray-500 text-sm">{records.length} health records</p>
         </div>
-        {canEdit && (
-          <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            <Plus className="w-4 h-4" /> Log Health
+        <div className="flex gap-2">
+          <button onClick={generateInjuryRiskReport} disabled={riskLoading}
+            className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
+            <Brain className={`w-4 h-4 ${riskLoading ? "animate-pulse" : ""}`} />
+            <span className="hidden md:inline">{riskLoading ? "Analyzing..." : "Nx Risk Analysis"}</span>
           </button>
-        )}
+          {canEdit && (
+            <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              <Plus className="w-4 h-4" /> Log Health
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -114,9 +182,7 @@ export default function PlayerHealth() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr><td colSpan={7} className="text-center text-gray-500 py-10">Loading...</td></tr>
-              ) : filtered.length === 0 ? (
+              {filtered.length === 0 ? (
                 <tr><td colSpan={7} className="text-center text-gray-500 py-10">No health records found</td></tr>
               ) : filtered.map(r => {
                 const cfg = AVAILABILITY_CONFIG[r.availability];
@@ -164,7 +230,128 @@ export default function PlayerHealth() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Nx Injury Risk Modal */}
+      {showRiskModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-[#141414] border border-red-500/30 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-800">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-red-400" />
+                <h2 className="text-white font-bold">Nx Injury Risk Analysis</h2>
+                <span className="text-red-400 text-xs bg-red-500/20 px-2 py-0.5 rounded-full">AI-Powered</span>
+              </div>
+              <button onClick={() => { setShowRiskModal(false); setRiskReport(null); }} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-5">
+              {riskLoading ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-4">
+                  <div className="w-10 h-10 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-gray-400 text-sm">Nx Intelligence analyzing player health data, training loads, and performance metrics...</p>
+                </div>
+              ) : riskReport ? (
+                <div className="space-y-5">
+                  {/* Team Risk */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-400 text-sm">Team Risk Level:</span>
+                    <span className={`text-sm font-bold px-3 py-0.5 rounded-full border ${RISK_COLOR[riskReport.overall_team_risk]}`}>
+                      {riskReport.overall_team_risk}
+                    </span>
+                  </div>
+
+                  {riskReport.summary && (
+                    <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-700">
+                      <p className="text-gray-300 text-sm leading-relaxed">{riskReport.summary}</p>
+                    </div>
+                  )}
+
+                  {/* High Priority Actions */}
+                  {riskReport.high_priority_actions?.length > 0 && (
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                      <p className="text-red-400 text-xs font-semibold uppercase tracking-wider mb-2">High Priority Actions</p>
+                      <ul className="space-y-1.5">
+                        {riskReport.high_priority_actions.map((a, i) => (
+                          <li key={i} className="text-gray-300 text-sm flex items-start gap-2">
+                            <AlertTriangle className="w-3.5 h-3.5 text-red-400 mt-0.5 flex-shrink-0" /> {a}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* At-Risk Players */}
+                  {riskReport.at_risk_players?.length > 0 && (
+                    <div>
+                      <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Player Risk Profiles</p>
+                      <div className="space-y-3">
+                        {riskReport.at_risk_players.map((p, i) => (
+                          <div key={i} className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-700">
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <p className="text-white font-semibold">{p.player_name}</p>
+                                <p className="text-gray-500 text-xs">{p.position}</p>
+                              </div>
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${RISK_COLOR[p.risk_level]}`}>
+                                {p.risk_level} Risk
+                              </span>
+                            </div>
+                            {p.risk_factors?.length > 0 && (
+                              <div className="mb-3">
+                                <p className="text-gray-500 text-xs uppercase mb-1">Risk Factors</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {p.risk_factors.map((f, j) => (
+                                    <span key={j} className="text-xs bg-red-500/10 text-red-300 border border-red-500/20 px-2 py-0.5 rounded">{f}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {p.load_management && (
+                              <div className="mb-3">
+                                <p className="text-gray-500 text-xs uppercase mb-1">Load Management</p>
+                                <p className="text-gray-300 text-sm">{p.load_management}</p>
+                              </div>
+                            )}
+                            {p.preventative_exercises?.length > 0 && (
+                              <div className="mb-2">
+                                <p className="text-gray-500 text-xs uppercase mb-1">Preventative Exercises</p>
+                                <ul className="space-y-0.5">
+                                  {p.preventative_exercises.map((e, j) => (
+                                    <li key={j} className="text-green-300 text-xs flex items-start gap-1.5">
+                                      <span className="text-green-500 mt-0.5">·</span> {e}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {p.return_to_play_notes && (
+                              <p className="text-blue-300 text-xs italic">↳ {p.return_to_play_notes}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Team Recommendations */}
+                  {riskReport.team_recommendations?.length > 0 && (
+                    <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-4">
+                      <p className="text-green-400 text-xs font-semibold uppercase tracking-wider mb-2">Team-Wide Recommendations</p>
+                      <ul className="space-y-1.5">
+                        {riskReport.team_recommendations.map((r, i) => (
+                          <li key={i} className="text-gray-300 text-sm flex items-start gap-2">
+                            <span className="text-green-400 mt-0.5">✓</span> {r}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Log/Edit Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="bg-[#141414] border border-gray-700 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">

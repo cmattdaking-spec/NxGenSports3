@@ -51,7 +51,7 @@ export default function DepthChart() {
     setAiSuggestion("");
     const playerData = unitPlayers.map(p => `${p.first_name} ${p.last_name} (${p.position}, Rating: ${p.overall_rating || "N/A"}, Status: ${p.status})`).join("\n");
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a football coaching AI assistant. Based on the following ${unit} players, suggest an optimal depth chart. Consider player ratings, positions, and availability status. Format your response as clear position-by-position recommendations with brief reasoning.\n\nPlayers:\n${playerData}\n\nProvide depth chart recommendations for ${unit} positions: ${positions.join(", ")}`,
+      prompt: `You are a football coaching assistant for NxDown. Based on the following ${unit} players, suggest an optimal depth chart. Consider player ratings, positions, and availability status. Format your response as clear position-by-position recommendations with brief reasoning.\n\nPlayers:\n${playerData}\n\nProvide depth chart recommendations for ${unit} positions: ${positions.join(", ")}`,
     });
     setAiSuggestion(res);
     setAiLoading(false);
@@ -69,7 +69,7 @@ export default function DepthChart() {
         <button onClick={getAISuggestions} disabled={aiLoading}
           className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 text-orange-400 px-4 py-2 rounded-lg text-sm font-medium transition-all">
           <Zap className={`w-4 h-4 ${aiLoading ? "animate-pulse" : ""}`} />
-          {aiLoading ? "Analyzing..." : "AI Suggest"}
+          {aiLoading ? "Analyzing..." : "Nx Suggest"}
         </button>
       </div>
 
@@ -88,7 +88,7 @@ export default function DepthChart() {
         <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-2 mb-3">
             <Zap className="w-4 h-4 text-orange-500" />
-            <span className="text-orange-400 font-medium text-sm">AI Depth Chart Recommendation</span>
+            <span className="text-orange-400 font-medium text-sm">Nx Depth Chart Recommendation</span>
             <button onClick={() => setAiSuggestion("")} className="ml-auto text-gray-500 hover:text-white"><X className="w-4 h-4" /></button>
           </div>
           <p className="text-gray-300 text-sm whitespace-pre-line">{aiSuggestion}</p>
