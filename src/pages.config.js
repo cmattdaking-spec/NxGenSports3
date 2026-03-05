@@ -50,6 +50,7 @@
 import Dashboard from './pages/Dashboard';
 import Roster from './pages/Roster';
 import DepthChart from './pages/DepthChart';
+import Playbook from './pages/Playbook';
 import __Layout from './Layout.jsx';
 
 
@@ -57,6 +58,7 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "Roster": Roster,
     "DepthChart": DepthChart,
+    "Playbook": Playbook,
 }
 
 export const pagesConfig = {
