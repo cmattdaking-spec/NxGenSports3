@@ -235,6 +235,47 @@ export default function Settings() {
         </div>
       </div>
 
+      {/* Change Password */}
+      <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5">
+        <h2 className="text-white font-bold mb-1 flex items-center gap-2">
+          <Lock className="w-4 h-4 text-[var(--color-primary,#3b82f6)]" /> Change Password
+        </h2>
+        <p className="text-gray-500 text-xs mb-4">Update your account password</p>
+        <div className="space-y-3">
+          {[
+            { key: "current", label: "Current Password" },
+            { key: "next", label: "New Password" },
+            { key: "confirm", label: "Confirm New Password" },
+          ].map(({ key, label }) => (
+            <div key={key}>
+              <label className="text-gray-400 text-xs mb-1 block">{label}</label>
+              <div className="relative">
+                <input
+                  type={showPw[key] ? "text" : "password"}
+                  value={pwForm[key]}
+                  onChange={e => setPwForm(f => ({ ...f, [key]: e.target.value }))}
+                  className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 pr-9 rounded-lg text-sm focus:outline-none focus:border-[var(--color-primary,#3b82f6)]"
+                  placeholder="••••••••"
+                />
+                <button type="button" onClick={() => setShowPw(s => ({ ...s, [key]: !s[key] }))} className="absolute right-2 top-2 text-gray-500 hover:text-gray-300">
+                  {showPw[key] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          ))}
+          {pwError && <p className="text-red-400 text-xs">{pwError}</p>}
+          {pwSuccess && <p className="text-green-400 text-xs">✓ Password changed successfully!</p>}
+          <button
+            onClick={handleChangePassword}
+            disabled={pwSaving}
+            className="w-full py-2.5 rounded-xl font-semibold text-sm transition-all text-white"
+            style={{ backgroundColor: "var(--color-primary, #3b82f6)" }}
+          >
+            {pwSaving ? "Saving..." : "Update Password"}
+          </button>
+        </div>
+      </div>
+
       {/* Logout */}
       <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5">
         <h2 className="text-white font-bold mb-4">Account</h2>
