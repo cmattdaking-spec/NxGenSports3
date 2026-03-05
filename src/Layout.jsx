@@ -180,7 +180,19 @@ export default function Layout({ children, currentPageName }) {
           <div className="w-6" />
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto relative">
+          {pageLoading && (
+            <div className="absolute inset-0 bg-[#0a0a0a] z-50 flex items-center justify-center">
+              <div className="relative flex items-center justify-center">
+                <div className="w-16 h-16 border-2 border-gray-800 border-t-[var(--color-primary,#f97316)] rounded-full animate-spin absolute" />
+                <img
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8dea6f5ebfce20bad2a8c/871a00698_image_aaa46895.png"
+                  alt="NxDown"
+                  className="w-8 h-8 rounded-lg object-cover"
+                />
+              </div>
+            </div>
+          )}
           {children}
         </main>
       </div>
