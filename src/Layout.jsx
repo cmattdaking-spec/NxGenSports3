@@ -5,7 +5,8 @@ import { base44 } from "@/api/base44Client";
 import {
   Users, BookOpen, Target, Calendar, Activity,
   ChevronLeft, ChevronRight, Home, Shield, Zap,
-  Menu, X, TrendingUp, ClipboardList, Crosshair, BarChart2 } from
+  Menu, X, TrendingUp, ClipboardList, Crosshair, BarChart2,
+  ListVideo, MessageSquare, Settings } from
 "lucide-react";
 
 const navItems = [
@@ -17,7 +18,10 @@ const navItems = [
 { label: "Practice", page: "Practice", icon: ClipboardList },
 { label: "Scouting", page: "Scouting", icon: Crosshair },
 { label: "Health", page: "PlayerHealth", icon: Activity },
-{ label: "Analytics", page: "Analytics", icon: BarChart2 }];
+{ label: "Analytics", page: "Analytics", icon: BarChart2 },
+{ label: "Playlists", page: "Playlists", icon: ListVideo },
+{ label: "Messages", page: "Messages", icon: MessageSquare },
+];
 
 
 export default function Layout({ children, currentPageName }) {
