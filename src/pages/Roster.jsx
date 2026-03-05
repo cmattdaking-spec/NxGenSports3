@@ -38,7 +38,10 @@ export default function Roster() {
     return matchSearch && matchUnit && matchPos;
   });
 
-  const openAdd = () => { setEditing(null); setForm({ status: "active", unit: "offense" }); setShowForm(true); };
+  const canAdd = CAN_ADD.includes(user?.role);
+  const canDelete = CAN_DELETE.includes(user?.role);
+
+  const openAdd = () => { setEditing(null); setForm({ status: "active", unit: "offense", academic_eligible: true }); setShowForm(true); };
   const openEdit = (p) => { setEditing(p); setForm({ ...p }); setShowForm(true); };
 
   const save = async () => {
