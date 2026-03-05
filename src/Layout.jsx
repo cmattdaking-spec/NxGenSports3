@@ -35,6 +35,15 @@ export default function Layout({ children, currentPageName }) {
   const [prevPage, setPrevPage] = useState(currentPageName);
 
   useEffect(() => {
+    if (currentPageName !== prevPage) {
+      setPrevPage(currentPageName);
+      setPageLoading(true);
+      const t = setTimeout(() => setPageLoading(false), 600);
+      return () => clearTimeout(t);
+    }
+  }, [currentPageName]);
+
+  useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
     // Load saved color scheme and apply CSS variables
     base44.entities.AppSettings.list().then((list) => {
