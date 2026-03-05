@@ -152,7 +152,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {stats.map(({ label, value, icon: Icon, page, color }) => (
           <Link key={label} to={createPageUrl(page)}
-            className="bg-[#141414] border border-gray-800 rounded-xl p-4 hover:border-orange-500/40 transition-all group">
+            className="bg-[#141414] border border-gray-800 rounded-xl p-4 hover:border-[var(--color-primary,#3b82f6)]/40 transition-all group">
             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${color} flex items-center justify-center mb-3`}>
               <Icon className="w-5 h-5 text-white" />
             </div>
