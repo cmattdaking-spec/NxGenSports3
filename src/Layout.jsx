@@ -45,7 +45,7 @@ export default function Layout({ children, currentPageName }) {
   const role = user?.role || "coach";
 
   const filteredNav = navItems.filter((item) => {
-    if (role === "position_coach" && item.page === "GamePlan") return false;
+    if (item.roles && !item.roles.includes(role)) return false;
     return true;
   });
 
