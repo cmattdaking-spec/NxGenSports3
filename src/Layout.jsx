@@ -161,19 +161,19 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Mobile Overlay */}
       {mobileOpen &&
-      <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-56 bg-[#111111] border-r border-gray-800 z-50">
-            <SidebarContent />
-          </aside>
-        </div>
+      <div className="fixed inset-0 z-40 md:hidden" style={{ pointerEvents: "all" }}>
+        <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
+        <aside className="absolute left-0 top-0 bottom-0 w-56 bg-[#111111] border-r border-gray-800 z-50" onClick={e => e.stopPropagation()}>
+          <SidebarContent />
+        </aside>
+      </div>
       }
 
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[#111111] border-b border-gray-800">
-          <button onClick={() => setMobileOpen(true)} className="text-gray-400">
+          <button onClick={() => setMobileOpen(true)} className="text-gray-400 p-1">
             <Menu className="w-6 h-6" />
           </button>
           <span className="text-white font-black text-lg">Nx<span style={{ color: "var(--color-primary, #3b82f6)" }}>Down</span></span>

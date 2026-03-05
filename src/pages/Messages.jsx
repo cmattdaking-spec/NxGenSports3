@@ -130,7 +130,7 @@ export default function Messages() {
         <div className="p-4 border-b border-gray-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-[var(--color-primary,#3b82f6)]" />
-            <span className="text-white font-black text-lg">Messages</span>
+            <span className="text-white font-black text-lg">NxMessage</span>
           </div>
           <button
             onClick={() => setShowNewConvo(true)}

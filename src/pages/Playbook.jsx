@@ -75,7 +75,7 @@ export default function Playbook() {
           <button onClick={getAISuggestions} disabled={aiLoading}
             className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 text-orange-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
             <Zap className={`w-4 h-4 ${aiLoading ? "animate-pulse" : ""}`} />
-            <span className="hidden md:inline">{aiLoading ? "Thinking..." : "AI Suggest"}</span>
+            <span className="hidden md:inline">{aiLoading ? "Thinking..." : "NxPlay"}</span>
           </button>
           <button onClick={() => { setDesignerPlay(null); setShowDesigner(true); }}
             className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -113,7 +113,7 @@ export default function Playbook() {
         <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-2 mb-3">
             <Zap className="w-4 h-4 text-orange-500" />
-            <span className="text-orange-400 font-medium text-sm">AI Play Suggestions</span>
+            <span className="text-orange-400 font-medium text-sm">NxPlay Suggestions</span>
             <button onClick={() => setAiSuggestions("")} className="ml-auto text-gray-500 hover:text-white"><X className="w-4 h-4" /></button>
           </div>
           <p className="text-gray-300 text-sm whitespace-pre-line">{aiSuggestions}</p>

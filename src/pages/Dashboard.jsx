@@ -167,7 +167,7 @@ export default function Dashboard() {
         <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-white font-bold flex items-center gap-2">
-              <Target className="w-4 h-4 text-orange-500" /> Next Game
+              <Target className="w-4 h-4 text-orange-500" /> NxGame
             </h2>
             <Link to={createPageUrl("Scouting")} className="text-orange-500 text-xs hover:text-orange-400 flex items-center gap-1">
               View All <ArrowRight className="w-3 h-3" />
@@ -238,7 +238,7 @@ export default function Dashboard() {
         <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-white font-bold flex items-center gap-2">
-              <ClipboardList className="w-4 h-4 text-orange-500" /> Next Practice
+              <ClipboardList className="w-4 h-4 text-orange-500" /> NxPractice
             </h2>
             <Link to={createPageUrl("Practice")} className="text-orange-500 text-xs hover:text-orange-400 flex items-center gap-1">
               View All <ArrowRight className="w-3 h-3" />
