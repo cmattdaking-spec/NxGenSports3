@@ -62,9 +62,11 @@ export default function Roster() {
           <h1 className="text-2xl font-black text-white">Roster <span className="text-orange-500">Management</span></h1>
           <p className="text-gray-500 text-sm">{players.length} players</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          <Plus className="w-4 h-4" /> Add Player
-        </button>
+        {canAdd && (
+          <button onClick={openAdd} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#3b82f6)" }}>
+            <Plus className="w-4 h-4" /> Add Player
+          </button>
+        )}
       </div>
 
       {/* Filters */}
