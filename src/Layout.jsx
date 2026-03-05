@@ -58,7 +58,7 @@ export default function Layout({ children, currentPageName }) {
         />
         {!collapsed &&
       <div>
-            <span className="text-white font-black text-xl tracking-tight">Nx<span className="text-blue-400">Down</span></span>
+            <span className="text-white font-black text-xl tracking-tight">Nx<span style={{ color: "var(--color-primary, #3b82f6)" }}>Down</span></span>
             <p className="text-gray-500 text-xs">Next-Gen Football Systems</p>
           </div>
       }
