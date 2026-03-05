@@ -110,7 +110,7 @@ export default function Dashboard() {
         </div>
         <div className="hidden md:flex items-center gap-2 bg-[var(--color-primary,#3b82f6)]/10 border border-[var(--color-primary,#3b82f6)]/30 rounded-lg px-3 py-2">
           <Sparkles className="w-4 h-4" style={{ color: "var(--color-primary,#3b82f6)" }} />
-          <span className="text-sm font-medium" style={{ color: "var(--color-primary,#3b82f6)" }}>AI Personalized</span>
+          <span className="text-sm font-medium" style={{ color: "var(--color-primary,#3b82f6)" }}>Nx Personalized</span>
         </div>
       </div>
 
@@ -120,7 +120,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" style={{ color: "var(--color-primary,#3b82f6)" }} />
-              <span className="text-sm font-semibold text-white">AI Suggestions for You</span>
+              <span className="text-sm font-semibold text-white">Nx Suggestions for You</span>
             </div>
             <button onClick={() => setAiDismissed(true)} className="text-gray-600 hover:text-gray-400 transition-colors">
               <X className="w-4 h-4" />
@@ -129,7 +129,7 @@ export default function Dashboard() {
           {aiLoading ? (
             <div className="flex items-center gap-2 text-gray-500 text-sm">
               <div className="w-3 h-3 rounded-full border border-gray-500 border-t-transparent animate-spin" />
-              Analyzing your team data...
+              Nx is analyzing your team data...
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
