@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, X, Zap, BookOpen } from "lucide-react";
+import { Plus, Search, Edit, Trash2, X, Zap, BookOpen, Eye } from "lucide-react";
 import PlayDesigner from "@/components/playbook/PlayDesigner";
+import PlayDiagramViewer from "@/components/playbook/PlayDiagramViewer";
 
 const CATEGORIES = ["run","pass","screen","play_action","blitz","coverage","zone","man","punt","kick","return"];
 const UNITS = ["offense","defense","special_teams"];
@@ -20,6 +21,7 @@ export default function Playbook() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState("");
   const [viewPlay, setViewPlay] = useState(null);
+  const [diagramPlay, setDiagramPlay] = useState(null);
 
   const load = () => base44.entities.Play.list().then(d => { setPlays(d); setLoading(false); });
   useEffect(() => { load(); }, []);
@@ -137,6 +139,7 @@ export default function Playbook() {
                           {p.formation && <p className="text-gray-500 text-xs mt-0.5">{p.formation}</p>}
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => setDiagramPlay(p)} className="text-gray-500 hover:text-blue-400 p-1" title="View Diagram"><Eye className="w-3.5 h-3.5" /></button>
                           <button onClick={() => openEdit(p)} className="text-gray-500 hover:text-orange-500 p-1"><Edit className="w-3.5 h-3.5" /></button>
                           <button onClick={() => remove(p.id)} className="text-gray-500 hover:text-red-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
@@ -162,6 +165,9 @@ export default function Playbook() {
           <p className="text-gray-500">No plays yet. Add your first play or use AI suggestions.</p>
         </div>
       )}
+
+      {/* Diagram Viewer */}
+      {diagramPlay && <PlayDiagramViewer play={diagramPlay} onClose={() => setDiagramPlay(null)} />}
 
       {/* Add/Edit Modal */}
       {showForm && (
