@@ -6,21 +6,23 @@ import {
   Users, BookOpen, Target, Calendar, Activity,
   ChevronLeft, ChevronRight, Home, Shield, Zap,
   Menu, X, TrendingUp, ClipboardList, Crosshair, BarChart2,
-  ListVideo, MessageSquare, Settings } from
+  ListVideo, MessageSquare, Settings, GraduationCap, UserCog } from
 "lucide-react";
 
 const navItems = [
-{ label: "Dashboard", page: "Dashboard", icon: Home },
-{ label: "Roster", page: "Roster", icon: Users },
-{ label: "Depth Chart", page: "DepthChart", icon: TrendingUp },
-{ label: "Playbook", page: "Playbook", icon: BookOpen },
-{ label: "Game Plans", page: "GamePlan", icon: Target },
-{ label: "Practice", page: "Practice", icon: ClipboardList },
-{ label: "Scouting", page: "Scouting", icon: Crosshair },
-{ label: "Health", page: "PlayerHealth", icon: Activity },
-{ label: "Analytics", page: "Analytics", icon: BarChart2 },
-{ label: "Playlists", page: "Playlists", icon: ListVideo },
-{ label: "Messages", page: "Messages", icon: MessageSquare },
+{ label: "Dashboard", page: "Dashboard", icon: Home, roles: null },
+{ label: "Roster", page: "Roster", icon: Users, roles: null },
+{ label: "Depth Chart", page: "DepthChart", icon: TrendingUp, roles: null },
+{ label: "Playbook", page: "Playbook", icon: BookOpen, roles: ["admin","head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","position_coach","trainer"] },
+{ label: "Game Plans", page: "GamePlan", icon: Target, roles: ["admin","head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","position_coach","trainer"] },
+{ label: "Practice", page: "Practice", icon: ClipboardList, roles: null },
+{ label: "Scouting", page: "Scouting", icon: Crosshair, roles: ["admin","head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","position_coach","trainer"] },
+{ label: "Health", page: "PlayerHealth", icon: Activity, roles: null },
+{ label: "Eligibility", page: "AcademicEligibility", icon: GraduationCap, roles: null },
+{ label: "Analytics", page: "Analytics", icon: BarChart2, roles: null },
+{ label: "Playlists", page: "Playlists", icon: ListVideo, roles: null },
+{ label: "Messages", page: "Messages", icon: MessageSquare, roles: null },
+{ label: "Users", page: "UserManagement", icon: UserCog, roles: ["admin"] },
 ];
 
 
