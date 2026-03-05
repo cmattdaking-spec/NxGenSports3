@@ -103,9 +103,11 @@ export default function DepthChart() {
             <div key={pos} className="bg-[#141414] border border-gray-800 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-orange-500 font-black text-lg font-mono">{pos}</span>
-                <button onClick={() => openEdit(pos)} className="text-gray-500 hover:text-orange-500 transition-colors">
-                  <Edit className="w-4 h-4" />
-                </button>
+                {canEdit && (
+                  <button onClick={() => openEdit(pos)} className="text-gray-500 hover:text-orange-500 transition-colors">
+                    <Edit className="w-4 h-4" />
+                  </button>
+                )}
               </div>
               <div className="space-y-2">
                 {[
