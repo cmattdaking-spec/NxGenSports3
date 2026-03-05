@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, X, Zap, BookOpen, Eye, Pen } from "lucide-react";
+import { Plus, Search, Edit, Trash2, X, Zap, BookOpen, Eye, Pen, Brain } from "lucide-react";
 import PlayDesigner from "@/components/playbook/PlayDesigner";
 import PlayDiagramViewer from "@/components/playbook/PlayDiagramViewer";
+import NxPlayAI from "@/components/playbook/NxPlayAI";
 
 const CATEGORIES = ["run","pass","screen","play_action","blitz","coverage","zone","man","punt","kick","return"];
 const UNITS = ["offense","defense","special_teams"];
@@ -23,8 +24,13 @@ export default function Playbook() {
   const [aiSuggestions, setAiSuggestions] = useState("");
   const [viewPlay, setViewPlay] = useState(null);
   const [diagramPlay, setDiagramPlay] = useState(null);
+  const [opponents, setOpponents] = useState([]);
+  const [showNxPlayAI, setShowNxPlayAI] = useState(false);
 
-  const load = () => base44.entities.Play.list().then(d => { setPlays(d); setLoading(false); });
+  const load = () => Promise.all([
+    base44.entities.Play.list(),
+    base44.entities.Opponent.list()
+  ]).then(([d, op]) => { setPlays(d); setOpponents(op); setLoading(false); });
   useEffect(() => { load(); }, []);
 
   const filtered = plays.filter(p => {
@@ -72,6 +78,11 @@ export default function Playbook() {
           <p className="text-gray-500 text-sm">{plays.length} plays in library</p>
         </div>
         <div className="flex gap-2">
+          <button onClick={() => setShowNxPlayAI(true)}
+            className="flex items-center gap-2 bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 text-purple-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
+            <Brain className="w-4 h-4" />
+            <span className="hidden md:inline">NxPlay AI</span>
+          </button>
           <button onClick={getAISuggestions} disabled={aiLoading}
             className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 text-orange-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
             <Zap className={`w-4 h-4 ${aiLoading ? "animate-pulse" : ""}`} />
@@ -171,6 +182,16 @@ export default function Playbook() {
           <BookOpen className="w-12 h-12 text-gray-700 mx-auto mb-3" />
           <p className="text-gray-500">No plays yet. Add your first play or use AI suggestions.</p>
         </div>
+      )}
+
+      {/* NxPlay AI Modal */}
+      {showNxPlayAI && (
+        <NxPlayAI
+          plays={plays}
+          opponents={opponents}
+          onClose={() => setShowNxPlayAI(false)}
+          onSavePlay={() => { load(); setShowNxPlayAI(false); }}
+        />
       )}
 
       {/* Diagram Viewer */}
