@@ -59,6 +59,8 @@ import Scouting from './pages/Scouting';
 import Settings from './pages/Settings';
 import Playlists from './pages/Playlists';
 import Messages from './pages/Messages';
+import UserManagement from './pages/UserManagement';
+import AcademicEligibility from './pages/AcademicEligibility';
 import __Layout from './Layout.jsx';
 
 
@@ -75,6 +77,8 @@ export const PAGES = {
     "Settings": Settings,
     "Playlists": Playlists,
     "Messages": Messages,
+    "UserManagement": UserManagement,
+    "AcademicEligibility": AcademicEligibility,
 }
 
 export const pagesConfig = {
