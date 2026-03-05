@@ -104,15 +104,49 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-white">
-            Command <span className="text-orange-500">Center</span>
+            {user ? `Welcome back, ${user.full_name?.split(" ")[0] || "Coach"}` : "Command"} <span style={{ color: "var(--color-primary,#3b82f6)" }}>Center</span>
           </h1>
-          <p className="text-gray-500 text-sm mt-1">Your team at a glance</p>
+          <p className="text-gray-500 text-sm mt-1 capitalize">{user?.role?.replace(/_/g, " ") || ""} · Your team at a glance</p>
         </div>
-        <div className="hidden md:flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-lg px-3 py-2">
-          <Zap className="w-4 h-4 text-orange-500" />
-          <span className="text-orange-400 text-sm font-medium">AI Ready</span>
+        <div className="hidden md:flex items-center gap-2 bg-[var(--color-primary,#3b82f6)]/10 border border-[var(--color-primary,#3b82f6)]/30 rounded-lg px-3 py-2">
+          <Sparkles className="w-4 h-4" style={{ color: "var(--color-primary,#3b82f6)" }} />
+          <span className="text-sm font-medium" style={{ color: "var(--color-primary,#3b82f6)" }}>AI Personalized</span>
         </div>
       </div>
+
+      {/* AI Suggestions */}
+      {!aiDismissed && (aiLoading || aiSuggestions.length > 0) && (
+        <div className="bg-[#141414] border rounded-xl p-4" style={{ borderColor: "var(--color-primary,#3b82f6)33" }}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" style={{ color: "var(--color-primary,#3b82f6)" }} />
+              <span className="text-sm font-semibold text-white">AI Suggestions for You</span>
+            </div>
+            <button onClick={() => setAiDismissed(true)} className="text-gray-600 hover:text-gray-400 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {aiLoading ? (
+            <div className="flex items-center gap-2 text-gray-500 text-sm">
+              <div className="w-3 h-3 rounded-full border border-gray-500 border-t-transparent animate-spin" />
+              Analyzing your team data...
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              {aiSuggestions.map((s, i) => (
+                <Link key={i} to={createPageUrl(s.page || "Dashboard")}
+                  className="flex items-center gap-2 p-3 bg-[#1a1a1a] rounded-lg hover:bg-[var(--color-primary,#3b82f6)]/10 border border-transparent hover:border-[var(--color-primary,#3b82f6)]/30 transition-all group">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--color-primary,#3b82f6)22" }}>
+                    <Zap className="w-3 h-3" style={{ color: "var(--color-primary,#3b82f6)" }} />
+                  </div>
+                  <span className="text-gray-300 text-xs flex-1">{s.text}</span>
+                  <ChevronRight className="w-3 h-3 text-gray-600 group-hover:text-gray-400 flex-shrink-0" />
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
