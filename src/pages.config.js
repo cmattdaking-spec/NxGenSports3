@@ -47,28 +47,34 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import Dashboard from './pages/Dashboard';
-import Roster from './pages/Roster';
-import DepthChart from './pages/DepthChart';
-import Playbook from './pages/Playbook';
-import GamePlan from './pages/GamePlan';
-import Practice from './pages/Practice';
-import Scouting from './pages/Scouting';
-import PlayerHealth from './pages/PlayerHealth';
 import Analytics from './pages/Analytics';
+import Dashboard from './pages/Dashboard';
+import DepthChart from './pages/DepthChart';
+import GamePlan from './pages/GamePlan';
+import Playbook from './pages/Playbook';
+import PlayerHealth from './pages/PlayerHealth';
+import Practice from './pages/Practice';
+import Roster from './pages/Roster';
+import Scouting from './pages/Scouting';
+import Settings from './pages/Settings';
+import Playlists from './pages/Playlists';
+import Messages from './pages/Messages';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Dashboard": Dashboard,
-    "Roster": Roster,
-    "DepthChart": DepthChart,
-    "Playbook": Playbook,
-    "GamePlan": GamePlan,
-    "Practice": Practice,
-    "Scouting": Scouting,
-    "PlayerHealth": PlayerHealth,
     "Analytics": Analytics,
+    "Dashboard": Dashboard,
+    "DepthChart": DepthChart,
+    "GamePlan": GamePlan,
+    "Playbook": Playbook,
+    "PlayerHealth": PlayerHealth,
+    "Practice": Practice,
+    "Roster": Roster,
+    "Scouting": Scouting,
+    "Settings": Settings,
+    "Playlists": Playlists,
+    "Messages": Messages,
 }
 
 export const pagesConfig = {
