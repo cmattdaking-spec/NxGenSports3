@@ -61,6 +61,8 @@ import Roster from './pages/Roster';
 import Scouting from './pages/Scouting';
 import Settings from './pages/Settings';
 import UserManagement from './pages/UserManagement';
+import InGameAssistant from './pages/InGameAssistant';
+import PlayerDevelopment from './pages/PlayerDevelopment';
 import __Layout from './Layout.jsx';
 
 
@@ -79,6 +81,8 @@ export const PAGES = {
     "Scouting": Scouting,
     "Settings": Settings,
     "UserManagement": UserManagement,
+    "InGameAssistant": InGameAssistant,
+    "PlayerDevelopment": PlayerDevelopment,
 }
 
 export const pagesConfig = {
