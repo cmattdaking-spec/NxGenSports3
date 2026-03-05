@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Edit, Trash2, X, Zap, ClipboardList, ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { Plus, Edit, Trash2, X, Zap, ClipboardList, ChevronDown, ChevronUp, Clock, Brain, Sparkles } from "lucide-react";
+import LoadingScreen from "../components/LoadingScreen";
 
 const STATUS_COLOR = { draft: "bg-yellow-500/20 text-yellow-400", active: "bg-blue-500/20 text-blue-400", completed: "bg-green-500/20 text-green-400" };
 
@@ -8,6 +9,7 @@ export default function Practice() {
   const [plans, setPlans] = useState([]);
   const [players, setPlayers] = useState([]);
   const [healthRecords, setHealthRecords] = useState([]);
+  const [opponents, setOpponents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -15,14 +17,19 @@ export default function Practice() {
   const [expanded, setExpanded] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiTarget, setAiTarget] = useState(null);
+  const [showNxGenerator, setShowNxGenerator] = useState(false);
+  const [genForm, setGenForm] = useState({ duration_minutes: 120, focus: "", opponent_id: "" });
+  const [genLoading, setGenLoading] = useState(false);
+  const [genResult, setGenResult] = useState(null);
 
   const load = async () => {
-    const [pr, pl, h] = await Promise.all([
+    const [pr, pl, h, op] = await Promise.all([
       base44.entities.PracticePlan.list("-date"),
       base44.entities.Player.list(),
-      base44.entities.PlayerHealth.list()
+      base44.entities.PlayerHealth.list(),
+      base44.entities.Opponent.list("-game_date")
     ]);
-    setPlans(pr); setPlayers(pl); setHealthRecords(h); setLoading(false);
+    setPlans(pr); setPlayers(pl); setHealthRecords(h); setOpponents(op); setLoading(false);
   };
   useEffect(() => { load(); }, []);
 
@@ -52,11 +59,86 @@ export default function Practice() {
     const injuredPlayers = players.filter(p => p.status === "injured").map(p => `${p.first_name} ${p.last_name}`).join(", ");
     const limitedPlayers = healthRecords.filter(h => h.availability === "limited").map(h => h.player_name).join(", ");
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a football coaching AI. Generate a detailed practice plan for a high school/college football team.\n\nPractice Focus: ${plan.focus || "General"}\nTotal Duration: ${plan.duration_minutes || 120} minutes\nDate: ${plan.date}\n\n${injuredPlayers ? `Injured/Out Players: ${injuredPlayers}` : ""}\n${limitedPlayers ? `Limited Players: ${limitedPlayers}` : ""}\n\nCreate a period-by-period practice schedule with:\n1. Individual periods (time in minutes, group, drill name, coaching points)\n2. Include warm-up, individual periods, group periods, team periods, and cool-down\n3. Note any health accommodations for limited players\n4. Suggest specific drills for each period that match the focus area\n\nBe specific and practical for a high school/college program.`,
+      prompt: `You are a football coaching AI for NxDown. Generate a detailed practice plan.\n\nPractice Focus: ${plan.focus || "General"}\nTotal Duration: ${plan.duration_minutes || 120} minutes\nDate: ${plan.date}\n\n${injuredPlayers ? `Injured/Out: ${injuredPlayers}` : ""}\n${limitedPlayers ? `Limited: ${limitedPlayers}` : ""}\n\nCreate a period-by-period schedule with warm-up, individual, group, team periods, and cool-down. Include specific drill names, coaching points, and health accommodations. Be specific and practical.`,
     });
     await base44.entities.PracticePlan.update(plan.id, { ai_suggestions: res });
     load(); setAiLoading(false); setAiTarget(null);
   };
+
+  const generateNxPlan = async () => {
+    setGenLoading(true);
+    setGenResult(null);
+    const injuredPlayers = players.filter(p => p.status === "injured").map(p => `${p.first_name} ${p.last_name} (${p.position})`).join(", ");
+    const limitedPlayers = healthRecords.filter(h => h.availability === "limited").map(h => `${h.player_name}`).join(", ");
+    const opponent = opponents.find(o => o.id === genForm.opponent_id);
+    const upcomingOpponents = opponents.filter(o => new Date(o.game_date) >= new Date()).slice(0, 3);
+
+    const res = await base44.integrations.Core.InvokeLLM({
+      prompt: `You are an elite football coaching AI for NxDown. Generate a complete, tailored practice session.
+
+Team Status:
+- Total Players: ${players.length}
+- Injured/Out: ${injuredPlayers || "None"}
+- Limited Players: ${limitedPlayers || "None"}
+- Practice Duration: ${genForm.duration_minutes} minutes
+- Focus Area: ${genForm.focus || "General preparation"}
+
+${opponent ? `Upcoming Opponent: ${opponent.name} (${opponent.game_date}, ${opponent.location})
+Offensive Tendency: ${opponent.offensive_tendency || "Unknown"}
+Defensive Tendency: ${opponent.defensive_tendency || "Unknown"}
+Key Players: ${opponent.key_players || "Unknown"}
+Weaknesses: ${opponent.weaknesses || "Unknown"}` : `Upcoming Games: ${upcomingOpponents.map(o => o.name + " on " + o.game_date).join(", ") || "None scheduled"}`}
+
+Generate a complete, structured practice plan with specific drills, focus areas, and timing. Optimize for the opponent and team needs.`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          focus: { type: "string" },
+          coaching_theme: { type: "string", description: "One key message for the day" },
+          periods: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                duration: { type: "number" },
+                unit: { type: "string" },
+                drill: { type: "string" },
+                coaching_points: { type: "array", items: { type: "string" } },
+                notes: { type: "string" }
+              }
+            }
+          },
+          opponent_prep_notes: { type: "string" },
+          health_accommodations: { type: "string" },
+          total_minutes: { type: "number" }
+        }
+      }
+    });
+    setGenResult(res);
+    setGenLoading(false);
+  };
+
+  const saveGeneratedPlan = async () => {
+    if (!genResult) return;
+    const today = new Date().toISOString().split("T")[0];
+    await base44.entities.PracticePlan.create({
+      title: genResult.title || "Nx Generated Practice",
+      focus: genResult.focus || genForm.focus,
+      date: today,
+      duration_minutes: genResult.total_minutes || genForm.duration_minutes,
+      status: "draft",
+      periods: genResult.periods || [],
+      ai_suggestions: `Coaching Theme: ${genResult.coaching_theme || ""}\n\n${genResult.opponent_prep_notes ? "Opponent Prep: " + genResult.opponent_prep_notes : ""}\n\n${genResult.health_accommodations ? "Health Notes: " + genResult.health_accommodations : ""}`.trim(),
+      notes: genResult.coaching_theme || ""
+    });
+    setShowNxGenerator(false);
+    setGenResult(null);
+    load();
+  };
+
+  if (loading) return <LoadingScreen />;
 
   return (
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
@@ -65,15 +147,26 @@ export default function Practice() {
           <h1 className="text-2xl font-black text-white">Practice <span className="text-orange-500">Plans</span></h1>
           <p className="text-gray-500 text-sm">{plans.length} plans</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          <Plus className="w-4 h-4" /> New Practice
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => { setGenForm({ duration_minutes: 120, focus: "", opponent_id: "" }); setGenResult(null); setShowNxGenerator(true); }}
+            className="flex items-center gap-2 bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 text-purple-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
+            <Brain className="w-4 h-4" />
+            <span className="hidden md:inline">Nx Generator</span>
+          </button>
+          <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <Plus className="w-4 h-4" /> New Practice
+          </button>
+        </div>
       </div>
 
-      {plans.length === 0 && !loading && (
+      {plans.length === 0 && (
         <div className="text-center py-20">
           <ClipboardList className="w-12 h-12 text-gray-700 mx-auto mb-3" />
-          <p className="text-gray-500">No practice plans yet. Create your first one!</p>
+          <p className="text-gray-500 mb-4">No practice plans yet.</p>
+          <button onClick={() => { setGenForm({ duration_minutes: 120, focus: "", opponent_id: "" }); setGenResult(null); setShowNxGenerator(true); }}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg text-sm font-medium">
+            Try Nx Generator
+          </button>
         </div>
       )}
 
@@ -96,7 +189,7 @@ export default function Practice() {
                 <button onClick={() => getAISuggestions(plan)} disabled={aiLoading && aiTarget === plan.id}
                   className="flex items-center gap-1 bg-orange-500/10 border border-orange-500/30 text-orange-400 px-2 py-1.5 rounded-lg text-xs hover:bg-orange-500/20 transition-all">
                   <Zap className={`w-3.5 h-3.5 ${aiLoading && aiTarget === plan.id ? "animate-pulse" : ""}`} />
-                  <span className="hidden md:inline">{aiLoading && aiTarget === plan.id ? "..." : "AI Plan"}</span>
+                  <span className="hidden md:inline">{aiLoading && aiTarget === plan.id ? "..." : "Nx Improve"}</span>
                 </button>
                 <button onClick={() => openEdit(plan)} className="text-gray-500 hover:text-orange-500 p-1.5"><Edit className="w-4 h-4" /></button>
                 <button onClick={() => remove(plan.id)} className="text-gray-500 hover:text-red-400 p-1.5"><Trash2 className="w-4 h-4" /></button>
@@ -115,10 +208,17 @@ export default function Practice() {
                       {plan.periods.map((period, i) => (
                         <div key={i} className="flex items-start gap-3 bg-[#1a1a1a] rounded-lg p-3">
                           <div className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded flex-shrink-0">{period.duration}m</div>
-                          <div>
+                          <div className="flex-1">
                             <p className="text-white text-sm font-medium">{period.name || "Period"}</p>
                             {period.drill && <p className="text-gray-400 text-xs mt-0.5">{period.drill}</p>}
                             {period.unit && <span className="text-xs text-orange-400">{period.unit}</span>}
+                            {period.coaching_points?.length > 0 && (
+                              <ul className="mt-1 space-y-0.5">
+                                {period.coaching_points.map((pt, j) => (
+                                  <li key={j} className="text-gray-500 text-xs">· {pt}</li>
+                                ))}
+                              </ul>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -129,7 +229,7 @@ export default function Practice() {
                   <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
                     <div className="flex items-center gap-2 mb-2">
                       <Zap className="w-3.5 h-3.5 text-orange-500" />
-                      <span className="text-orange-400 text-xs font-medium">AI Practice Plan</span>
+                      <span className="text-orange-400 text-xs font-medium">Nx Practice Notes</span>
                     </div>
                     <p className="text-gray-300 text-sm whitespace-pre-line">{plan.ai_suggestions}</p>
                   </div>
@@ -141,7 +241,151 @@ export default function Practice() {
         ))}
       </div>
 
-      {/* Modal */}
+      {/* Nx Generator Modal */}
+      {showNxGenerator && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-[#141414] border border-purple-500/30 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-800">
+              <div className="flex items-center gap-2">
+                <Brain className="w-5 h-5 text-purple-400" />
+                <h2 className="text-white font-bold">Nx Practice Generator</h2>
+                <span className="text-purple-400 text-xs bg-purple-500/20 px-2 py-0.5 rounded-full">AI-Powered</span>
+              </div>
+              <button onClick={() => { setShowNxGenerator(false); setGenResult(null); }} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              {!genResult ? (
+                <>
+                  <p className="text-gray-500 text-sm">Nx Intelligence will analyze your team's needs, health status, and upcoming opponents to generate an optimized practice plan.</p>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-gray-400 text-xs mb-1 block">Duration (minutes)</label>
+                      <input type="number" value={genForm.duration_minutes} onChange={e => setGenForm(f => ({ ...f, duration_minutes: +e.target.value }))}
+                        className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-purple-500" />
+                    </div>
+                    <div>
+                      <label className="text-gray-400 text-xs mb-1 block">Opponent to Prepare For</label>
+                      <select value={genForm.opponent_id} onChange={e => setGenForm(f => ({ ...f, opponent_id: e.target.value }))}
+                        className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-purple-500">
+                        <option value="">Auto-detect next game</option>
+                        {opponents.filter(o => new Date(o.game_date) >= new Date()).map(o => (
+                          <option key={o.id} value={o.id}>{o.name} ({o.game_date})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-gray-400 text-xs mb-1 block">Additional Focus / Theme</label>
+                      <input value={genForm.focus} onChange={e => setGenForm(f => ({ ...f, focus: e.target.value }))}
+                        placeholder="e.g. Red Zone, Pass Rush, 3rd Down Conversion..."
+                        className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-purple-500" />
+                    </div>
+                  </div>
+
+                  {/* Team Status Preview */}
+                  <div className="bg-[#1a1a1a] rounded-lg p-3 border border-gray-700">
+                    <p className="text-gray-500 text-xs uppercase tracking-wider mb-2">Nx will consider</p>
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      <div>
+                        <p className="text-2xl font-black text-white">{players.length}</p>
+                        <p className="text-gray-500 text-xs">Total Players</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-black text-red-400">{players.filter(p => p.status === "injured").length}</p>
+                        <p className="text-gray-500 text-xs">Injured Out</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-black text-yellow-400">{healthRecords.filter(h => h.availability === "limited").length}</p>
+                        <p className="text-gray-500 text-xs">Limited</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button onClick={() => setShowNxGenerator(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-lg text-sm">Cancel</button>
+                    <button onClick={generateNxPlan} disabled={genLoading}
+                      className="flex-1 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg text-sm font-medium">
+                      {genLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          Generate with Nx AI
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Sparkles className="w-4 h-4 text-purple-400" />
+                      <h3 className="text-white font-bold text-lg">{genResult.title}</h3>
+                    </div>
+                    <p className="text-purple-300 text-sm italic">"{genResult.coaching_theme}"</p>
+                    <div className="flex gap-3 mt-2 text-xs text-gray-400">
+                      <span>{genResult.total_minutes} min</span>
+                      <span>·</span>
+                      <span>{genResult.focus}</span>
+                    </div>
+                  </div>
+
+                  {genResult.periods?.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-gray-500 text-xs uppercase tracking-wider">Generated Schedule ({genResult.periods.length} periods)</p>
+                      {genResult.periods.map((p, i) => (
+                        <div key={i} className="bg-[#1a1a1a] rounded-lg p-3 border border-gray-800">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="bg-purple-500 text-white text-xs font-bold px-2 py-0.5 rounded">{p.duration}m</span>
+                            <span className="text-white text-sm font-medium">{p.name}</span>
+                            {p.unit && <span className="text-purple-400 text-xs ml-auto">{p.unit}</span>}
+                          </div>
+                          {p.drill && <p className="text-gray-400 text-xs">{p.drill}</p>}
+                          {p.coaching_points?.length > 0 && (
+                            <ul className="mt-1.5 space-y-0.5">
+                              {p.coaching_points.map((pt, j) => (
+                                <li key={j} className="text-gray-500 text-xs flex items-start gap-1">
+                                  <span className="text-purple-400 mt-0.5">·</span> {pt}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {genResult.opponent_prep_notes && (
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                      <p className="text-orange-400 text-xs font-semibold uppercase mb-1">Opponent Prep Notes</p>
+                      <p className="text-gray-300 text-sm">{genResult.opponent_prep_notes}</p>
+                    </div>
+                  )}
+                  {genResult.health_accommodations && (
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                      <p className="text-blue-400 text-xs font-semibold uppercase mb-1">Health Accommodations</p>
+                      <p className="text-gray-300 text-sm">{genResult.health_accommodations}</p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <button onClick={() => setGenResult(null)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-lg text-sm">Regenerate</button>
+                    <button onClick={saveGeneratedPlan} className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg text-sm font-medium">
+                      Save Practice Plan
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit/Add Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="bg-[#141414] border border-gray-700 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -181,8 +425,6 @@ export default function Practice() {
                   </select>
                 </div>
               </div>
-
-              {/* Periods */}
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-gray-400 text-xs uppercase tracking-wider">Practice Periods</label>
@@ -208,7 +450,6 @@ export default function Practice() {
                   ))}
                 </div>
               </div>
-
               <div>
                 <label className="text-gray-400 text-xs mb-1 block">Notes</label>
                 <textarea value={form.notes || ""} onChange={e => setForm({...form, notes: e.target.value})} rows={2}

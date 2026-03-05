@@ -47,38 +47,38 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import AcademicEligibility from './pages/AcademicEligibility';
 import Analytics from './pages/Analytics';
 import Dashboard from './pages/Dashboard';
 import DepthChart from './pages/DepthChart';
 import GamePlan from './pages/GamePlan';
+import Messages from './pages/Messages';
 import Playbook from './pages/Playbook';
 import PlayerHealth from './pages/PlayerHealth';
+import Playlists from './pages/Playlists';
 import Practice from './pages/Practice';
 import Roster from './pages/Roster';
 import Scouting from './pages/Scouting';
 import Settings from './pages/Settings';
-import Playlists from './pages/Playlists';
-import Messages from './pages/Messages';
 import UserManagement from './pages/UserManagement';
-import AcademicEligibility from './pages/AcademicEligibility';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AcademicEligibility": AcademicEligibility,
     "Analytics": Analytics,
     "Dashboard": Dashboard,
     "DepthChart": DepthChart,
     "GamePlan": GamePlan,
+    "Messages": Messages,
     "Playbook": Playbook,
     "PlayerHealth": PlayerHealth,
+    "Playlists": Playlists,
     "Practice": Practice,
     "Roster": Roster,
     "Scouting": Scouting,
     "Settings": Settings,
-    "Playlists": Playlists,
-    "Messages": Messages,
     "UserManagement": UserManagement,
-    "AcademicEligibility": AcademicEligibility,
 }
 
 export const pagesConfig = {
