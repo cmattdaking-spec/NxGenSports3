@@ -6,7 +6,7 @@ import {
   Users, BookOpen, Target, Calendar, Activity,
   ChevronLeft, ChevronRight, Home, Shield, Zap,
   Menu, X, TrendingUp, ClipboardList, Crosshair, BarChart2,
-  ListVideo, MessageSquare, Settings, GraduationCap, UserCog } from
+  ListVideo, MessageSquare, Settings, GraduationCap, UserCog, Brain, Gamepad2 } from
 "lucide-react";
 
 
@@ -22,7 +22,9 @@ const navItems = [
 { label: "Eligibility", page: "AcademicEligibility", icon: GraduationCap, roles: null },
 { label: "Analytics", page: "Analytics", icon: BarChart2, roles: null },
 { label: "Playlists", page: "Playlists", icon: ListVideo, roles: null },
-{ label: "Messages", page: "Messages", icon: MessageSquare, roles: null },
+{ label: "NxMessage", page: "Messages", icon: MessageSquare, roles: null },
+{ label: "In-Game AI", page: "InGameAssistant", icon: Gamepad2, roles: ["admin","head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","position_coach"] },
+{ label: "Development", page: "PlayerDevelopment", icon: Brain, roles: null },
 { label: "Users", page: "UserManagement", icon: UserCog, roles: ["admin", "head_coach", "athletic_director"] },
 ];
 
