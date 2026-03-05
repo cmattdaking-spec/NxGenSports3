@@ -31,6 +31,13 @@ export default function Layout({ children, currentPageName }) {
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
+    // Load saved color scheme and apply CSS variables
+    base44.entities.AppSettings.list().then((list) => {
+      if (list.length > 0 && list[0].primary_color) {
+        document.documentElement.style.setProperty("--color-primary", list[0].primary_color);
+        document.documentElement.style.setProperty("--color-secondary", list[0].secondary_color || list[0].primary_color);
+      }
+    }).catch(() => {});
   }, []);
 
   const role = user?.role || "coach";
