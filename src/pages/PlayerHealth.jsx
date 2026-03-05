@@ -73,9 +73,11 @@ export default function PlayerHealth() {
           <h1 className="text-2xl font-black text-white">Player <span className="text-orange-500">Health</span></h1>
           <p className="text-gray-500 text-sm">{records.length} health records</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          <Plus className="w-4 h-4" /> Log Health
-        </button>
+        {canEdit && (
+          <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <Plus className="w-4 h-4" /> Log Health
+          </button>
+        )}
       </div>
 
       {/* Summary Cards */}
