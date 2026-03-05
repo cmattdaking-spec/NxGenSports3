@@ -144,10 +144,10 @@ export default function Roster() {
                     ) : <span className="text-gray-600 text-xs">—</span>}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2 justify-end">
-                      <button onClick={() => openEdit(p)} className="text-gray-500 hover:text-orange-500 transition-colors"><Edit className="w-4 h-4" /></button>
-                      <button onClick={() => remove(p.id)} className="text-gray-500 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
-                    </div>
+                   <div className="flex items-center gap-2 justify-end">
+                     {canAdd && <button onClick={() => openEdit(p)} className="text-gray-500 hover:text-blue-400 transition-colors"><Edit className="w-4 h-4" /></button>}
+                     {canDelete && <button onClick={() => remove(p.id)} className="text-gray-500 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>}
+                   </div>
                   </td>
                 </tr>
               ))}
