@@ -27,6 +27,11 @@ export default function Settings() {
   const [settings, setSettings] = useState(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notifSaving, setNotifSaving] = useState(false);
+  const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [pwSuccess, setPwSuccess] = useState(false);
+  const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false });
 
   const canChangeColors = user?.role === "head_coach" || user?.role === "admin";
 
