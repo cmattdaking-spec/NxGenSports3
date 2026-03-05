@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, X, Zap, BookOpen, Eye } from "lucide-react";
+import { Plus, Search, Edit, Trash2, X, Zap, BookOpen, Eye, Pen } from "lucide-react";
 import PlayDesigner from "@/components/playbook/PlayDesigner";
 import PlayDiagramViewer from "@/components/playbook/PlayDiagramViewer";
 
@@ -76,6 +76,11 @@ export default function Playbook() {
             className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 text-orange-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
             <Zap className={`w-4 h-4 ${aiLoading ? "animate-pulse" : ""}`} />
             <span className="hidden md:inline">{aiLoading ? "Thinking..." : "AI Suggest"}</span>
+          </button>
+          <button onClick={() => { setDesignerPlay(null); setShowDesigner(true); }}
+            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+            <Pen className="w-4 h-4" />
+            <span className="hidden md:inline">Designer</span>
           </button>
           <button onClick={openAdd}
             className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
