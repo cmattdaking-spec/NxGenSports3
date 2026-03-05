@@ -136,7 +136,10 @@ export default function Layout({ children, currentPageName }) {
         <SidebarContent />
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-orange-500 transition-all z-10">
+          className="absolute -right-3 top-20 w-6 h-6 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all z-10"
+          style={{ '--hover-bg': 'var(--color-primary, #3b82f6)' }}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--color-primary, #3b82f6)'}
+          onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}>
 
           {collapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
         </button>
