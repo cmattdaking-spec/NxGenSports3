@@ -70,6 +70,14 @@ export default function Settings() {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const handleToggleNotifications = async () => {
+    setNotifSaving(true);
+    const newVal = !notificationsEnabled;
+    setNotificationsEnabled(newVal);
+    await base44.auth.updateMe({ notifications_enabled: newVal });
+    setNotifSaving(false);
+  };
+
   const handleLogout = () => {
     base44.auth.logout();
   };
