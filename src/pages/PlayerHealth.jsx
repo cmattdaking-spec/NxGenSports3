@@ -149,10 +149,12 @@ export default function PlayerHealth() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2 justify-end">
-                        <button onClick={() => openEdit(r)} className="text-gray-500 hover:text-orange-500 transition-colors"><Edit className="w-4 h-4" /></button>
-                        <button onClick={() => remove(r.id)} className="text-gray-500 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
-                      </div>
+                      {canEdit && (
+                        <div className="flex items-center gap-2 justify-end">
+                          <button onClick={() => openEdit(r)} className="text-gray-500 hover:text-orange-500 transition-colors"><Edit className="w-4 h-4" /></button>
+                          <button onClick={() => remove(r.id)} className="text-gray-500 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
