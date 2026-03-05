@@ -35,8 +35,11 @@ export default function AcademicEligibility() {
   const ineligible = filtered.filter(p => p.academic_eligible === false);
 
   if (loading) return (
-    <div className="flex items-center justify-center h-full bg-[#0a0a0a]">
-      <div className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: "var(--color-primary,#3b82f6)", borderTopColor: "transparent" }} />
+    <div className="fixed inset-0 bg-[#0a0a0a] flex items-center justify-center z-50">
+      <div className="relative flex items-center justify-center">
+        <div className="w-16 h-16 border-2 border-gray-800 border-t-[var(--color-primary,#f97316)] rounded-full animate-spin absolute" />
+        <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8dea6f5ebfce20bad2a8c/871a00698_image_aaa46895.png" alt="NxDown" className="w-8 h-8 rounded-lg object-cover" />
+      </div>
     </div>
   );
 

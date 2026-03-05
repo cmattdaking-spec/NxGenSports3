@@ -39,7 +39,8 @@ export default function UserManagement() {
   useEffect(() => {
     base44.auth.me().then(u => {
       setUser(u);
-      if (u?.role !== "admin") return setLoading(false);
+      const allowed = ["admin", "head_coach", "athletic_director"];
+      if (!allowed.includes(u?.role)) return setLoading(false);
       base44.entities.User.list().then(list => {
         setAllUsers(list);
         setLoading(false);
@@ -48,6 +49,7 @@ export default function UserManagement() {
   }, []);
 
   const isAdmin = user?.role === "admin";
+  const canView = isAdmin || user?.role === "head_coach" || user?.role === "athletic_director";
 
   const saveRole = async (userId) => {
     await base44.entities.User.update(userId, { role: editRole });
@@ -67,13 +69,13 @@ export default function UserManagement() {
     setTimeout(() => setInviteMsg(""), 3000);
   };
 
-  if (!isAdmin) {
+  if (!canView) {
     return (
       <div className="bg-[#0a0a0a] min-h-full flex items-center justify-center">
         <div className="text-center text-gray-500">
           <Shield className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p className="font-semibold">Admin Access Only</p>
-          <p className="text-sm mt-1">You don't have permission to manage users.</p>
+          <p className="font-semibold">Access Restricted</p>
+          <p className="text-sm mt-1">Admin, Head Coach, or Athletic Director access required.</p>
         </div>
       </div>
     );
