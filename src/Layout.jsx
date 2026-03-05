@@ -8,8 +8,7 @@ import {
   Menu, X, TrendingUp, ClipboardList, Crosshair, BarChart2,
   ListVideo, MessageSquare, Settings, GraduationCap, UserCog } from
 "lucide-react";
-import { useEffect as _useEffect, useState as _useState } from "react";
-import LoadingScreen from "./components/LoadingScreen";
+
 
 const navItems = [
 { label: "Dashboard", page: "Dashboard", icon: Home, roles: null },
@@ -32,6 +31,8 @@ export default function Layout({ children, currentPageName }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [pageLoading, setPageLoading] = useState(false);
+  const [prevPage, setPrevPage] = useState(currentPageName);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
