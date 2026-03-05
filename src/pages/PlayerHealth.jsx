@@ -18,6 +18,7 @@ export default function PlayerHealth() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
   const [filterAvail, setFilterAvail] = useState("all");
+  const [user, setUser] = useState(null);
 
   const load = async () => {
     const [r, p] = await Promise.all([
@@ -26,7 +27,9 @@ export default function PlayerHealth() {
     ]);
     setRecords(r); setPlayers(p); setLoading(false);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); load(); }, []);
+
+  const canEdit = user?.role !== "athletic_director";
 
   const openAdd = () => {
     setEditing(null);
