@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Edit, Trash2, X, Zap, BookOpen } from "lucide-react";
-import PlayDesigner from "../components/playbook/PlayDesigner";
+import PlayDesigner from "@/components/playbook/PlayDesigner";
 
 const CATEGORIES = ["run","pass","screen","play_action","blitz","coverage","zone","man","punt","kick","return"];
 const UNITS = ["offense","defense","special_teams"];
