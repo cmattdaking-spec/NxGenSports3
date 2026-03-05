@@ -84,24 +84,38 @@ export default function Layout({ children, currentPageName }) {
       })}
       </nav>
 
-      {/* User */}
-      {user &&
-    <div className={`border-t border-gray-800 p-3 ${collapsed ? "flex justify-center" : ""}`}>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-xs font-bold">
-                {user.full_name?.[0] || user.email?.[0] || "C"}
-              </span>
-            </div>
-            {!collapsed &&
-        <div className="min-w-0">
-                <p className="text-white text-sm font-medium truncate">{user.full_name || "Coach"}</p>
-                <p className="text-gray-500 text-xs capitalize">{role.replace("_", " ")}</p>
+      {/* Settings + User */}
+      <div className={`border-t border-gray-800 p-2 space-y-1`}>
+        <Link
+          to={createPageUrl("Settings")}
+          onClick={() => setMobileOpen(false)}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group
+            ${currentPageName === "Settings"
+              ? "bg-[var(--color-primary,#3b82f6)] text-white shadow-lg"
+              : "text-gray-400 hover:text-white hover:bg-white/5"}`
+          }
+        >
+          <Settings className="w-5 h-5 flex-shrink-0" />
+          {!collapsed && <span className="text-sm font-medium">Settings</span>}
+        </Link>
+        {user &&
+          <div className={`p-2 ${collapsed ? "flex justify-center" : ""}`}>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--color-primary, #3b82f6)" }}>
+                <span className="text-white text-xs font-bold">
+                  {user.full_name?.[0] || user.email?.[0] || "C"}
+                </span>
               </div>
-        }
+              {!collapsed &&
+                <div className="min-w-0">
+                  <p className="text-white text-sm font-medium truncate">{user.full_name || "Coach"}</p>
+                  <p className="text-gray-500 text-xs capitalize">{role.replace(/_/g, " ")}</p>
+                </div>
+              }
+            </div>
           </div>
-        </div>
-    }
+        }
+      </div>
     </div>;
 
 
