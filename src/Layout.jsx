@@ -8,6 +8,8 @@ import {
   Menu, X, TrendingUp, ClipboardList, Crosshair, BarChart2,
   ListVideo, MessageSquare, Settings, GraduationCap, UserCog } from
 "lucide-react";
+import { useEffect as _useEffect, useState as _useState } from "react";
+import LoadingScreen from "./components/LoadingScreen";
 
 const navItems = [
 { label: "Dashboard", page: "Dashboard", icon: Home, roles: null },
@@ -22,7 +24,7 @@ const navItems = [
 { label: "Analytics", page: "Analytics", icon: BarChart2, roles: null },
 { label: "Playlists", page: "Playlists", icon: ListVideo, roles: null },
 { label: "Messages", page: "Messages", icon: MessageSquare, roles: null },
-{ label: "Users", page: "UserManagement", icon: UserCog, roles: ["admin"] },
+{ label: "Users", page: "UserManagement", icon: UserCog, roles: ["admin", "head_coach", "athletic_director"] },
 ];
 
 
