@@ -176,6 +176,22 @@ export default function Playbook() {
       {/* Diagram Viewer */}
       {diagramPlay && <PlayDiagramViewer play={diagramPlay} onClose={() => setDiagramPlay(null)} />}
 
+      {/* Play Designer */}
+      {showDesigner && (
+        <PlayDesigner
+          onClose={() => { setShowDesigner(false); setDesignerPlay(null); }}
+          initialData={designerPlay ? { elements: designerPlay._designerElements || [] } : undefined}
+          onSave={async ({ dataUrl, elements }) => {
+            if (designerPlay) {
+              await base44.entities.Play.update(designerPlay.id, { diagram_data: dataUrl, _designerElements: elements });
+            } else {
+              await base44.entities.Play.create({ name: "Untitled Play", unit: "offense", category: "run", diagram_data: dataUrl, _designerElements: elements });
+            }
+            load();
+          }}
+        />
+      )}
+
       {/* Add/Edit Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
