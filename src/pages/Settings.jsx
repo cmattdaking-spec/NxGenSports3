@@ -196,6 +196,27 @@ export default function Settings() {
         )}
       </div>
 
+      {/* Push Notifications */}
+      <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5">
+        <h2 className="text-white font-bold mb-1 flex items-center gap-2">
+          <Bell className="w-4 h-4 text-[var(--color-primary,#3b82f6)]" /> Push Notifications
+        </h2>
+        <p className="text-gray-500 text-xs mb-4">Get notified about team updates, messages, and alerts</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-white text-sm font-medium">Enable Notifications</p>
+            <p className="text-gray-500 text-xs mt-0.5">{notificationsEnabled ? "You will receive push notifications" : "Notifications are off"}</p>
+          </div>
+          <button
+            onClick={handleToggleNotifications}
+            disabled={notifSaving}
+            className={`relative w-12 h-6 rounded-full transition-all duration-300 ${notificationsEnabled ? "bg-[var(--color-primary,#3b82f6)]" : "bg-gray-700"} disabled:opacity-50`}
+          >
+            <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${notificationsEnabled ? "left-6" : "left-0.5"}`} />
+          </button>
+        </div>
+      </div>
+
       {/* Logout */}
       <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5">
         <h2 className="text-white font-bold mb-4">Account</h2>
