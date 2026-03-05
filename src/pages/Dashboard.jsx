@@ -16,16 +16,22 @@ export default function Dashboard() {
   const [practices, setPractices] = useState([]);
   const [opponents, setOpponents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiDismissed, setAiDismissed] = useState(false);
 
   useEffect(() => {
     Promise.all([
+      base44.auth.me().catch(() => null),
       base44.entities.Player.list(),
       base44.entities.PlayerHealth.list(),
       base44.entities.Play.list(),
       base44.entities.GamePlan.list(),
       base44.entities.PracticePlan.list(),
       base44.entities.Opponent.list()
-    ]).then(([p, h, pl, gp, pr, op]) => {
+    ]).then(([u, p, h, pl, gp, pr, op]) => {
+      setUser(u);
       setPlayers(p);
       setHealthRecords(h);
       setPlays(pl);
@@ -33,8 +39,41 @@ export default function Dashboard() {
       setPractices(pr);
       setOpponents(op);
       setLoading(false);
+      // Load AI suggestions after data is ready
+      loadAISuggestions(u, p, h, pl, gp, pr, op);
     });
   }, []);
+
+  const loadAISuggestions = async (u, p, h, pl, gp, pr, op) => {
+    if (!u) return;
+    setAiLoading(true);
+    const role = u.role || "coach";
+    const injured = p.filter(pl => pl.status === "injured").length;
+    const nextGame = op.find(o => new Date(o.game_date) >= new Date());
+    const upcomingPractice = pr.find(practice => practice.status !== "completed" && new Date(practice.date) >= new Date());
+    const context = `Role: ${role}. Players: ${p.length}. Injured: ${injured}. Plays in playbook: ${pl.length}. Game plans: ${gp.length}. Next game: ${nextGame ? nextGame.name + " on " + nextGame.game_date : "none"}. Upcoming practice: ${upcomingPractice ? upcomingPractice.title + " on " + upcomingPractice.date : "none"}.`;
+    const res = await base44.integrations.Core.InvokeLLM({
+      prompt: `You are an AI assistant for a football team management app. Based on the current team data, generate 3 personalized action suggestions for a user with role "${role}". Keep each suggestion concise (under 15 words). Focus on the most impactful next steps given the data. Context: ${context}`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          suggestions: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                text: { type: "string" },
+                page: { type: "string", description: "One of: Roster, Playbook, DepthChart, GamePlan, Practice, Scouting, PlayerHealth, Analytics" },
+                icon: { type: "string", description: "One of: Users, BookOpen, Target, Activity, TrendingUp, ClipboardList, Crosshair" }
+              }
+            }
+          }
+        }
+      }
+    });
+    setAiSuggestions(res?.suggestions || []);
+    setAiLoading(false);
+  };
 
   const injured = players.filter(p => p.status === "injured");
   const limited = healthRecords.filter(h => h.availability === "limited" || h.availability === "out");
