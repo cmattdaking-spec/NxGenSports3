@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import {
   Users, BookOpen, Target, Activity, TrendingUp,
   ClipboardList, Crosshair, Zap, AlertTriangle,
-  ArrowRight, Shield
+  ArrowRight, Shield, Sparkles, X, ChevronRight
 } from "lucide-react";
 
 export default function Dashboard() {
