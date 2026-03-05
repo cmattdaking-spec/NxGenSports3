@@ -31,7 +31,7 @@ export default function Settings() {
   const canChangeColors = user?.role === "head_coach" || user?.role === "admin";
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    base44.auth.me().then(u => { setUser(u); setNotificationsEnabled(u?.notifications_enabled || false); }).catch(() => {});
     base44.entities.AppSettings.list().then((list) => {
       if (list.length > 0) {
         setSettings(list[0]);
