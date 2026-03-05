@@ -162,7 +162,7 @@ export default function Layout({ children, currentPageName }) {
           <button onClick={() => setMobileOpen(true)} className="text-gray-400">
             <Menu className="w-6 h-6" />
           </button>
-          <span className="text-white font-black text-lg">Nx<span className="text-orange-500">Down</span></span>
+          <span className="text-white font-black text-lg">Nx<span style={{ color: "var(--color-primary, #3b82f6)" }}>Down</span></span>
           <div className="w-6" />
         </header>
 
