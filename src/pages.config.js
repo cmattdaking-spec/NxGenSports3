@@ -55,6 +55,7 @@ import GamePlan from './pages/GamePlan';
 import Practice from './pages/Practice';
 import Scouting from './pages/Scouting';
 import PlayerHealth from './pages/PlayerHealth';
+import Analytics from './pages/Analytics';
 import __Layout from './Layout.jsx';
 
 
@@ -67,6 +68,7 @@ export const PAGES = {
     "Practice": Practice,
     "Scouting": Scouting,
     "PlayerHealth": PlayerHealth,
+    "Analytics": Analytics,
 }
 
 export const pagesConfig = {
