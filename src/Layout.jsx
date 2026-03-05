@@ -40,13 +40,15 @@ export default function Layout({ children, currentPageName }) {
   <div className="flex flex-col h-full">
       {/* Logo */}
       <div className={`flex items-center gap-3 px-4 py-5 border-b border-gray-800 ${collapsed ? "justify-center" : ""}`}>
-        <div className="w-9 h-9 rounded-lg nxdown-gradient flex items-center justify-center flex-shrink-0">
-          
-        </div>
+        <img
+          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8dea6f5ebfce20bad2a8c/871a00698_image_aaa46895.png"
+          alt="NxDown"
+          className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
+        />
         {!collapsed &&
       <div>
-            <span className="text-white font-black text-xl tracking-tight">Nx<span className="text-orange-500">Down</span></span>
-            <p className="text-gray-500 text-xs">Coaching Platform</p>
+            <span className="text-white font-black text-xl tracking-tight">Nx<span className="text-blue-400">Down</span></span>
+            <p className="text-gray-500 text-xs">Next-Gen Football Systems</p>
           </div>
       }
       </div>
