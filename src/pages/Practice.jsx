@@ -173,10 +173,12 @@ Generate a complete, structured practice plan with specific drills, focus areas,
         <div className="text-center py-20">
           <ClipboardList className="w-12 h-12 text-gray-700 mx-auto mb-3" />
           <p className="text-gray-500 mb-4">No practice plans yet.</p>
-          <button onClick={() => { setGenForm({ duration_minutes: 120, focus: "", opponent_id: "" }); setGenResult(null); setShowNxGenerator(true); }}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg text-sm font-medium">
-            Try Nx Generator
-          </button>
+          {canEdit && (
+            <button onClick={() => { setGenForm({ duration_minutes: 120, focus: "", opponent_id: "" }); setGenResult(null); setShowNxGenerator(true); }}
+              className="text-white px-5 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+              Try Nx Generator
+            </button>
+          )}
         </div>
       )}
 
