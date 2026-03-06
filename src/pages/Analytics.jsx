@@ -216,6 +216,11 @@ export default function Analytics() {
           <p className="text-gray-500 text-sm">Performance trends, comparisons & Nx insights</p>
         </div>
         <div className="flex gap-2 flex-wrap justify-end">
+          <button onClick={() => setShowODK(true)}
+            className="flex items-center gap-2 bg-[#141414] border border-gray-700 hover:border-gray-500 text-gray-300 px-3 py-2 rounded-lg text-sm font-medium">
+            <Upload className="w-4 h-4" />
+            <span className="hidden md:inline">ODK Import</span>
+          </button>
           <button onClick={getAIInsight} disabled={aiLoading || !selectedPlayer}
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border"
             style={{ backgroundColor: "var(--color-primary,#f97316)1a", borderColor: "var(--color-primary,#f97316)4d", color: "var(--color-primary,#f97316)" }}>
