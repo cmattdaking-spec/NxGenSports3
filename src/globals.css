@@ -41,21 +41,8 @@ body {
   border-radius: 2px;
 }
 
-/* Global accent overrides — all focus rings and primary accents use the chosen color scheme */
+/* Global: all inputs/selects/textareas use the chosen color scheme on focus */
 input:focus, select:focus, textarea:focus {
   border-color: var(--color-primary, #f97316) !important;
   outline: none;
-}
-
-.btn-primary {
-  background-color: var(--color-primary, #f97316) !important;
-}
-
-.accent-primary {
-  color: var(--color-primary, #f97316) !important;
-}
-
-/* Page title accent spans */
-.title-accent {
-  color: var(--color-primary, #f97316);
 }
