@@ -100,25 +100,33 @@ export default function Playbook() {
           <p className="text-gray-500 text-sm">{plays.length} plays in library</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setShowNxPlayAI(true)}
-            className="flex items-center gap-2 bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 text-purple-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
-            <Brain className="w-4 h-4" />
-            <span className="hidden md:inline">NxPlay AI</span>
-          </button>
-          <button onClick={getAISuggestions} disabled={aiLoading}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border" style={{ backgroundColor: "var(--color-primary,#f97316)18", borderColor: "var(--color-primary,#f97316)55", color: "var(--color-primary,#f97316)" }}>
-            <Zap className={`w-4 h-4 ${aiLoading ? "animate-pulse" : ""}`} />
-            <span className="hidden md:inline">{aiLoading ? "Thinking..." : "NxPlay"}</span>
-          </button>
-          <button onClick={() => { setDesignerPlay(null); setShowDesigner(true); }}
-            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
-            <Pen className="w-4 h-4" />
-            <span className="hidden md:inline">Designer</span>
-          </button>
-          <button onClick={openAdd}
-            className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
-            <Plus className="w-4 h-4" /> Add Play
-          </button>
+          {canUseAI && (
+            <button onClick={() => setShowNxPlayAI(true)}
+              className="flex items-center gap-2 bg-teal-500/10 border border-teal-500/30 hover:bg-teal-500/20 text-teal-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
+              <Brain className="w-4 h-4" />
+              <span className="hidden md:inline">NxPlay AI</span>
+            </button>
+          )}
+          {canUseAI && (
+            <button onClick={getAISuggestions} disabled={aiLoading}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border" style={{ backgroundColor: "var(--color-primary,#f97316)18", borderColor: "var(--color-primary,#f97316)55", color: "var(--color-primary,#f97316)" }}>
+              <Zap className={`w-4 h-4 ${aiLoading ? "animate-pulse" : ""}`} />
+              <span className="hidden md:inline">{aiLoading ? "Thinking..." : "NxPlay"}</span>
+            </button>
+          )}
+          {canCreate && (
+            <button onClick={() => { setDesignerPlay(null); setShowDesigner(true); }}
+              className="flex items-center gap-2 bg-teal-600/20 border border-teal-500/30 hover:bg-teal-600/30 text-teal-300 px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+              <Pen className="w-4 h-4" />
+              <span className="hidden md:inline">Designer</span>
+            </button>
+          )}
+          {canCreate && (
+            <button onClick={openAdd}
+              className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+              <Plus className="w-4 h-4" /> Add Play
+            </button>
+          )}
         </div>
       </div>
 
