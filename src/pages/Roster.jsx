@@ -125,7 +125,15 @@ export default function Roster() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-300 text-sm font-mono">{p.position}</td>
+                  <td className="px-4 py-3 text-gray-300 text-sm font-mono">
+                    <div>{p.position}</div>
+                    {(p.offensive_position || p.defensive_position) && (
+                      <div className="flex gap-1 mt-0.5">
+                        {p.offensive_position && <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">{p.offensive_position}</span>}
+                        {p.defensive_position && <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">{p.defensive_position}</span>}
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${unitColor[p.unit] || "bg-gray-500/20 text-gray-400"}`}>
                       {p.unit?.replace("_", " ")}
@@ -232,6 +240,22 @@ export default function Roster() {
                    <label className="text-gray-400 text-xs mb-1 block">Overall Rating (0-100)</label>
                    <input type="number" min="0" max="100" value={form.overall_rating || ""} onChange={e => setForm({...form, overall_rating: +e.target.value})}
                      className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none" />
+                 </div>
+                 <div>
+                   <label className="text-gray-400 text-xs mb-1 block">Offensive Position</label>
+                   <select value={form.offensive_position || ""} onChange={e => setForm({...form, offensive_position: e.target.value})}
+                     className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none">
+                     <option value="">None</option>
+                     {["QB","RB","FB","WR","TE","LT","LG","C","RG","RT"].map(p => <option key={p} value={p}>{p}</option>)}
+                   </select>
+                 </div>
+                 <div>
+                   <label className="text-gray-400 text-xs mb-1 block">Defensive Position</label>
+                   <select value={form.defensive_position || ""} onChange={e => setForm({...form, defensive_position: e.target.value})}
+                     className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none">
+                     <option value="">None</option>
+                     {["DE","DT","NT","OLB","MLB","ILB","CB","SS","FS"].map(p => <option key={p} value={p}>{p}</option>)}
+                   </select>
                  </div>
                 </div>
                 <div>
