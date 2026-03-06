@@ -302,6 +302,139 @@ Avg Grade: ${avgGrade}, Recent Injuries: ${injuries}, Status: ${player.status}`,
         </button>
       </div>
 
+      {activeTab === "development" && (
+        <div>
+          {/* Team Report */}
+          {(teamLoading || teamReport) && (
+            <div className="bg-[#141414] border border-yellow-500/20 rounded-xl mb-6 overflow-hidden">
+              <div className="p-4 border-b border-gray-800 flex items-center gap-2">
+                <Star className="w-4 h-4 text-yellow-400" />
+                <span className="text-white font-semibold text-sm">Nx Team Prospect Report</span>
+              </div>
+              {teamLoading ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-3">
+                  <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-gray-500 text-sm">Analyzing entire roster...</p>
+                </div>
+              ) : teamReport && (
+                <div className="p-4 space-y-4">
+                  <p className="text-gray-300 text-sm">{teamReport.team_summary}</p>
+                  {teamReport.future_stars?.length > 0 && (
+                    <div>
+                      <p className="text-yellow-400 text-xs uppercase tracking-wider mb-2 flex items-center gap-1"><Star className="w-3 h-3" /> Future Stars</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {teamReport.future_stars.map((s, i) => (
+                          <div key={i} className="bg-[#1a1a1a] rounded-lg p-3 border border-yellow-500/10">
+                            <div className="flex items-center gap-2">
+                              <span className="text-white font-semibold text-sm">{s.player_name}</span>
+                              <span className="text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">{s.position}</span>
+                              <span className={`text-xs ml-auto ${POTENTIAL_COLOR[s.potential] || "text-gray-400"}`}>{s.potential}</span>
+                            </div>
+                            <p className="text-gray-400 text-xs mt-1">{s.reason}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {teamReport.depth_concerns?.length > 0 && (
+                    <div>
+                      <p className="text-red-400 text-xs uppercase tracking-wider mb-2">Depth Concerns</p>
+                      {teamReport.depth_concerns.map((c, i) => (
+                        <p key={i} className="text-gray-400 text-sm flex items-start gap-2"><span className="text-red-400 mt-0.5">·</span>{c}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Player Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {players.map(player => {
+              const pStats = devStats.filter(s => s.player_id === player.id);
+              const avgGrade = pStats.length ? (pStats.reduce((sum,s) => sum+(s.grade||0),0)/pStats.length).toFixed(1) : null;
+              const latestHealth = devHealth.filter(h => h.player_id === player.id)[0];
+              const isSelected = devSelectedPlayer?.id === player.id;
+              return (
+                <div key={player.id} className={`bg-[#141414] border rounded-xl overflow-hidden transition-all ${isSelected ? "border-orange-500/50" : "border-gray-800 hover:border-gray-700"}`}>
+                  <div className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400 font-bold text-sm">
+                          {player.first_name?.[0]}{player.last_name?.[0]}
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold text-sm">{player.first_name} {player.last_name}</p>
+                          <p className="text-gray-500 text-xs">{player.position} · {player.year || "—"}</p>
+                        </div>
+                      </div>
+                      {player.overall_rating && (
+                        <div className="text-right">
+                          <p className="text-orange-400 font-black text-lg">{player.overall_rating}</p>
+                          <p className="text-gray-600 text-xs">Rating</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2 mb-3 flex-wrap">
+                      {avgGrade && <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">Avg Grade: {avgGrade}</span>}
+                      {latestHealth && <span className={`text-xs px-2 py-0.5 rounded ${latestHealth.availability === "full" ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>{latestHealth.availability}</span>}
+                    </div>
+                    <button onClick={() => generateDevPlan(player)} disabled={devLoading && isSelected}
+                      className="w-full flex items-center justify-center gap-2 bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 text-orange-400 py-2 rounded-lg text-xs font-medium transition-all">
+                      <Brain className={`w-3.5 h-3.5 ${devLoading && isSelected ? "animate-pulse" : ""}`} />
+                      {devLoading && isSelected ? "Generating Plan..." : "Nx Development Plan"}
+                    </button>
+                  </div>
+                  {isSelected && devPlan && !devLoading && (
+                    <div className="border-t border-gray-800 p-4 space-y-3">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${POTENTIAL_COLOR[devPlan.potential_rating]} bg-yellow-500/10`}>{devPlan.potential_rating} Potential</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${RISK_COLOR[devPlan.injury_risk_level]}`}>{devPlan.injury_risk_level} Injury Risk</span>
+                      </div>
+                      <p className="text-gray-300 text-xs">{devPlan.overall_assessment}</p>
+                      {devPlan.short_term_goals?.length > 0 && (
+                        <div>
+                          <p className="text-orange-400 text-xs uppercase tracking-wider mb-1.5">Short-Term Goals</p>
+                          {devPlan.short_term_goals.map((g, i) => (
+                            <div key={i} className="flex items-start gap-2 mb-1.5">
+                              <Target className="w-3 h-3 text-orange-400 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-300 text-xs">{g.goal}</p>
+                                <p className="text-gray-500 text-xs">{g.timeline}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {devPlan.training_program && (
+                        <div className="bg-[#1a1a1a] rounded-lg p-3">
+                          <p className="text-blue-400 text-xs uppercase mb-2">Training Program</p>
+                          {devPlan.training_program.weekly_focus && <p className="text-gray-400 text-xs mb-2">{devPlan.training_program.weekly_focus}</p>}
+                          {devPlan.training_program.skill_drills?.slice(0,3).map((d,i) => (
+                            <p key={i} className="text-gray-300 text-xs flex gap-1.5"><span className="text-blue-400">·</span>{d}</p>
+                          ))}
+                          {devPlan.training_program.load_recommendation && (
+                            <p className="text-yellow-400 text-xs mt-2 italic">{devPlan.training_program.load_recommendation}</p>
+                          )}
+                        </div>
+                      )}
+                      {devPlan.career_projection && (
+                        <div className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">
+                          <p className="text-green-400 text-xs uppercase mb-1">Career Projection</p>
+                          <p className="text-gray-300 text-xs">{devPlan.career_projection}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {activeTab === "sc" && <>
       {/* Load Alerts - HC/Trainer only */}
       {canSeeLoadAlerts && loadAlerts.length > 0 && (
         <div className="mb-5 space-y-2">
