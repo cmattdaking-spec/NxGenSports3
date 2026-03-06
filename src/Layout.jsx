@@ -10,20 +10,26 @@ import {
 "lucide-react";
 
 
+// Coordinator-level roles (includes associate_head_coach when designated)
+const COORDINATOR_ROLES = ["admin","head_coach","associate_head_coach","athletic_director","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach","trainer"];
+const COORD_ONLY = ["admin","head_coach","associate_head_coach","athletic_director","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach","trainer"];
+const GAME_PLAN_ROLES = ["admin","head_coach","associate_head_coach","athletic_director","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach","trainer"];
+const IN_GAME_ROLES = ["admin","head_coach","associate_head_coach","athletic_director","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
+
 const navItems = [
 { label: "Dashboard", page: "Dashboard", icon: Home, roles: null },
 { label: "Roster", page: "Roster", icon: Users, roles: null },
 { label: "Depth Chart", page: "DepthChart", icon: TrendingUp, roles: null },
-{ label: "Playbook", page: "Playbook", icon: BookOpen, roles: ["admin","head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","position_coach","trainer"] },
-{ label: "Game Plans", page: "GamePlan", icon: Target, roles: ["admin","head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","position_coach","trainer"] },
+{ label: "Playbook", page: "Playbook", icon: BookOpen, roles: COORD_ONLY },
+{ label: "Game Plans", page: "GamePlan", icon: Target, roles: GAME_PLAN_ROLES },
 { label: "Practice", page: "Practice", icon: ClipboardList, roles: null },
-{ label: "Scouting", page: "Scouting", icon: Crosshair, roles: ["admin","head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","position_coach","trainer"] },
+{ label: "Scouting", page: "Scouting", icon: Crosshair, roles: COORD_ONLY },
 { label: "Health", page: "PlayerHealth", icon: Activity, roles: null },
 { label: "Eligibility", page: "AcademicEligibility", icon: GraduationCap, roles: null },
 { label: "Analytics", page: "Analytics", icon: BarChart2, roles: null },
 { label: "Playlists", page: "Playlists", icon: ListVideo, roles: null },
 { label: "NxMessage", page: "Messages", icon: MessageSquare, roles: null },
-{ label: "In-Game AI", page: "InGameAssistant", icon: Gamepad2, roles: ["admin","head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","position_coach"] },
+{ label: "In-Game AI", page: "InGameAssistant", icon: Gamepad2, roles: IN_GAME_ROLES },
 { label: "Development", page: "PlayerDevelopment", icon: Brain, roles: null },
 { label: "Users", page: "UserManagement", icon: UserCog, roles: ["admin", "head_coach", "athletic_director"] },
 ];
@@ -56,10 +62,12 @@ export default function Layout({ children, currentPageName }) {
     }).catch(() => {});
   }, []);
 
+  // Effective role: associate_head_coach gets coordinator-level access when designated
   const role = user?.role || "coach";
+  const effectiveRole = (user?.is_associate_head_coach && role !== "head_coach") ? "associate_head_coach" : role;
 
   const filteredNav = navItems.filter((item) => {
-    if (item.roles && !item.roles.includes(role)) return false;
+    if (item.roles && !item.roles.includes(effectiveRole)) return false;
     return true;
   });
 
@@ -133,7 +141,10 @@ export default function Layout({ children, currentPageName }) {
               {!collapsed &&
                 <div className="min-w-0">
                   <p className="text-white text-sm font-medium truncate">{user.full_name || "Coach"}</p>
-                  <p className="text-gray-500 text-xs capitalize">{role.replace(/_/g, " ")}</p>
+                  <p className="text-gray-500 text-xs capitalize">
+                    {role.replace(/_/g, " ")}
+                    {user?.is_associate_head_coach && <span className="text-cyan-400 ml-1">(AC)</span>}
+                  </p>
                 </div>
               }
             </div>
