@@ -306,6 +306,18 @@ export default function Playbook() {
                 <textarea value={form.notes || ""} onChange={e => setForm({...form, notes: e.target.value})} rows={2}
                   className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500 resize-none" />
               </div>
+              {/* Private toggle */}
+              <div className="flex items-center gap-3 p-3 bg-[#1a1a1a] rounded-lg border border-gray-700">
+                <Lock className="w-4 h-4 text-teal-400 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-white text-sm font-medium">Private Play</p>
+                  <p className="text-gray-500 text-xs">Only visible to you</p>
+                </div>
+                <button type="button" onClick={() => setForm(f => ({ ...f, is_private: !f.is_private }))}
+                  className={`w-10 h-6 rounded-full transition-colors ${form.is_private ? "bg-teal-500" : "bg-gray-700"}`}>
+                  <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${form.is_private ? "translate-x-4" : "translate-x-0"}`} />
+                </button>
+              </div>
               <div className="flex gap-3 pt-1">
                 <button onClick={() => setShowForm(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-lg text-sm">Cancel</button>
                 <button onClick={save} className="flex-1 text-white py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>Save Play</button>
