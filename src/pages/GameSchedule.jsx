@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Calendar, MapPin, ChevronDown, ChevronUp, Shield, Swords, Target, TrendingUp, Brain, X } from "lucide-react";
+import { Calendar, MapPin, ChevronDown, ChevronUp, Shield, Swords, Target, TrendingUp, Brain, X, Gamepad2 } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
+import LiveGameTracker from "../components/schedule/LiveGameTracker";
 
 const LEVELS = ["Varsity","JV","Freshman"];
 
@@ -25,6 +26,7 @@ export default function GameSchedule() {
   const [scoutLoading, setScoutLoading] = useState(false);
   const [scoutReport, setScoutReport] = useState(null);
   const [teamPreview, setTeamPreview] = useState(null);
+  const [liveTracker, setLiveTracker] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -124,6 +126,11 @@ Provide a concise game-week scouting preview including threat assessment, keys t
                   <span className="hidden md:inline">Game Plan</span>
                 </Link>
               )}
+              <button onClick={() => setLiveTracker(opp)}
+                className="flex items-center gap-1 bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white px-2 py-1.5 rounded-lg text-xs transition-all">
+                <Gamepad2 className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">Tracker</span>
+              </button>
               <button onClick={() => setExpanded(isExpanded ? null : opp.id)} className="text-gray-500 hover:text-white p-1.5">
                 {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
@@ -260,6 +267,9 @@ Provide a concise game-week scouting preview including threat assessment, keys t
           </Link>
         </div>
       )}
+
+      {/* Live Game Tracker */}
+      {liveTracker && <LiveGameTracker opponent={liveTracker} onClose={() => setLiveTracker(null)} />}
 
       {/* Scout Preview Modal */}
       {scoutModal && (
