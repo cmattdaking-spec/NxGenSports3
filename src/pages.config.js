@@ -63,6 +63,8 @@ import Roster from './pages/Roster';
 import Scouting from './pages/Scouting';
 import Settings from './pages/Settings';
 import UserManagement from './pages/UserManagement';
+import StrengthConditioning from './pages/StrengthConditioning';
+import GameSchedule from './pages/GameSchedule';
 import __Layout from './Layout.jsx';
 
 
@@ -83,6 +85,8 @@ export const PAGES = {
     "Scouting": Scouting,
     "Settings": Settings,
     "UserManagement": UserManagement,
+    "StrengthConditioning": StrengthConditioning,
+    "GameSchedule": GameSchedule,
 }
 
 export const pagesConfig = {
