@@ -52,8 +52,10 @@ import Analytics from './pages/Analytics';
 import Dashboard from './pages/Dashboard';
 import DepthChart from './pages/DepthChart';
 import GamePlan from './pages/GamePlan';
+import InGameAssistant from './pages/InGameAssistant';
 import Messages from './pages/Messages';
 import Playbook from './pages/Playbook';
+import PlayerDevelopment from './pages/PlayerDevelopment';
 import PlayerHealth from './pages/PlayerHealth';
 import Playlists from './pages/Playlists';
 import Practice from './pages/Practice';
@@ -61,8 +63,6 @@ import Roster from './pages/Roster';
 import Scouting from './pages/Scouting';
 import Settings from './pages/Settings';
 import UserManagement from './pages/UserManagement';
-import InGameAssistant from './pages/InGameAssistant';
-import PlayerDevelopment from './pages/PlayerDevelopment';
 import __Layout from './Layout.jsx';
 
 
@@ -72,8 +72,10 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "DepthChart": DepthChart,
     "GamePlan": GamePlan,
+    "InGameAssistant": InGameAssistant,
     "Messages": Messages,
     "Playbook": Playbook,
+    "PlayerDevelopment": PlayerDevelopment,
     "PlayerHealth": PlayerHealth,
     "Playlists": Playlists,
     "Practice": Practice,
@@ -81,8 +83,6 @@ export const PAGES = {
     "Scouting": Scouting,
     "Settings": Settings,
     "UserManagement": UserManagement,
-    "InGameAssistant": InGameAssistant,
-    "PlayerDevelopment": PlayerDevelopment,
 }
 
 export const pagesConfig = {
