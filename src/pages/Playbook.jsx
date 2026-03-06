@@ -132,18 +132,18 @@ export default function Playbook() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-5">
-        <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search plays..."
-            className="w-full bg-[#141414] border border-gray-800 text-white pl-9 pr-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+      <div className="relative flex-1 min-w-48">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search plays..."
+          className="w-full bg-[#141414] border border-gray-800 text-white pl-9 pr-3 py-2 rounded-lg text-sm focus:outline-none" />
         </div>
         <select value={filterUnit} onChange={e => setFilterUnit(e.target.value)}
-          className="bg-[#141414] border border-gray-800 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500">
+          className="bg-[#141414] border border-gray-800 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none">
           <option value="all">All Units</option>
           {UNITS.map(u => <option key={u} value={u}>{u.replace("_"," ")}</option>)}
         </select>
         <select value={filterCat} onChange={e => setFilterCat(e.target.value)}
-          className="bg-[#141414] border border-gray-800 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500">
+          className="bg-[#141414] border border-gray-800 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none">
           <option value="all">All Types</option>
           {CATEGORIES.map(c => <option key={c} value={c}>{c.replace("_"," ")}</option>)}
         </select>
