@@ -74,7 +74,7 @@ export default function Playbook() {
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-white">Play<span className="text-orange-500">book</span></h1>
+          <h1 className="text-2xl font-black text-white">Play<span style={{ color: "var(--color-primary,#f97316)" }}>book</span></h1>
           <p className="text-gray-500 text-sm">{plays.length} plays in library</p>
         </div>
         <div className="flex gap-2">
@@ -84,7 +84,7 @@ export default function Playbook() {
             <span className="hidden md:inline">NxPlay AI</span>
           </button>
           <button onClick={getAISuggestions} disabled={aiLoading}
-            className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 text-orange-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border" style={{ backgroundColor: "var(--color-primary,#f97316)18", borderColor: "var(--color-primary,#f97316)55", color: "var(--color-primary,#f97316)" }}>
             <Zap className={`w-4 h-4 ${aiLoading ? "animate-pulse" : ""}`} />
             <span className="hidden md:inline">{aiLoading ? "Thinking..." : "NxPlay"}</span>
           </button>
@@ -94,7 +94,7 @@ export default function Playbook() {
             <span className="hidden md:inline">Designer</span>
           </button>
           <button onClick={openAdd}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
             <Plus className="w-4 h-4" /> Add Play
           </button>
         </div>
@@ -121,10 +121,10 @@ export default function Playbook() {
 
       {/* AI Suggestions */}
       {aiSuggestions && (
-        <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 mb-6">
+        <div className="rounded-xl p-4 mb-6 border" style={{ backgroundColor: "var(--color-primary,#f97316)15", borderColor: "var(--color-primary,#f97316)40" }}>
           <div className="flex items-center gap-2 mb-3">
-            <Zap className="w-4 h-4 text-orange-500" />
-            <span className="text-orange-400 font-medium text-sm">NxPlay Suggestions</span>
+            <Zap className="w-4 h-4" style={{ color: "var(--color-primary,#f97316)" }} />
+            <span className="font-medium text-sm" style={{ color: "var(--color-primary,#f97316)" }}>NxPlay Suggestions</span>
             <button onClick={() => setAiSuggestions("")} className="ml-auto text-gray-500 hover:text-white"><X className="w-4 h-4" /></button>
           </div>
           <p className="text-gray-300 text-sm whitespace-pre-line">{aiSuggestions}</p>
@@ -149,7 +149,7 @@ export default function Playbook() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {unitPlays.map(p => (
-                    <div key={p.id} className="bg-[#141414] border border-gray-800 rounded-xl p-4 hover:border-orange-500/30 transition-all group">
+                    <div key={p.id} className="bg-[#141414] border border-gray-800 rounded-xl p-4 transition-all group" style={{ "--hover-border": "var(--color-primary,#f97316)55" }} onMouseEnter={e => e.currentTarget.style.borderColor = "var(--color-primary,#f97316)55"} onMouseLeave={e => e.currentTarget.style.borderColor = ""}>
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <p className="text-white font-bold">{p.name}</p>
@@ -158,14 +158,14 @@ export default function Playbook() {
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => setDiagramPlay(p)} className="text-gray-500 hover:text-blue-400 p-1" title="View Diagram"><Eye className="w-3.5 h-3.5" /></button>
                           <button onClick={() => { setDesignerPlay(p); setShowDesigner(true); }} className="text-gray-500 hover:text-purple-400 p-1" title="Edit Diagram"><Pen className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => openEdit(p)} className="text-gray-500 hover:text-orange-500 p-1"><Edit className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => openEdit(p)} className="text-gray-500 p-1" onMouseEnter={e => e.currentTarget.style.color = "var(--color-primary,#f97316)"} onMouseLeave={e => e.currentTarget.style.color = ""}><Edit className="w-3.5 h-3.5" /></button>
                           <button onClick={() => remove(p.id)} className="text-gray-500 hover:text-red-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         <span className={`text-xs px-2 py-0.5 rounded-full ${catColor[p.category] || "bg-gray-500/20 text-gray-400"}`}>{p.category?.replace("_"," ")}</span>
                         {p.down_distance && <span className="text-xs px-2 py-0.5 rounded-full bg-gray-800 text-gray-400">{p.down_distance}</span>}
-                        {p.ai_suggested && <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 flex items-center gap-1"><Zap className="w-2.5 h-2.5" />AI</span>}
+                        {p.ai_suggested && <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1" style={{ backgroundColor: "var(--color-primary,#f97316)25", color: "var(--color-primary,#f97316)" }}><Zap className="w-2.5 h-2.5" />Nx</span>}
                       </div>
                       {p.description && <p className="text-gray-500 text-xs mt-2 line-clamp-2">{p.description}</p>}
                     </div>
@@ -275,7 +275,7 @@ export default function Playbook() {
               </div>
               <div className="flex gap-3 pt-1">
                 <button onClick={() => setShowForm(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-lg text-sm">Cancel</button>
-                <button onClick={save} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg text-sm font-medium">Save Play</button>
+                <button onClick={save} className="flex-1 text-white py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>Save Play</button>
               </div>
             </div>
           </div>

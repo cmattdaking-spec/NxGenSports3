@@ -178,10 +178,10 @@ Generate a detailed JSON report with strategic insights.`,
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-white">Opponent <span className="text-orange-500">Scouting</span></h1>
+          <h1 className="text-2xl font-black text-white">Opponent <span style={{ color: "var(--color-primary,#f97316)" }}>Scouting</span></h1>
           <p className="text-gray-500 text-sm">{opponents.length} opponents · Powered by Nx Intelligence</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        <button onClick={openAdd} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
           <Plus className="w-4 h-4" /> Add Opponent
         </button>
       </div>
@@ -406,7 +406,7 @@ Generate a detailed JSON report with strategic insights.`,
               ))}
               <div className="flex gap-3 pt-1">
                 <button onClick={() => setShowForm(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-lg text-sm">Cancel</button>
-                <button onClick={save} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg text-sm font-medium">Save Opponent</button>
+                <button onClick={save} className="flex-1 text-white py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>Save Opponent</button>
               </div>
             </div>
           </div>

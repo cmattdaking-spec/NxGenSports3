@@ -60,7 +60,7 @@ export default function Roster() {
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-white">Roster <span className="text-orange-500">Management</span></h1>
+          <h1 className="text-2xl font-black text-white">Roster <span style={{ color: "var(--color-primary,#f97316)" }}>Management</span></h1>
           <p className="text-gray-500 text-sm">{players.length} players</p>
         </div>
         {canAdd && (
@@ -112,10 +112,10 @@ export default function Roster() {
                 <tr><td colSpan={8} className="text-center text-gray-500 py-10">No players found</td></tr>
               ) : filtered.map(p => (
                 <tr key={p.id} className="border-b border-gray-800/50 hover:bg-white/2 transition-colors">
-                  <td className="px-4 py-3 text-orange-500 font-bold text-sm">#{p.number || "--"}</td>
+                  <td className="px-4 py-3 font-bold text-sm" style={{ color: "var(--color-primary,#f97316)" }}>#{p.number || "--"}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
                         {p.first_name?.[0]}{p.last_name?.[0]}
                       </div>
                       <div>
@@ -138,7 +138,7 @@ export default function Roster() {
                     {p.overall_rating ? (
                       <div className="flex items-center gap-2">
                         <div className="w-16 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-orange-500 rounded-full" style={{ width: `${p.overall_rating}%` }} />
+                          <div className="h-full rounded-full" style={{ width: `${p.overall_rating}%`, backgroundColor: "var(--color-primary,#f97316)" }} />
                         </div>
                         <span className="text-gray-400 text-xs">{p.overall_rating}</span>
                       </div>
@@ -240,7 +240,7 @@ export default function Roster() {
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setShowForm(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-lg text-sm transition-colors">Cancel</button>
-                <button onClick={save} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg text-sm font-medium transition-colors">Save Player</button>
+                <button onClick={save} className="flex-1 text-white py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>Save Player</button>
               </div>
             </div>
           </div>
