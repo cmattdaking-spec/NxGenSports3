@@ -258,12 +258,12 @@ Generate a complete, structured practice plan with specific drills, focus areas,
       {/* Nx Generator Modal */}
       {showNxGenerator && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-[#141414] border border-purple-500/30 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#141414] border border-teal-500/30 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-gray-800">
               <div className="flex items-center gap-2">
-                <Brain className="w-5 h-5 text-purple-400" />
+                <Brain className="w-5 h-5 text-teal-400" />
                 <h2 className="text-white font-bold">Nx Practice Generator</h2>
-                <span className="text-purple-400 text-xs bg-purple-500/20 px-2 py-0.5 rounded-full">AI-Powered</span>
+                <span className="text-teal-400 text-xs bg-teal-500/20 px-2 py-0.5 rounded-full">AI-Powered</span>
               </div>
               <button onClick={() => { setShowNxGenerator(false); setGenResult(null); }} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
@@ -276,12 +276,12 @@ Generate a complete, structured practice plan with specific drills, focus areas,
                     <div>
                       <label className="text-gray-400 text-xs mb-1 block">Duration (minutes)</label>
                       <input type="number" value={genForm.duration_minutes} onChange={e => setGenForm(f => ({ ...f, duration_minutes: +e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-purple-500" />
+                        className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none" />
                     </div>
                     <div>
                       <label className="text-gray-400 text-xs mb-1 block">Opponent to Prepare For</label>
                       <select value={genForm.opponent_id} onChange={e => setGenForm(f => ({ ...f, opponent_id: e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-purple-500">
+                        className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none">
                         <option value="">Auto-detect next game</option>
                         {opponents.filter(o => new Date(o.game_date) >= new Date()).map(o => (
                           <option key={o.id} value={o.id}>{o.name} ({o.game_date})</option>
@@ -292,7 +292,7 @@ Generate a complete, structured practice plan with specific drills, focus areas,
                       <label className="text-gray-400 text-xs mb-1 block">Additional Focus / Theme</label>
                       <input value={genForm.focus} onChange={e => setGenForm(f => ({ ...f, focus: e.target.value }))}
                         placeholder="e.g. Red Zone, Pass Rush, 3rd Down Conversion..."
-                        className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-purple-500" />
+                        className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none" />
                     </div>
                   </div>
 
@@ -318,7 +318,7 @@ Generate a complete, structured practice plan with specific drills, focus areas,
                   <div className="flex gap-3">
                     <button onClick={() => setShowNxGenerator(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-lg text-sm">Cancel</button>
                     <button onClick={generateNxPlan} disabled={genLoading}
-                      className="flex-1 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg text-sm font-medium">
+                      className="flex-1 flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white py-2.5 rounded-lg text-sm font-medium">
                       {genLoading ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -335,12 +335,12 @@ Generate a complete, structured practice plan with specific drills, focus areas,
                 </>
               ) : (
                 <div className="space-y-4">
-                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
+                  <div className="bg-teal-500/10 border border-teal-500/20 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-1">
-                      <Sparkles className="w-4 h-4 text-purple-400" />
+                      <Sparkles className="w-4 h-4 text-teal-400" />
                       <h3 className="text-white font-bold text-lg">{genResult.title}</h3>
                     </div>
-                    <p className="text-purple-300 text-sm italic">"{genResult.coaching_theme}"</p>
+                    <p className="text-teal-300 text-sm italic">"{genResult.coaching_theme}"</p>
                     <div className="flex gap-3 mt-2 text-xs text-gray-400">
                       <span>{genResult.total_minutes} min</span>
                       <span>·</span>
@@ -354,16 +354,16 @@ Generate a complete, structured practice plan with specific drills, focus areas,
                       {genResult.periods.map((p, i) => (
                         <div key={i} className="bg-[#1a1a1a] rounded-lg p-3 border border-gray-800">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="bg-purple-500 text-white text-xs font-bold px-2 py-0.5 rounded">{p.duration}m</span>
+                            <span className="bg-teal-600 text-white text-xs font-bold px-2 py-0.5 rounded">{p.duration}m</span>
                             <span className="text-white text-sm font-medium">{p.name}</span>
-                            {p.unit && <span className="text-purple-400 text-xs ml-auto">{p.unit}</span>}
+                            {p.unit && <span className="text-teal-400 text-xs ml-auto">{p.unit}</span>}
                           </div>
                           {p.drill && <p className="text-gray-400 text-xs">{p.drill}</p>}
                           {p.coaching_points?.length > 0 && (
                             <ul className="mt-1.5 space-y-0.5">
                               {p.coaching_points.map((pt, j) => (
                                 <li key={j} className="text-gray-500 text-xs flex items-start gap-1">
-                                  <span className="text-purple-400 mt-0.5">·</span> {pt}
+                                   <span className="text-teal-400 mt-0.5">·</span> {pt}
                                 </li>
                               ))}
                             </ul>
@@ -388,7 +388,7 @@ Generate a complete, structured practice plan with specific drills, focus areas,
 
                   <div className="flex gap-3">
                     <button onClick={() => setGenResult(null)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-lg text-sm">Regenerate</button>
-                    <button onClick={saveGeneratedPlan} className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-lg text-sm font-medium">
+                    <button onClick={saveGeneratedPlan} className="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-2.5 rounded-lg text-sm font-medium">
                       Save Practice Plan
                     </button>
                   </div>
