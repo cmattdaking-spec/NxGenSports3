@@ -6,7 +6,7 @@ import {
   Users, BookOpen, Target, Calendar, Activity,
   ChevronLeft, ChevronRight, Home, Shield, Zap,
   Menu, X, TrendingUp, ClipboardList, Crosshair, BarChart2,
-  ListVideo, MessageSquare, Settings, GraduationCap, UserCog, Brain, Gamepad2 } from
+  ListVideo, MessageSquare, Settings, GraduationCap, UserCog, Brain, Gamepad2, Dumbbell, CalendarDays } from
 "lucide-react";
 
 
@@ -19,12 +19,14 @@ const IN_GAME_ROLES = ["admin","head_coach","associate_head_coach","athletic_dir
 const navItems = [
 { label: "Dashboard", page: "Dashboard", icon: Home, roles: null },
 { label: "Roster", page: "Roster", icon: Users, roles: null },
+{ label: "Schedule", page: "GameSchedule", icon: CalendarDays, roles: null },
 { label: "Depth Chart", page: "DepthChart", icon: TrendingUp, roles: null },
 { label: "Playbook", page: "Playbook", icon: BookOpen, roles: COORD_ONLY },
 { label: "Game Plans", page: "GamePlan", icon: Target, roles: GAME_PLAN_ROLES },
 { label: "Practice", page: "Practice", icon: ClipboardList, roles: null },
 { label: "Scouting", page: "Scouting", icon: Crosshair, roles: COORD_ONLY },
 { label: "Health", page: "PlayerHealth", icon: Activity, roles: null },
+{ label: "S&C", page: "StrengthConditioning", icon: Dumbbell, roles: null },
 { label: "Eligibility", page: "AcademicEligibility", icon: GraduationCap, roles: null },
 { label: "Analytics", page: "Analytics", icon: BarChart2, roles: null },
 { label: "Playlists", page: "Playlists", icon: ListVideo, roles: null },
