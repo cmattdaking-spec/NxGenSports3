@@ -154,14 +154,18 @@ Generate a complete, structured practice plan with specific drills, focus areas,
           <p className="text-gray-500 text-sm">{plans.length} plans</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => { setGenForm({ duration_minutes: 120, focus: "", opponent_id: "" }); setGenResult(null); setShowNxGenerator(true); }}
-            className="flex items-center gap-2 bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 text-purple-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
-            <Brain className="w-4 h-4" />
-            <span className="hidden md:inline">Nx Generator</span>
-          </button>
-          <button onClick={openAdd} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
-            <Plus className="w-4 h-4" /> New Practice
-          </button>
+          {canEdit && (
+            <button onClick={() => { setGenForm({ duration_minutes: 120, focus: "", opponent_id: "" }); setGenResult(null); setShowNxGenerator(true); }}
+              className="flex items-center gap-2 bg-teal-500/10 border border-teal-500/30 hover:bg-teal-500/20 text-teal-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
+              <Brain className="w-4 h-4" />
+              <span className="hidden md:inline">Nx Generator</span>
+            </button>
+          )}
+          {canEdit && (
+            <button onClick={openAdd} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+              <Plus className="w-4 h-4" /> New Practice
+            </button>
+          )}
         </div>
       </div>
 
