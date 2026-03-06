@@ -4,6 +4,7 @@ import { Plus, Edit, Trash2, X, Activity, AlertTriangle, CheckCircle, Clock, Bra
 import LoadingScreen from "../components/LoadingScreen";
 
 const AVAILABILITY = ["full","limited","out","day_to_day"];
+const LOAD_ALERT_ROLES = ["head_coach","admin","trainer","strength_conditioning_coordinator"];
 const AVAILABILITY_CONFIG = {
   full: { color: "bg-green-500/20 text-green-400 border-green-500/30", icon: CheckCircle, label: "Full" },
   limited: { color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30", icon: Clock, label: "Limited" },
@@ -16,6 +17,8 @@ export default function PlayerHealth() {
   const [records, setRecords] = useState([]);
   const [players, setPlayers] = useState([]);
   const [stats, setStats] = useState([]);
+  const [workouts, setWorkouts] = useState([]);
+  const [loadAlerts, setLoadAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -27,16 +30,24 @@ export default function PlayerHealth() {
   const [showRiskModal, setShowRiskModal] = useState(false);
 
   const load = async () => {
-    const [r, p, s] = await Promise.all([
+    const [r, p, s, w] = await Promise.all([
       base44.entities.PlayerHealth.list("-date"),
       base44.entities.Player.list(),
-      base44.entities.PlayerStat.list("-week", 100)
+      base44.entities.PlayerStat.list("-week", 100),
+      base44.entities.WorkoutPlan.list("-date", 60)
     ]);
-    setRecords(r); setPlayers(p); setStats(s); setLoading(false);
+    setRecords(r); setPlayers(p); setStats(s); setWorkouts(w); setLoading(false);
+    // Compute S&C load alerts
+    const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentHigh = w.filter(wk => new Date(wk.date) >= sevenDaysAgo && (wk.intensity === "high" || wk.intensity === "max") && wk.status === "completed");
+    if (recentHigh.length >= 3) {
+      setLoadAlerts([{ message: `${recentHigh.length} high-intensity S&C sessions in the last 7 days — players may be fatigued. Consider scheduling recovery workouts.` }]);
+    }
   };
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); load(); }, []);
 
   const canEdit = user?.role !== "athletic_director";
+  const canSeeLoadAlerts = user && LOAD_ALERT_ROLES.includes(user.role);
 
   const openAdd = () => {
     setEditing(null);
