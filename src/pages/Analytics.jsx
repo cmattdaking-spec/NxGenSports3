@@ -150,13 +150,15 @@ export default function Analytics() {
         </div>
         <div className="flex gap-2 flex-wrap justify-end">
           <button onClick={getAIInsight} disabled={aiLoading || !selectedPlayer}
-            className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 text-orange-400 px-3 py-2 rounded-lg text-sm font-medium">
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border"
+            style={{ backgroundColor: "var(--color-primary,#f97316)1a", borderColor: "var(--color-primary,#f97316)4d", color: "var(--color-primary,#f97316)" }}>
             <Zap className={`w-4 h-4 ${aiLoading ? "animate-pulse" : ""}`} />
             <span className="hidden md:inline">{aiLoading ? "Analyzing..." : "Nx Insight"}</span>
           </button>
           <button onClick={() => { setForm({ week: playerStats.length + 1 }); setShowAdd(true); }}
             disabled={!selectedPlayer}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+            className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium"
+            style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
             <Plus className="w-4 h-4" /> Log Stats
           </button>
         </div>
@@ -166,10 +168,11 @@ export default function Analytics() {
       <div className="flex flex-wrap gap-2 mb-4">
         {players.map(p => (
           <button key={p.id}
-            onClick={() => { setSelectedPlayer(p); setAiInsight(""); setTrainingRecs(""); }}
+            onClick={() => { setSelectedPlayer(p); setAiInsight(""); }}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-all ${selectedPlayer?.id === p.id
-              ? "bg-orange-500 border-orange-500 text-white"
-              : "bg-[#141414] border-gray-800 text-gray-400 hover:border-orange-500/40 hover:text-white"}`}>
+              ? "text-white"
+              : "bg-[#141414] border-gray-800 text-gray-400 hover:text-white"}`}
+            style={selectedPlayer?.id === p.id ? { backgroundColor: "var(--color-primary,#f97316)", borderColor: "var(--color-primary,#f97316)" } : {}}>
             <span className="text-xs opacity-60">#{p.number}</span>
             {p.first_name} {p.last_name}
             <span className="text-xs opacity-60">{p.position}</span>
@@ -216,7 +219,7 @@ export default function Analytics() {
           <TrendingUp className="w-12 h-12 text-gray-700 mx-auto mb-3" />
           <p className="text-gray-500 mb-4">No stats logged for {selectedPlayer.first_name} yet.</p>
           <button onClick={() => { setForm({ week: 1 }); setShowAdd(true); }}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm">Log First Game Stats</button>
+            className="text-white px-4 py-2 rounded-lg text-sm" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>Log First Game Stats</button>
         </div>
       ) : (
         <>
@@ -257,7 +260,8 @@ export default function Analytics() {
           <div className="flex gap-1 mb-5 bg-[#141414] border border-gray-800 rounded-lg p-1 w-fit overflow-x-auto">
             {["trends", "radar", "table"].map(t => (
               <button key={t} onClick={() => setTab(t)}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium capitalize transition-all whitespace-nowrap ${tab === t ? "bg-orange-500 text-white" : "text-gray-400 hover:text-white"}`}>
+                className={`px-4 py-1.5 rounded-md text-sm font-medium capitalize transition-all whitespace-nowrap ${tab === t ? "text-white" : "text-gray-400 hover:text-white"}`}
+                style={tab === t ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
                 {t}
               </button>
             ))}
@@ -265,11 +269,11 @@ export default function Analytics() {
 
           {/* AI Insight */}
           {aiInsight && (
-            <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 mb-5">
+            <div className="rounded-xl p-4 mb-5 border" style={{ backgroundColor: "var(--color-primary,#f97316)1a", borderColor: "var(--color-primary,#f97316)4d" }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-orange-500" />
-                  <span className="text-orange-400 font-medium text-sm">Nx Performance Insight</span>
+                  <Zap className="w-4 h-4" style={{ color: "var(--color-primary,#f97316)" }} />
+                  <span className="font-medium text-sm" style={{ color: "var(--color-primary,#f97316)" }}>Nx Performance Insight</span>
                 </div>
                 <button onClick={() => setAiInsight("")} className="text-gray-500 hover:text-white"><X className="w-4 h-4" /></button>
               </div>
@@ -324,7 +328,7 @@ export default function Analytics() {
                 <RadarChart data={radarData}>
                   <PolarGrid stroke="#333" />
                   <PolarAngleAxis dataKey="metric" tick={{ fill: "#888", fontSize: 11 }} />
-                  <Radar name={selectedPlayer.first_name} dataKey="value" stroke="#f97316" fill="#f97316" fillOpacity={0.25} strokeWidth={2} />
+                  <Radar name={selectedPlayer.first_name} dataKey="value" stroke="var(--color-primary,#f97316)" fill="var(--color-primary,#f97316)" fillOpacity={0.25} strokeWidth={2} />
                   {comparePlayer && (
                     <Radar name={comparePlayer.first_name} dataKey="compare" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.15} strokeWidth={2} />
                   )}
@@ -373,9 +377,9 @@ export default function Analytics() {
                     ))}
                     {/* Averages row */}
                     <tr className="border-t border-gray-700 bg-[#0d0d0d]">
-                      <td colSpan={2} className="text-orange-400 px-4 py-3 font-semibold text-xs uppercase">Season Avg</td>
+                      <td colSpan={2} className="px-4 py-3 font-semibold text-xs uppercase" style={{ color: "var(--color-primary,#f97316)" }}>Season Avg</td>
                       {metrics.map(m => (
-                        <td key={m} className="text-center text-orange-400 font-bold px-3 py-3 text-sm">{getAvg(m)}</td>
+                        <td key={m} className="text-center font-bold px-3 py-3 text-sm" style={{ color: "var(--color-primary,#f97316)" }}>{getAvg(m)}</td>
                       ))}
                     </tr>
                   </tbody>
@@ -448,7 +452,7 @@ export default function Analytics() {
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setShowAdd(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-lg text-sm">Cancel</button>
-                <button onClick={saveStats} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg text-sm font-medium">Save Stats</button>
+                <button onClick={saveStats} className="flex-1 text-white py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>Save Stats</button>
               </div>
             </div>
           </div>
