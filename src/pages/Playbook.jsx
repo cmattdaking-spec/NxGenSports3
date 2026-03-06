@@ -1,17 +1,22 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Search, Edit, Trash2, X, Zap, BookOpen, Eye, Pen, Brain } from "lucide-react";
+import { Plus, Search, Edit, Trash2, X, Zap, BookOpen, Eye, Pen, Brain, Lock } from "lucide-react";
 import PlayDesigner from "@/components/playbook/PlayDesigner";
 import PlayDiagramViewer from "@/components/playbook/PlayDiagramViewer";
 import NxPlayAI from "@/components/playbook/NxPlayAI";
 
 const CATEGORIES = ["run","pass","screen","play_action","blitz","coverage","zone","man","punt","kick","return"];
 const UNITS = ["offense","defense","special_teams"];
-const catColor = { run: "bg-green-500/20 text-green-400", pass: "bg-blue-500/20 text-blue-400", screen: "bg-cyan-500/20 text-cyan-400", play_action: "bg-purple-500/20 text-purple-400", blitz: "bg-red-500/20 text-red-400", coverage: "bg-yellow-500/20 text-yellow-400", zone: "bg-orange-500/20 text-orange-400", man: "bg-pink-500/20 text-pink-400", punt: "bg-gray-500/20 text-gray-400", kick: "bg-gray-500/20 text-gray-400", return: "bg-indigo-500/20 text-indigo-400" };
+const catColor = { run: "bg-green-500/20 text-green-400", pass: "bg-blue-500/20 text-blue-400", screen: "bg-cyan-500/20 text-cyan-400", play_action: "bg-teal-500/20 text-teal-400", blitz: "bg-red-500/20 text-red-400", coverage: "bg-yellow-500/20 text-yellow-400", zone: "bg-teal-600/20 text-teal-300", man: "bg-sky-500/20 text-sky-400", punt: "bg-gray-500/20 text-gray-400", kick: "bg-gray-500/20 text-gray-400", return: "bg-indigo-500/20 text-indigo-400" };
+
+// Roles that can create/edit plays
+const CAN_CREATE = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
+const CAN_USE_AI = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 
 export default function Playbook() {
   const [plays, setPlays] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const [search, setSearch] = useState("");
   const [filterUnit, setFilterUnit] = useState("all");
   const [filterCat, setFilterCat] = useState("all");
@@ -31,16 +36,33 @@ export default function Playbook() {
     base44.entities.Play.list(),
     base44.entities.Opponent.list()
   ]).then(([d, op]) => { setPlays(d); setOpponents(op); setLoading(false); });
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+    load();
+  }, []);
+
+  const role = user?.role || "viewer";
+  const canCreate = CAN_CREATE.includes(role);
+  const canUseAI = CAN_USE_AI.includes(role);
+
+  // Position coaches can only edit plays they created; coordinators/HC can edit all
+  const canEditPlay = (p) => {
+    if (!canCreate) return false;
+    if (role === "position_coach") return p.created_by === user?.email;
+    return true;
+  };
+  const canDeletePlay = (p) => canEditPlay(p);
 
   const filtered = plays.filter(p => {
+    // Position coaches see all non-private plays + their own private ones
+    if (p.is_private && p.created_by !== user?.email && role === "position_coach") return false;
     const match = p.name?.toLowerCase().includes(search.toLowerCase()) || p.formation?.toLowerCase().includes(search.toLowerCase());
     const matchUnit = filterUnit === "all" || p.unit === filterUnit;
     const matchCat = filterCat === "all" || p.category === filterCat;
     return match && matchUnit && matchCat;
   });
 
-  const openAdd = () => { setEditing(null); setForm({ unit: "offense", category: "run" }); setShowForm(true); };
+  const openAdd = () => { setEditing(null); setForm({ unit: "offense", category: "run", is_private: false }); setShowForm(true); };
   const openEdit = (p) => { setEditing(p); setForm({...p}); setShowForm(true); };
 
   const save = async () => {
