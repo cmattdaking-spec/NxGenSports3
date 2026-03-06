@@ -159,6 +159,21 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
         </div>
       </div>
 
+      {/* S&C Load Alerts - HC/Trainer only */}
+      {canSeeLoadAlerts && loadAlerts.length > 0 && (
+        <div className="mb-5 space-y-2">
+          {loadAlerts.map((alert, i) => (
+            <div key={i} className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-orange-400 text-sm font-semibold">S&C High Load Alert</p>
+                <p className="text-gray-300 text-sm mt-0.5">{alert.message}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {AVAILABILITY.map(a => {
