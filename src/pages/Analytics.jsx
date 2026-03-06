@@ -126,6 +126,70 @@ export default function Analytics() {
 
 
 
+  const importODK = async (file) => {
+    setOdkLoading(true);
+    setOdkResult(null);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const res = await base44.integrations.Core.ExtractDataFromUploadedFile({
+      file_url,
+      json_schema: {
+        type: "object",
+        properties: {
+          records: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                player_name: { type: "string" },
+                position: { type: "string" },
+                week: { type: "number" },
+                game_date: { type: "string" },
+                opponent: { type: "string" },
+                completions: { type: "number" },
+                attempts: { type: "number" },
+                passing_yards: { type: "number" },
+                rushing_yards: { type: "number" },
+                receptions: { type: "number" },
+                receiving_yards: { type: "number" },
+                touchdowns: { type: "number" },
+                interceptions: { type: "number" },
+                tackles: { type: "number" },
+                sacks: { type: "number" },
+                forced_fumbles: { type: "number" },
+                pass_deflections: { type: "number" },
+                snap_count: { type: "number" },
+                grade: { type: "number" }
+              }
+            }
+          }
+        }
+      }
+    });
+    if (res.status === "success" && res.output?.records?.length > 0) {
+      const records = res.output.records;
+      // Match player names to player IDs
+      const enriched = records.map(r => {
+        const matched = players.find(p =>
+          `${p.first_name} ${p.last_name}`.toLowerCase() === r.player_name?.toLowerCase()
+        );
+        return {
+          ...r,
+          player_id: matched?.id || "",
+          player_name: r.player_name,
+          position: matched?.position || r.position || "",
+          week: r.week || 1,
+        };
+      }).filter(r => r.player_id); // only import matched players
+      await base44.entities.PlayerStat.bulkCreate(enriched);
+      const updated = await base44.entities.PlayerStat.list("-week", 200);
+      setStats(updated);
+      setOdkResult({ success: true, count: enriched.length, total: records.length });
+    } else {
+      setOdkResult({ success: false, error: res.details || "Could not parse file" });
+    }
+    setOdkLoading(false);
+  };
+
   const saveGoals = () => {
     const updated = { ...goals, [selectedPlayer.id]: goalForm };
     setGoals(updated);
