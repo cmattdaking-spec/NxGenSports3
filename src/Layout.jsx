@@ -12,9 +12,12 @@ import {
 
 // Coordinator-level roles (includes associate_head_coach when designated)
 const COORDINATOR_ROLES = ["admin","head_coach","associate_head_coach","athletic_director","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach","trainer"];
-const COORD_ONLY = ["admin","head_coach","associate_head_coach","athletic_director","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach","trainer"];
-const GAME_PLAN_ROLES = ["admin","head_coach","associate_head_coach","athletic_director","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach","trainer"];
-const IN_GAME_ROLES = ["admin","head_coach","associate_head_coach","athletic_director","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
+// Playbook, Scouting: coordinators + position_coach (not athletic_director, not trainer)
+const COORD_ONLY = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
+// Game Plans: same as COORD_ONLY
+const GAME_PLAN_ROLES = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
+// NxCall (In-Game AI): no athletic_director
+const IN_GAME_ROLES = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 
 const navItems = [
 { label: "Dashboard", page: "Dashboard", icon: Home, roles: null },
@@ -31,7 +34,7 @@ const navItems = [
 { label: "Analytics", page: "Analytics", icon: BarChart2, roles: null },
 { label: "Playlists", page: "Playlists", icon: ListVideo, roles: null },
 { label: "NxMessage", page: "Messages", icon: MessageSquare, roles: null },
-{ label: "In-Game AI", page: "InGameAssistant", icon: Gamepad2, roles: IN_GAME_ROLES },
+{ label: "NxCall", page: "InGameAssistant", icon: Gamepad2, roles: IN_GAME_ROLES },
 { label: "Development", page: "PlayerDevelopment", icon: Brain, roles: null },
 { label: "Users", page: "UserManagement", icon: UserCog, roles: ["admin", "head_coach", "athletic_director"] },
 ];
