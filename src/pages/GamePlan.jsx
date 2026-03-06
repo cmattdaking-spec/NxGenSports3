@@ -362,7 +362,7 @@ Generate a detailed, opponent-specific game plan JSON.`,
                               <ol className="space-y-1">
                                 {nxPlanResult.situational_plays[key].map((pl, i) => (
                                   <li key={i} className="text-gray-300 text-xs flex gap-1.5">
-                                    <span className="text-orange-500 font-bold">{i+1}.</span> {pl}
+                                    <span className="font-bold" style={{ color: "var(--color-primary,#f97316)" }}>{i+1}.</span> {pl}
                                   </li>
                                 ))}
                               </ol>
