@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Edit, Trash2, X, Activity, AlertTriangle, CheckCircle, Clock, Brain, ShieldAlert } from "lucide-react";
+import { Plus, Edit, Trash2, X, Activity, AlertTriangle, CheckCircle, Clock, Brain, ShieldAlert, Flame } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
 
 const AVAILABILITY = ["full","limited","out","day_to_day"];
