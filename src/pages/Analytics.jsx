@@ -492,6 +492,63 @@ export default function Analytics() {
         </div>
       )}
 
+      {/* ODK Import Modal */}
+      {showODK && (
+        <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+          <div className="bg-[#141414] border border-gray-700 rounded-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-gray-800">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-400" />
+                <h2 className="text-white font-bold">Import ODK Data</h2>
+              </div>
+              <button onClick={() => { setShowODK(false); setOdkResult(null); }} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-gray-400 text-sm">Upload a CSV or Excel export from ODK (or any third-party stats platform). Player names must match your roster.</p>
+              <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-xs text-gray-500 space-y-1">
+                <p className="text-gray-400 font-medium mb-1">Expected columns (flexible):</p>
+                <p>player_name, position, week, opponent, passing_yards, rushing_yards,</p>
+                <p>receptions, receiving_yards, touchdowns, tackles, sacks, grade, etc.</p>
+              </div>
+              {odkLoading ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-3">
+                  <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-gray-400 text-sm">Parsing and importing stats...</p>
+                </div>
+              ) : odkResult ? (
+                <div className={`rounded-xl p-4 flex items-start gap-3 ${odkResult.success ? "bg-green-500/10 border border-green-500/30" : "bg-red-500/10 border border-red-500/30"}`}>
+                  {odkResult.success ? (
+                    <>
+                      <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-green-400 font-semibold text-sm">Import Successful</p>
+                        <p className="text-gray-400 text-xs mt-1">{odkResult.count} of {odkResult.total} records imported ({odkResult.total - odkResult.count} skipped — no matching player).</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-red-400 font-semibold text-sm">Import Failed</p>
+                        <p className="text-gray-400 text-xs mt-1">{odkResult.error}</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-700 hover:border-gray-500 rounded-xl p-8 cursor-pointer transition-colors">
+                  <Upload className="w-8 h-8 text-gray-500 mb-2" />
+                  <p className="text-gray-400 text-sm font-medium">Click to upload ODK file</p>
+                  <p className="text-gray-600 text-xs mt-1">CSV or Excel (.xlsx)</p>
+                  <input type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={e => e.target.files[0] && importODK(e.target.files[0])} />
+                </label>
+              )}
+              <button onClick={() => { setShowODK(false); setOdkResult(null); }} className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-lg text-sm">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Log Stats Modal */}
       {showAdd && selectedPlayer && (
         <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
