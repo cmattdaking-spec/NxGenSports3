@@ -52,6 +52,7 @@ import Analytics from './pages/Analytics';
 import Dashboard from './pages/Dashboard';
 import DepthChart from './pages/DepthChart';
 import GamePlan from './pages/GamePlan';
+import GameSchedule from './pages/GameSchedule';
 import InGameAssistant from './pages/InGameAssistant';
 import Messages from './pages/Messages';
 import Playbook from './pages/Playbook';
@@ -62,9 +63,8 @@ import Practice from './pages/Practice';
 import Roster from './pages/Roster';
 import Scouting from './pages/Scouting';
 import Settings from './pages/Settings';
-import UserManagement from './pages/UserManagement';
 import StrengthConditioning from './pages/StrengthConditioning';
-import GameSchedule from './pages/GameSchedule';
+import UserManagement from './pages/UserManagement';
 import __Layout from './Layout.jsx';
 
 
@@ -74,6 +74,7 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "DepthChart": DepthChart,
     "GamePlan": GamePlan,
+    "GameSchedule": GameSchedule,
     "InGameAssistant": InGameAssistant,
     "Messages": Messages,
     "Playbook": Playbook,
@@ -84,9 +85,8 @@ export const PAGES = {
     "Roster": Roster,
     "Scouting": Scouting,
     "Settings": Settings,
-    "UserManagement": UserManagement,
     "StrengthConditioning": StrengthConditioning,
-    "GameSchedule": GameSchedule,
+    "UserManagement": UserManagement,
 }
 
 export const pagesConfig = {

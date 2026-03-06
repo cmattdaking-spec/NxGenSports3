@@ -123,7 +123,7 @@ Generate a detailed JSON report with strategic insights.`,
           )}
           <button onClick={() => { setDeepAnalysisTarget(opp.id); getDeepAnalysis(opp); }}
             disabled={deepAnalysisLoading && deepAnalysisTarget === opp.id}
-            className="flex items-center gap-1 bg-purple-500/10 border border-purple-500/30 text-purple-400 px-2 py-1.5 rounded-lg text-xs hover:bg-purple-500/20 transition-all">
+            className="flex items-center gap-1 bg-teal-500/10 border border-teal-500/30 text-teal-400 px-2 py-1.5 rounded-lg text-xs hover:bg-teal-500/20 transition-all">
             <Brain className={`w-3.5 h-3.5 ${deepAnalysisLoading && deepAnalysisTarget === opp.id ? "animate-pulse" : ""}`} />
             <span className="hidden md:inline">{deepAnalysisLoading && deepAnalysisTarget === opp.id ? "Analyzing..." : "Nx Analysis"}</span>
           </button>
@@ -209,19 +209,19 @@ Generate a detailed JSON report with strategic insights.`,
       {/* Deep Analysis Modal */}
       {deepAnalysisTarget && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-[#141414] border border-purple-500/30 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#141414] border border-teal-500/30 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-gray-800">
               <div className="flex items-center gap-2">
-                <Brain className="w-5 h-5 text-purple-400" />
+                <Brain className="w-5 h-5 text-teal-400" />
                 <h2 className="text-white font-bold">Nx Deep Analysis</h2>
-                <span className="text-purple-400 text-xs bg-purple-500/20 px-2 py-0.5 rounded-full">AI-Powered</span>
+                <span className="text-teal-400 text-xs bg-teal-500/20 px-2 py-0.5 rounded-full">AI-Powered</span>
               </div>
               <button onClick={() => { setDeepAnalysisTarget(null); setDeepReport(null); }} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
             <div className="p-5">
               {deepAnalysisLoading ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-4">
-                  <div className="w-10 h-10 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-10 h-10 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
                   <p className="text-gray-400 text-sm">Nx Intelligence analyzing opponent data...</p>
                   <p className="text-gray-600 text-xs">Generating offensive/defensive breakdown, matchups, and game plan adjustments</p>
                 </div>
@@ -263,18 +263,18 @@ Generate a detailed JSON report with strategic insights.`,
                   {deepReport.key_player_matchups?.length > 0 && (
                     <div>
                       <div className="flex items-center gap-2 mb-3">
-                        <Users className="w-4 h-4 text-purple-400" />
-                        <span className="text-purple-400 text-xs font-semibold uppercase tracking-wider">Key Player Matchups</span>
+                        <Users className="w-4 h-4 text-teal-400" />
+                          <span className="text-teal-400 text-xs font-semibold uppercase tracking-wider">Key Player Matchups</span>
                       </div>
                       <div className="space-y-2">
                         {deepReport.key_player_matchups.map((m, i) => (
-                          <div key={i} className="bg-[#1a1a1a] rounded-lg p-3 border border-purple-500/10">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-white text-sm font-semibold">{m.their_player}</span>
-                              <span className="text-gray-500 text-xs">·</span>
-                              <span className="text-gray-400 text-xs">{m.matchup_note}</span>
-                            </div>
-                            <p className="text-purple-300 text-xs">↳ {m.recommendation}</p>
+                          <div key={i} className="bg-[#1a1a1a] rounded-lg p-3 border border-teal-500/10">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-white text-sm font-semibold">{m.their_player}</span>
+                            <span className="text-gray-500 text-xs">·</span>
+                            <span className="text-gray-400 text-xs">{m.matchup_note}</span>
+                          </div>
+                          <p className="text-teal-300 text-xs">↳ {m.recommendation}</p>
                           </div>
                         ))}
                       </div>
