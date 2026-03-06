@@ -268,9 +268,10 @@ Avg Grade: ${avgGrade}, Recent Injuries: ${injuries}, Status: ${player.status}`,
         {activeTab === "sc" && (
           <div className="flex gap-2">
             <button onClick={generateAIPlan} disabled={aiLoading}
-              className="flex items-center gap-2 bg-teal-500/10 border border-teal-500/30 hover:bg-teal-500/20 text-teal-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-white"
+              style={{ backgroundColor: "#22c55e", opacity: aiLoading ? 0.7 : 1 }}>
               <Brain className="w-4 h-4" />
-              <span className="hidden md:inline">Nx S&C AI</span>
+              <span className="hidden md:inline">NxPlan</span>
             </button>
             {canEdit && (
               <button onClick={openAdd} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>

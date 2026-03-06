@@ -4,7 +4,7 @@ import {
   LineChart, Line, BarChart, Bar, RadarChart, Radar, PolarGrid,
   PolarAngleAxis, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
-import { TrendingUp, Zap, Plus, X, Users, Target, ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { TrendingUp, Zap, Plus, X, Users, Target, ArrowUp, ArrowDown, Minus, Upload, FileText, CheckCircle } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
 
 const POSITION_METRICS = {
