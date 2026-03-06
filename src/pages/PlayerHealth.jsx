@@ -131,7 +131,7 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-white">Player <span className="text-orange-500">Health</span></h1>
+          <h1 className="text-2xl font-black text-white">Player <span style={{ color: "var(--color-primary,#f97316)" }}>Health</span></h1>
           <p className="text-gray-500 text-sm">{records.length} health records</p>
         </div>
         <div className="flex gap-2">
