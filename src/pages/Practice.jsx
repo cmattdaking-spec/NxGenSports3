@@ -5,11 +5,15 @@ import LoadingScreen from "../components/LoadingScreen";
 
 const STATUS_COLOR = { draft: "bg-yellow-500/20 text-yellow-400", active: "bg-blue-500/20 text-blue-400", completed: "bg-green-500/20 text-green-400" };
 
+// AD and Trainer cannot create/edit practice plans
+const PRACTICE_EDIT_ROLES = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
+
 export default function Practice() {
   const [plans, setPlans] = useState([]);
   const [players, setPlayers] = useState([]);
   const [healthRecords, setHealthRecords] = useState([]);
   const [opponents, setOpponents] = useState([]);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
