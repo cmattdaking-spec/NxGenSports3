@@ -198,13 +198,15 @@ Generate a complete, structured practice plan with specific drills, focus areas,
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <button onClick={() => getAISuggestions(plan)} disabled={aiLoading && aiTarget === plan.id}
-                  className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs transition-all border" style={{ backgroundColor: "var(--color-primary,#f97316)18", borderColor: "var(--color-primary,#f97316)55", color: "var(--color-primary,#f97316)" }}>
-                  <Zap className={`w-3.5 h-3.5 ${aiLoading && aiTarget === plan.id ? "animate-pulse" : ""}`} />
-                  <span className="hidden md:inline">{aiLoading && aiTarget === plan.id ? "..." : "Nx Improve"}</span>
-                </button>
-                <button onClick={() => openEdit(plan)} className="text-gray-500 p-1.5" onMouseEnter={e => e.currentTarget.style.color="var(--color-primary,#f97316)"} onMouseLeave={e => e.currentTarget.style.color=""}><Edit className="w-4 h-4" /></button>
-                <button onClick={() => remove(plan.id)} className="text-gray-500 hover:text-red-400 p-1.5"><Trash2 className="w-4 h-4" /></button>
+                {canEdit && (
+                  <button onClick={() => getAISuggestions(plan)} disabled={aiLoading && aiTarget === plan.id}
+                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs transition-all border" style={{ backgroundColor: "var(--color-primary,#f97316)18", borderColor: "var(--color-primary,#f97316)55", color: "var(--color-primary,#f97316)" }}>
+                    <Zap className={`w-3.5 h-3.5 ${aiLoading && aiTarget === plan.id ? "animate-pulse" : ""}`} />
+                    <span className="hidden md:inline">{aiLoading && aiTarget === plan.id ? "..." : "Nx Improve"}</span>
+                  </button>
+                )}
+                {canEdit && <button onClick={() => openEdit(plan)} className="text-gray-500 p-1.5" onMouseEnter={e => e.currentTarget.style.color="var(--color-primary,#f97316)"} onMouseLeave={e => e.currentTarget.style.color=""}><Edit className="w-4 h-4" /></button>}
+                {canEdit && <button onClick={() => remove(plan.id)} className="text-gray-500 hover:text-red-400 p-1.5"><Trash2 className="w-4 h-4" /></button>}
                 <button onClick={() => setExpanded(expanded === plan.id ? null : plan.id)} className="text-gray-500 hover:text-white p-1.5">
                   {expanded === plan.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
