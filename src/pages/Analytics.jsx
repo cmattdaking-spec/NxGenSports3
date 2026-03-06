@@ -4,7 +4,7 @@ import {
   LineChart, Line, BarChart, Bar, RadarChart, Radar, PolarGrid,
   PolarAngleAxis, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
-import { TrendingUp, Zap, Plus, X, Users, Target, Trophy, ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { TrendingUp, Zap, Plus, X, Users, Target, ArrowUp, ArrowDown, Minus } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
 
 const POSITION_METRICS = {
@@ -40,8 +40,6 @@ export default function Analytics() {
   const [goals, setGoals] = useState({});
   const [showGoals, setShowGoals] = useState(false);
   const [goalForm, setGoalForm] = useState({});
-  const [trainingRecs, setTrainingRecs] = useState("");
-  const [trainingLoading, setTrainingLoading] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -123,34 +121,7 @@ export default function Analytics() {
     setAiLoading(false);
   };
 
-  const getTrainingRecs = async () => {
-    if (!selectedPlayer || playerStats.length === 0) return;
-    setTrainingLoading(true);
-    setTrainingRecs("");
-    const summary = playerStats.map(s =>
-      `Week ${s.week}: ${metrics.map(m => `${m}=${s[m] || 0}`).join(", ")}`
-    ).join("\n");
-    const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an elite football strength & conditioning coach. Based on this ${selectedPlayer.position}'s performance data, generate a personalized training program recommendation.
 
-Player: ${selectedPlayer.first_name} ${selectedPlayer.last_name} (${selectedPlayer.position}, ${selectedPlayer.year || "Unknown year"})
-Speed rating: ${selectedPlayer.speed || "N/A"}, Strength: ${selectedPlayer.strength || "N/A"}, Agility: ${selectedPlayer.agility || "N/A"}
-
-Stats:\n${summary}
-
-Provide:
-1. Weekly training focus areas (3-4 specific areas to target)
-2. Recommended drills for each area with sets/reps
-3. Film study recommendations
-4. Mental/IQ development tips
-5. Estimated improvement timeline
-
-Keep it practical for a high school/college program.`,
-    });
-    setTrainingRecs(res);
-    setTrainingLoading(false);
-    setTab("training");
-  };
 
   const saveGoals = () => {
     const updated = { ...goals, [selectedPlayer.id]: goalForm };
@@ -178,11 +149,6 @@ Keep it practical for a high school/college program.`,
           <p className="text-gray-500 text-sm">Performance trends, comparisons & Nx insights</p>
         </div>
         <div className="flex gap-2 flex-wrap justify-end">
-          <button onClick={getTrainingRecs} disabled={trainingLoading || !selectedPlayer || playerStats.length === 0}
-            className="flex items-center gap-2 bg-green-500/10 border border-green-500/30 hover:bg-green-500/20 text-green-400 px-3 py-2 rounded-lg text-sm font-medium">
-            <Trophy className={`w-4 h-4 ${trainingLoading ? "animate-pulse" : ""}`} />
-            <span className="hidden md:inline">{trainingLoading ? "Generating..." : "Training Plan"}</span>
-          </button>
           <button onClick={getAIInsight} disabled={aiLoading || !selectedPlayer}
             className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 text-orange-400 px-3 py-2 rounded-lg text-sm font-medium">
             <Zap className={`w-4 h-4 ${aiLoading ? "animate-pulse" : ""}`} />
@@ -289,10 +255,10 @@ Keep it practical for a high school/college program.`,
 
           {/* Tabs */}
           <div className="flex gap-1 mb-5 bg-[#141414] border border-gray-800 rounded-lg p-1 w-fit overflow-x-auto">
-            {["trends", "radar", "table", "training"].map(t => (
+            {["trends", "radar", "table"].map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium capitalize transition-all whitespace-nowrap ${tab === t ? "bg-orange-500 text-white" : "text-gray-400 hover:text-white"}`}>
-                {t === "training" ? "Nx Training" : t}
+                {t}
               </button>
             ))}
           </div>
@@ -418,35 +384,7 @@ Keep it practical for a high school/college program.`,
             </div>
           )}
 
-          {/* Training Recommendations */}
-          {tab === "training" && (
-            <div>
-              {trainingLoading ? (
-                <div className="flex flex-col items-center justify-center py-16 gap-4">
-                  <div className="w-10 h-10 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
-                  <p className="text-gray-400 text-sm">Nx is generating your personalized training plan...</p>
-                </div>
-              ) : trainingRecs ? (
-                <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Trophy className="w-5 h-5 text-green-400" />
-                    <span className="text-green-400 font-semibold">Nx Personalized Training Plan</span>
-                    <span className="text-xs text-gray-500">for {selectedPlayer.first_name} {selectedPlayer.last_name}</span>
-                  </div>
-                  <p className="text-gray-300 text-sm whitespace-pre-line leading-relaxed">{trainingRecs}</p>
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <Trophy className="w-12 h-12 text-gray-700 mx-auto mb-3" />
-                  <p className="text-gray-500 mb-4">Generate a personalized training plan powered by Nx Intelligence</p>
-                  <button onClick={getTrainingRecs} disabled={trainingLoading}
-                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium">
-                    Generate Nx Training Plan
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+
         </>
       )}
 
