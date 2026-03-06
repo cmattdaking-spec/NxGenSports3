@@ -10,7 +10,8 @@ const STATUSES = ["active","injured","suspended","inactive"];
 const statusColor = { active: "bg-green-500/20 text-green-400", injured: "bg-red-500/20 text-red-400", suspended: "bg-yellow-500/20 text-yellow-400", inactive: "bg-gray-500/20 text-gray-400" };
 const unitColor = { offense: "bg-blue-500/20 text-blue-400", defense: "bg-red-500/20 text-red-400", special_teams: "bg-purple-500/20 text-purple-400" };
 
-const CAN_ADD = ["admin","head_coach","athletic_director","offensive_coordinator","defensive_coordinator","special_teams_coordinator"];
+// Only AD and HC can add, edit, or remove players per account security policy
+const CAN_ADD = ["admin","head_coach","athletic_director"];
 const CAN_DELETE = ["admin","head_coach","athletic_director"];
 
 export default function Roster() {
