@@ -179,17 +179,20 @@ export default function Playbook() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {unitPlays.map(p => (
-                    <div key={p.id} className="bg-[#141414] border border-gray-800 rounded-xl p-4 transition-all group" style={{ "--hover-border": "var(--color-primary,#f97316)55" }} onMouseEnter={e => e.currentTarget.style.borderColor = "var(--color-primary,#f97316)55"} onMouseLeave={e => e.currentTarget.style.borderColor = ""}>
+                    <div key={p.id} className="bg-[#141414] border border-gray-800 rounded-xl p-4 transition-all group" onMouseEnter={e => e.currentTarget.style.borderColor = "var(--color-primary,#f97316)55"} onMouseLeave={e => e.currentTarget.style.borderColor = ""}>
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <p className="text-white font-bold">{p.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-white font-bold">{p.name}</p>
+                            {p.is_private && <Lock className="w-3 h-3 text-teal-400 flex-shrink-0" title="Private play" />}
+                          </div>
                           {p.formation && <p className="text-gray-500 text-xs mt-0.5">{p.formation}</p>}
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => setDiagramPlay(p)} className="text-gray-500 hover:text-blue-400 p-1" title="View Diagram"><Eye className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => { setDesignerPlay(p); setShowDesigner(true); }} className="text-gray-500 hover:text-purple-400 p-1" title="Edit Diagram"><Pen className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => openEdit(p)} className="text-gray-500 p-1" onMouseEnter={e => e.currentTarget.style.color = "var(--color-primary,#f97316)"} onMouseLeave={e => e.currentTarget.style.color = ""}><Edit className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => remove(p.id)} className="text-gray-500 hover:text-red-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
+                          {canEditPlay(p) && <button onClick={() => { setDesignerPlay(p); setShowDesigner(true); }} className="text-gray-500 hover:text-teal-400 p-1" title="Edit Diagram"><Pen className="w-3.5 h-3.5" /></button>}
+                          {canEditPlay(p) && <button onClick={() => openEdit(p)} className="text-gray-500 p-1" onMouseEnter={e => e.currentTarget.style.color = "var(--color-primary,#f97316)"} onMouseLeave={e => e.currentTarget.style.color = ""}><Edit className="w-3.5 h-3.5" /></button>}
+                          {canDeletePlay(p) && <button onClick={() => remove(p.id)} className="text-gray-500 hover:text-red-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>}
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-1.5 mt-2">
