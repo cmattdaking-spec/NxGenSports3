@@ -434,7 +434,8 @@ Avg Grade: ${avgGrade}, Recent Injuries: ${injuries}, Status: ${player.status}`,
         </div>
       )}
 
-      {activeTab === "sc" && <>
+      {activeTab === "sc" && (
+      <div>
       {/* Load Alerts - HC/Trainer only */}
       {canSeeLoadAlerts && loadAlerts.length > 0 && (
         <div className="mb-5 space-y-2">
@@ -535,7 +536,8 @@ Avg Grade: ${avgGrade}, Recent Injuries: ${injuries}, Status: ${player.status}`,
         </div>
       )}
 
-      {activeTab === "sc" && null /* end sc tab */}
+      </div>
+      )}
 
       {/* Nx S&C AI Modal */}
       {showAiModal && (
