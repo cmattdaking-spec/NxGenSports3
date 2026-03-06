@@ -193,6 +193,60 @@ Generate a 5-day workout week plan with specific exercises, sets, reps, and coac
     load();
   };
 
+  const generateDevPlan = async (player) => {
+    setDevSelectedPlayer(player);
+    setDevLoading(true); setDevPlan(null);
+    const pStats = devStats.filter(s => s.player_id === player.id).sort((a,b) => b.week - a.week);
+    const latestHealth = devHealth.filter(h => h.player_id === player.id).sort((a,b) => new Date(b.date) - new Date(a.date));
+    const avgGrade = pStats.length ? (pStats.reduce((s,r) => s + (r.grade||0),0)/pStats.length).toFixed(1) : "N/A";
+    const injuries = latestHealth.filter(h => h.injury_type).map(h => h.injury_type).join(", ") || "None";
+    const res = await base44.integrations.Core.InvokeLLM({
+      prompt: `You are an elite player development AI for NxDown football. Generate a comprehensive development plan for:
+Name: ${player.first_name} ${player.last_name}, Position: ${player.position}, Year: ${player.year || "?"}, Weight: ${player.weight || "?"}lbs
+Rating: ${player.overall_rating || "N/A"}/100, Speed: ${player.speed || "N/A"}, Strength: ${player.strength || "N/A"}, Agility: ${player.agility || "N/A"}
+Avg Grade: ${avgGrade}, Recent Injuries: ${injuries}, Status: ${player.status}`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          potential_rating: { type: "string", enum: ["Elite","High","Medium","Developing"] },
+          injury_risk_level: { type: "string", enum: ["Low","Medium","High"] },
+          overall_assessment: { type: "string" },
+          strengths: { type: "array", items: { type: "string" } },
+          areas_to_improve: { type: "array", items: { type: "string" } },
+          short_term_goals: { type: "array", items: { type: "object", properties: { goal: { type: "string" }, timeline: { type: "string" } } } },
+          training_program: { type: "object", properties: { weekly_focus: { type: "string" }, skill_drills: { type: "array", items: { type: "string" } }, load_recommendation: { type: "string" } } },
+          career_projection: { type: "string" }
+        }
+      }
+    });
+    setDevPlan(res); setDevLoading(false);
+  };
+
+  const generateTeamReport = async () => {
+    setTeamLoading(true); setTeamReport(null);
+    const playerData = players.slice(0,30).map(p => {
+      const pStats = devStats.filter(s => s.player_id === p.id);
+      const avgGrade = pStats.length ? (pStats.reduce((sum,s) => sum+(s.grade||0),0)/pStats.length).toFixed(1) : 0;
+      return `${p.first_name} ${p.last_name}: ${p.position} (${p.year}), Rating: ${p.overall_rating||"N/A"}, Avg Grade: ${avgGrade}, Status: ${p.status}`;
+    }).join("\n");
+    const res = await base44.integrations.Core.InvokeLLM({
+      prompt: `You are an elite talent scout AI for NxDown football. Analyze the roster and identify top prospects and development needs.\n\nPlayers:\n${playerData}`,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          team_summary: { type: "string" },
+          future_stars: { type: "array", items: { type: "object", properties: { player_name: { type: "string" }, position: { type: "string" }, reason: { type: "string" }, potential: { type: "string" } } } },
+          depth_concerns: { type: "array", items: { type: "string" } },
+          team_development_priorities: { type: "array", items: { type: "string" } }
+        }
+      }
+    });
+    setTeamReport(res); setTeamLoading(false);
+  };
+
+  const POTENTIAL_COLOR = { Elite: "text-yellow-400", High: "text-orange-400", Medium: "text-blue-400", Developing: "text-gray-400" };
+  const RISK_COLOR = { Low: "text-green-400 bg-green-500/20", Medium: "text-yellow-400 bg-yellow-500/20", High: "text-red-400 bg-red-500/20" };
+
   const filtered = plans.filter(p => {
     if (filterType !== "all" && p.type !== filterType) return false;
     if (filterLevel !== "all" && p.level !== filterLevel && p.level !== "All") return false;
