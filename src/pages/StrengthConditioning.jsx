@@ -260,23 +260,46 @@ Avg Grade: ${avgGrade}, Recent Injuries: ${injuries}, Status: ${player.status}`,
   return (
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-black text-white">Strength & <span style={{ color: "var(--color-primary,#f97316)" }}>Conditioning</span></h1>
           <p className="text-gray-500 text-sm">{plans.length} workout plans</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={generateAIPlan} disabled={aiLoading}
-            className="flex items-center gap-2 bg-teal-500/10 border border-teal-500/30 hover:bg-teal-500/20 text-teal-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
-            <Brain className="w-4 h-4" />
-            <span className="hidden md:inline">Nx S&C AI</span>
-          </button>
-          {canEdit && (
-            <button onClick={openAdd} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
-              <Plus className="w-4 h-4" /> New Plan
+        {activeTab === "sc" && (
+          <div className="flex gap-2">
+            <button onClick={generateAIPlan} disabled={aiLoading}
+              className="flex items-center gap-2 bg-teal-500/10 border border-teal-500/30 hover:bg-teal-500/20 text-teal-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
+              <Brain className="w-4 h-4" />
+              <span className="hidden md:inline">Nx S&C AI</span>
             </button>
-          )}
-        </div>
+            {canEdit && (
+              <button onClick={openAdd} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+                <Plus className="w-4 h-4" /> New Plan
+              </button>
+            )}
+          </div>
+        )}
+        {activeTab === "development" && (
+          <button onClick={generateTeamReport} disabled={teamLoading}
+            className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/30 hover:bg-yellow-500/20 text-yellow-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
+            <Star className={`w-4 h-4 ${teamLoading ? "animate-pulse" : ""}`} />
+            <span className="hidden md:inline">{teamLoading ? "Analyzing..." : "Team Prospect Report"}</span>
+          </button>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 mb-5 bg-[#141414] border border-gray-800 rounded-lg p-1 w-fit">
+        <button onClick={() => setActiveTab("sc")}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === "sc" ? "text-white" : "text-gray-400 hover:text-white"}`}
+          style={activeTab === "sc" ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
+          <Dumbbell className="w-4 h-4" /> S&C Plans
+        </button>
+        <button onClick={() => setActiveTab("development")}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${activeTab === "development" ? "text-white" : "text-gray-400 hover:text-white"}`}
+          style={activeTab === "development" ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
+          <TrendingUp className="w-4 h-4" /> Development
+        </button>
       </div>
 
       {/* Load Alerts - HC/Trainer only */}
