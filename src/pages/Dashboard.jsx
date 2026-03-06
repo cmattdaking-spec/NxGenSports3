@@ -228,18 +228,21 @@ export default function Dashboard() {
           <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-white font-bold flex items-center gap-2">
-                <Target className="w-4 h-4 text-orange-500" /> NxGame
+                <Target className="w-4 h-4" style={{ color: "var(--color-primary,#f97316)" }} /> NxGame
               </h2>
-              <Link to={createPageUrl("Scouting")} className="text-orange-500 text-xs hover:text-orange-400 flex items-center gap-1">
-                View All <ArrowRight className="w-3 h-3" />
+              <Link to={createPageUrl("GameSchedule")} className="text-xs flex items-center gap-1" style={{ color: "var(--color-primary,#f97316)" }}>
+                Full Schedule <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
             {nextGame ? (
               <div>
-                <p className="text-2xl font-black text-white">{nextGame.name}</p>
-                <p className="text-orange-500 text-sm mt-1">{nextGame.game_date} · {nextGame.location}</p>
+                <p className="text-2xl font-black text-white">vs. {nextGame.name}</p>
+                <p className="text-sm mt-1" style={{ color: "var(--color-primary,#f97316)" }}>{nextGame.game_date} · {nextGame.location}</p>
                 {nextGame.offensive_tendency && (
-                  <p className="text-gray-400 text-xs mt-2 line-clamp-2">{nextGame.offensive_tendency}</p>
+                  <p className="text-gray-400 text-xs mt-2 line-clamp-2">Off: {nextGame.offensive_tendency}</p>
+                )}
+                {nextGame.weaknesses && (
+                  <p className="text-green-400 text-xs mt-1 line-clamp-1">⚡ {nextGame.weaknesses}</p>
                 )}
               </div>
             ) : (
@@ -253,7 +256,7 @@ export default function Dashboard() {
               <h2 className="text-white font-bold flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-red-500" /> Health Alerts
               </h2>
-              <Link to={createPageUrl("PlayerHealth")} className="text-orange-500 text-xs hover:text-orange-400 flex items-center gap-1">
+              <Link to={createPageUrl("PlayerHealth")} className="text-xs flex items-center gap-1" style={{ color: "var(--color-primary,#f97316)" }}>
                 View All <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
@@ -277,18 +280,20 @@ export default function Dashboard() {
           {/* Quick Actions */}
           <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
             <h2 className="text-white font-bold mb-4 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-orange-500" /> Quick Actions
+              <Zap className="w-4 h-4" style={{ color: "var(--color-primary,#f97316)" }} /> Quick Actions
             </h2>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: "Add Play", page: "Playbook", icon: BookOpen },
                 { label: "Edit Depth Chart", page: "DepthChart", icon: TrendingUp },
                 { label: "New Practice", page: "Practice", icon: ClipboardList },
-                { label: "Scout Opponent", page: "Scouting", icon: Crosshair },
+                { label: "Game Schedule", page: "GameSchedule", icon: Crosshair },
               ].map(({ label, page, icon: Icon }) => (
                 <Link key={label} to={createPageUrl(page)}
-                  className="flex items-center gap-2 p-3 bg-[#1a1a1a] rounded-lg hover:bg-orange-500/10 hover:border-orange-500/30 border border-transparent transition-all">
-                  <Icon className="w-4 h-4 text-orange-500" />
+                  className="flex items-center gap-2 p-3 bg-[#1a1a1a] rounded-lg border border-transparent transition-all"
+                  onMouseEnter={e => { e.currentTarget.style.borderColor="var(--color-primary,#f97316)44"; e.currentTarget.style.backgroundColor="var(--color-primary,#f97316)10"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor="transparent"; e.currentTarget.style.backgroundColor=""; }}>
+                  <Icon className="w-4 h-4" style={{ color: "var(--color-primary,#f97316)" }} />
                   <span className="text-gray-300 text-xs font-medium">{label}</span>
                 </Link>
               ))}
@@ -299,16 +304,16 @@ export default function Dashboard() {
           <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-white font-bold flex items-center gap-2">
-                <ClipboardList className="w-4 h-4 text-orange-500" /> NxPractice
+                <ClipboardList className="w-4 h-4" style={{ color: "var(--color-primary,#f97316)" }} /> NxPractice
               </h2>
-              <Link to={createPageUrl("Practice")} className="text-orange-500 text-xs hover:text-orange-400 flex items-center gap-1">
+              <Link to={createPageUrl("Practice")} className="text-xs flex items-center gap-1" style={{ color: "var(--color-primary,#f97316)" }}>
                 View All <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
             {upcomingPractice ? (
               <div>
                 <p className="text-xl font-black text-white">{upcomingPractice.title}</p>
-                <p className="text-orange-500 text-sm mt-1">{upcomingPractice.date}</p>
+                <p className="text-sm mt-1" style={{ color: "var(--color-primary,#f97316)" }}>{upcomingPractice.date}</p>
                 {upcomingPractice.focus && <p className="text-gray-400 text-xs mt-2">{upcomingPractice.focus}</p>}
                 {upcomingPractice.duration_minutes && (
                   <p className="text-gray-500 text-xs mt-1">{upcomingPractice.duration_minutes} min</p>
