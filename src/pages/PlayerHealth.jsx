@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Edit, Trash2, X, Activity, AlertTriangle, CheckCircle, Clock, Brain, ShieldAlert, Flame } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
+import MedicalTab from "../components/health/MedicalTab";
 
 const AVAILABILITY = ["full","limited","out","day_to_day"];
 const LOAD_ALERT_ROLES = ["head_coach","admin","trainer","strength_conditioning_coordinator"];
@@ -28,6 +29,7 @@ export default function PlayerHealth() {
   const [riskReport, setRiskReport] = useState(null);
   const [riskLoading, setRiskLoading] = useState(false);
   const [showRiskModal, setShowRiskModal] = useState(false);
+  const [tab, setTab] = useState("health");
 
   const load = async () => {
     const [r, p, s, w] = await Promise.all([
@@ -140,6 +142,20 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
 
   return (
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
+      {/* Tabs */}
+      <div className="flex gap-1 mb-5 bg-[#141414] border border-gray-800 rounded-lg p-1 w-fit">
+        {[{ id: "health", label: "Health Records" }, { id: "medical", label: "Medical / Concussion" }].map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === t.id ? "text-white" : "text-gray-400 hover:text-white"}`}
+            style={tab === t.id ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "medical" && <MedicalTab players={players} />}
+
+      {tab === "health" && <>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black text-white">Player <span style={{ color: "var(--color-primary,#f97316)" }}>Health</span></h1>
@@ -376,6 +392,8 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
           </div>
         </div>
       )}
+
+      </>}
 
       {/* Log/Edit Modal */}
       {showForm && (
