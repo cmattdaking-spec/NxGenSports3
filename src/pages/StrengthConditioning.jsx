@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Edit, Trash2, X, Zap, Brain, Dumbbell, ChevronDown, ChevronUp, AlertTriangle, Flame } from "lucide-react";
+import { Plus, Edit, Trash2, X, Zap, Brain, Dumbbell, ChevronDown, ChevronUp, AlertTriangle, Flame, Star, Target, TrendingUp } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
 
 const TYPES = ["strength","conditioning","speed","agility","recovery","full_body","position_specific"];
@@ -44,6 +44,16 @@ export default function StrengthConditioning() {
   const [loadAlerts, setLoadAlerts] = useState([]);
   const [filterType, setFilterType] = useState("all");
   const [filterLevel, setFilterLevel] = useState("all");
+  const [activeTab, setActiveTab] = useState("sc");
+  // Development state
+  const [devStats, setDevStats] = useState([]);
+  const [devHealth, setDevHealth] = useState([]);
+  const [devPractices, setDevPractices] = useState([]);
+  const [devSelectedPlayer, setDevSelectedPlayer] = useState(null);
+  const [devPlan, setDevPlan] = useState(null);
+  const [devLoading, setDevLoading] = useState(false);
+  const [teamReport, setTeamReport] = useState(null);
+  const [teamLoading, setTeamLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: "", type: "strength", level: "All", intensity: "moderate",
@@ -64,6 +74,11 @@ export default function StrengthConditioning() {
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
     load();
+    Promise.all([
+      base44.entities.PlayerStat.list("-week", 200),
+      base44.entities.PlayerHealth.list("-date", 100),
+      base44.entities.PracticePlan.list("-date", 20),
+    ]).then(([st, hr, pr]) => { setDevStats(st); setDevHealth(hr); setDevPractices(pr); });
   }, []);
 
   // Compute load alerts once we have data
