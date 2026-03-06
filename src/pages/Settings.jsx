@@ -277,6 +277,11 @@ export default function Settings() {
         </div>
       </div>
 
+      {/* Users / Staff Management — admin, AD, HC only */}
+      {user && ["admin", "athletic_director", "head_coach"].includes(user.role) && (
+        <UsersSection currentUser={user} />
+      )}
+
       {/* Logout */}
       <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5">
         <h2 className="text-white font-bold mb-4">Account</h2>
