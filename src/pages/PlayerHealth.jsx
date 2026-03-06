@@ -141,7 +141,7 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
             <span className="hidden md:inline">{riskLoading ? "Analyzing..." : "Nx Risk Analysis"}</span>
           </button>
           {canEdit && (
-            <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <button onClick={openAdd} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
               <Plus className="w-4 h-4" /> Log Health
             </button>
           )}
@@ -217,7 +217,7 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
                     <td className="px-4 py-3">
                       {canEdit && (
                         <div className="flex items-center gap-2 justify-end">
-                          <button onClick={() => openEdit(r)} className="text-gray-500 hover:text-orange-500 transition-colors"><Edit className="w-4 h-4" /></button>
+                          <button onClick={() => openEdit(r)} className="text-gray-500 transition-colors" onMouseEnter={e => e.currentTarget.style.color="var(--color-primary,#f97316)"} onMouseLeave={e => e.currentTarget.style.color=""}><Edit className="w-4 h-4" /></button>
                           <button onClick={() => remove(r.id)} className="text-gray-500 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       )}
