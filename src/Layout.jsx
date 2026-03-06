@@ -40,7 +40,7 @@ const navItems = [
 { label: "Playlists", page: "Playlists", icon: ListVideo, roles: null },
 { label: "NxMessage", page: "Messages", icon: MessageSquare, roles: null },
 { label: "NxCall", page: "InGameAssistant", icon: Gamepad2, roles: IN_GAME_ROLES },
-{ label: "Development", page: "PlayerDevelopment", icon: Brain, roles: null },
+
 { label: "Users", page: "UserManagement", icon: UserCog, roles: ["admin", "head_coach", "athletic_director"] },
 ];
 

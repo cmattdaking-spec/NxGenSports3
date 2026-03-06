@@ -18,7 +18,7 @@ const TYPE_COLOR = {
   strength: "bg-blue-500/20 text-blue-400",
   conditioning: "bg-orange-500/20 text-orange-400",
   speed: "bg-yellow-500/20 text-yellow-400",
-  agility: "bg-purple-500/20 text-purple-400",
+  agility: "bg-teal-500/20 text-teal-400",
   recovery: "bg-green-500/20 text-green-400",
   full_body: "bg-red-500/20 text-red-400",
   position_specific: "bg-cyan-500/20 text-cyan-400"
@@ -198,7 +198,7 @@ Generate a 5-day workout week plan with specific exercises, sets, reps, and coac
         </div>
         <div className="flex gap-2">
           <button onClick={generateAIPlan} disabled={aiLoading}
-            className="flex items-center gap-2 bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 text-purple-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
+            className="flex items-center gap-2 bg-teal-500/10 border border-teal-500/30 hover:bg-teal-500/20 text-teal-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
             <Brain className="w-4 h-4" />
             <span className="hidden md:inline">Nx S&C AI</span>
           </button>
@@ -253,7 +253,7 @@ Generate a 5-day workout week plan with specific exercises, sets, reps, and coac
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <h3 className="text-white font-bold">{plan.name}</h3>
-                    {plan.ai_generated && <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400">AI</span>}
+                    {plan.ai_generated && <span className="text-xs px-1.5 py-0.5 rounded-full bg-teal-500/20 text-teal-400">AI</span>}
                     <span className={`text-xs px-2 py-0.5 rounded-full ${TYPE_COLOR[plan.type] || "bg-gray-500/20 text-gray-400"}`}>{plan.type?.replace("_"," ")}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${INTENSITY_COLOR[plan.intensity] || ""}`}>{plan.intensity}</span>
                     {plan.level && plan.level !== "All" && <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">{plan.level}</span>}
@@ -313,26 +313,26 @@ Generate a 5-day workout week plan with specific exercises, sets, reps, and coac
       {/* Nx S&C AI Modal */}
       {showAiModal && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-[#141414] border border-purple-500/30 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#141414] border border-teal-500/30 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-gray-800">
               <div className="flex items-center gap-2">
-                <Brain className="w-5 h-5 text-purple-400" />
+                <Brain className="w-5 h-5 text-teal-400" />
                 <h2 className="text-white font-bold">Nx S&C Weekly Plan</h2>
-                <span className="text-purple-400 text-xs bg-purple-500/20 px-2 py-0.5 rounded-full">AI-Powered</span>
+                <span className="text-teal-400 text-xs bg-teal-500/20 px-2 py-0.5 rounded-full">AI-Powered</span>
               </div>
               <button onClick={() => { setShowAiModal(false); setAiPlan(null); }} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
             <div className="p-5">
               {aiLoading ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-4">
-                  <div className="w-10 h-10 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-10 h-10 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
                   <p className="text-gray-400 text-sm">Nx is generating your S&C program...</p>
                 </div>
               ) : aiPlan ? (
                 <div className="space-y-5">
-                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
+                  <div className="bg-teal-500/10 border border-teal-500/20 rounded-xl p-4">
                     <h3 className="text-white font-bold text-lg">{aiPlan.plan_name}</h3>
-                    <p className="text-purple-300 text-sm italic mt-1">"{aiPlan.weekly_theme}"</p>
+                    <p className="text-teal-300 text-sm italic mt-1">"{aiPlan.weekly_theme}"</p>
                     {aiPlan.coaching_notes && <p className="text-gray-400 text-sm mt-2">{aiPlan.coaching_notes}</p>}
                   </div>
                   {aiPlan.days?.map((day, i) => (
