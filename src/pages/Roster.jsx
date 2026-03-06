@@ -229,11 +229,43 @@ export default function Roster() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-gray-400 text-xs mb-1 block">Overall Rating (0-100)</label>
-                  <input type="number" min="0" max="100" value={form.overall_rating || ""} onChange={e => setForm({...form, overall_rating: +e.target.value})}
-                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+                   <label className="text-gray-400 text-xs mb-1 block">Overall Rating (0-100)</label>
+                   <input type="number" min="0" max="100" value={form.overall_rating || ""} onChange={e => setForm({...form, overall_rating: +e.target.value})}
+                     className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none" />
+                 </div>
                 </div>
-              </div>
+                <div>
+                 <label className="text-gray-400 text-xs mb-2 block">Secondary Positions (can play)</label>
+                 <div className="flex flex-wrap gap-2">
+                   {POSITIONS.filter(p => p !== form.position).map(pos => (
+                     <button key={pos} type="button"
+                       onClick={() => {
+                         const curr = form.secondary_positions || [];
+                         setForm({...form, secondary_positions: curr.includes(pos) ? curr.filter(p => p !== pos) : [...curr, pos]});
+                       }}
+                       className={`text-xs px-2 py-1 rounded-lg border transition-all ${(form.secondary_positions || []).includes(pos) ? "text-white" : "bg-[#1a1a1a] border-gray-700 text-gray-400"}`}
+                       style={(form.secondary_positions || []).includes(pos) ? { backgroundColor: "var(--color-primary,#f97316)", borderColor: "var(--color-primary,#f97316)" } : {}}>
+                       {pos}
+                     </button>
+                   ))}
+                 </div>
+                </div>
+                <div>
+                 <label className="text-gray-400 text-xs mb-2 block">Team Levels</label>
+                 <div className="flex gap-2">
+                   {LEVELS.map(l => (
+                     <button key={l} type="button"
+                       onClick={() => {
+                         const curr = form.levels || [];
+                         setForm({...form, levels: curr.includes(l) ? curr.filter(lv => lv !== l) : [...curr, l]});
+                       }}
+                       className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${(form.levels || []).includes(l) ? "text-white" : "bg-[#1a1a1a] border-gray-700 text-gray-400"}`}
+                       style={(form.levels || []).includes(l) ? { backgroundColor: "var(--color-primary,#f97316)", borderColor: "var(--color-primary,#f97316)" } : {}}>
+                       {l}
+                     </button>
+                   ))}
+                 </div>
+                </div>
               <div>
                 <label className="text-gray-400 text-xs mb-1 block">Hometown</label>
                 <input value={form.hometown || ""} onChange={e => setForm({...form, hometown: e.target.value})}
