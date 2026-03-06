@@ -6,6 +6,7 @@ const POSITIONS = ["QB","RB","FB","WR","TE","LT","LG","C","RG","RT","DE","DT","N
 const UNITS = ["offense","defense","special_teams"];
 const YEARS = ["Freshman","Sophomore","Junior","Senior","Grad"];
 const STATUSES = ["active","injured","suspended","inactive"];
+const LEVELS = ["Varsity","JV","Freshman"];
 
 const statusColor = { active: "bg-green-500/20 text-green-400", injured: "bg-red-500/20 text-red-400", suspended: "bg-yellow-500/20 text-yellow-400", inactive: "bg-gray-500/20 text-gray-400" };
 const unitColor = { offense: "bg-blue-500/20 text-blue-400", defense: "bg-red-500/20 text-red-400", special_teams: "bg-purple-500/20 text-purple-400" };
@@ -42,7 +43,7 @@ export default function Roster() {
   const canAdd = CAN_ADD.includes(user?.role);
   const canDelete = CAN_DELETE.includes(user?.role);
 
-  const openAdd = () => { setEditing(null); setForm({ status: "active", unit: "offense", academic_eligible: true }); setShowForm(true); };
+  const openAdd = () => { setEditing(null); setForm({ status: "active", unit: "offense", academic_eligible: true, levels: ["Varsity"], secondary_positions: [] }); setShowForm(true); };
   const openEdit = (p) => { setEditing(p); setForm({ ...p }); setShowForm(true); };
 
   const save = async () => {
@@ -130,7 +131,12 @@ export default function Roster() {
                       {p.unit?.replace("_", " ")}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-400 text-sm">{p.year}</td>
+                  <td className="px-4 py-3 text-gray-400 text-sm">
+                    <div>{p.year}</div>
+                    <div className="flex flex-wrap gap-1 mt-0.5">
+                      {(p.levels || ["Varsity"]).map(l => <span key={l} className="text-xs px-1.5 py-0.5 rounded bg-gray-800 text-gray-500">{l}</span>)}
+                    </div>
+                  </td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${statusColor[p.status]}`}>{p.status}</span>
                   </td>
