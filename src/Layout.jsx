@@ -19,6 +19,11 @@ const GAME_PLAN_ROLES = ["admin","head_coach","associate_head_coach","offensive_
 // NxCall (In-Game AI): no athletic_director
 const IN_GAME_ROLES = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 
+// Roles that can see Depth Chart (everyone except nothing — but AD is view-only)
+const DEPTH_CHART_ROLES = null; // all
+// Trainer-visible: Depth Chart (view), Practice (view), S&C, Health (edit)
+// Athletic Director: NO Playbook, GamePlan, Scouting, NxCall
+
 const navItems = [
 { label: "Dashboard", page: "Dashboard", icon: Home, roles: null },
 { label: "Roster", page: "Roster", icon: Users, roles: null },
