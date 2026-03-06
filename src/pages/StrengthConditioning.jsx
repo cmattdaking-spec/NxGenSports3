@@ -535,6 +535,8 @@ Avg Grade: ${avgGrade}, Recent Injuries: ${injuries}, Status: ${player.status}`,
         </div>
       )}
 
+      </>}
+
       {/* Nx S&C AI Modal */}
       {showAiModal && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
