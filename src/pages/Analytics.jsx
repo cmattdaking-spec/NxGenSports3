@@ -40,6 +40,9 @@ export default function Analytics() {
   const [goals, setGoals] = useState({});
   const [showGoals, setShowGoals] = useState(false);
   const [goalForm, setGoalForm] = useState({});
+  const [showODK, setShowODK] = useState(false);
+  const [odkLoading, setOdkLoading] = useState(false);
+  const [odkResult, setOdkResult] = useState(null);
 
   useEffect(() => {
     Promise.all([
