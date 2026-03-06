@@ -24,7 +24,7 @@ const POSITION_METRICS = {
 };
 
 const metricLabel = (m) => m.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-const COLORS = ["#f97316", "#3b82f6", "#10b981", "#a855f7", "#eab308"];
+const COLORS = ["var(--color-primary,#f97316)", "#3b82f6", "#10b981", "#a855f7", "#eab308"];
 
 export default function Analytics() {
   const [players, setPlayers] = useState([]);
@@ -145,7 +145,7 @@ export default function Analytics() {
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-white">Nx <span className="text-orange-500">Analytics</span></h1>
+          <h1 className="text-2xl font-black text-white">Nx <span style={{ color: "var(--color-primary,#f97316)" }}>Analytics</span></h1>
           <p className="text-gray-500 text-sm">Performance trends, comparisons & Nx insights</p>
         </div>
         <div className="flex gap-2 flex-wrap justify-end">
