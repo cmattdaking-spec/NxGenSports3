@@ -148,10 +148,10 @@ Generate a detailed, opponent-specific game plan JSON.`,
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-white">Game <span className="text-orange-500">Plans</span></h1>
+          <h1 className="text-2xl font-black text-white">Game <span style={{ color: "var(--color-primary,#f97316)" }}>Plans</span></h1>
           <p className="text-gray-500 text-sm">{plans.length} plans created</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        <button onClick={openAdd} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
           <Plus className="w-4 h-4" /> New Plan
         </button>
       </div>
@@ -185,11 +185,11 @@ Generate a detailed, opponent-specific game plan JSON.`,
                   <span className="hidden md:inline">{nxPlanLoading && nxPlanTarget === plan.id ? "Generating..." : "Nx Game Plan"}</span>
                 </button>
                 <button onClick={() => getAISuggestions(plan)} disabled={aiLoading && aiTarget === plan.id}
-                  className="flex items-center gap-1 bg-orange-500/10 border border-orange-500/30 text-orange-400 px-2 py-1.5 rounded-lg text-xs hover:bg-orange-500/20 transition-all">
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs transition-all border" style={{ backgroundColor: "var(--color-primary,#f97316)18", borderColor: "var(--color-primary,#f97316)55", color: "var(--color-primary,#f97316)" }}>
                   <Zap className={`w-3.5 h-3.5 ${aiLoading && aiTarget === plan.id ? "animate-pulse" : ""}`} />
                   <span className="hidden md:inline">{aiLoading && aiTarget === plan.id ? "..." : "Nx Assist"}</span>
                 </button>
-                <button onClick={() => openEdit(plan)} className="text-gray-500 hover:text-orange-500 p-1.5 transition-colors"><Edit className="w-4 h-4" /></button>
+                <button onClick={() => openEdit(plan)} className="text-gray-500 p-1.5 transition-colors" onMouseEnter={e => e.currentTarget.style.color="var(--color-primary,#f97316)"} onMouseLeave={e => e.currentTarget.style.color=""}><Edit className="w-4 h-4" /></button>
                 <button onClick={() => remove(plan.id)} className="text-gray-500 hover:text-red-400 p-1.5 transition-colors"><Trash2 className="w-4 h-4" /></button>
                 <button onClick={() => setExpanded(expanded === plan.id ? null : plan.id)} className="text-gray-500 hover:text-white p-1.5 transition-colors">
                   {expanded === plan.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -206,10 +206,10 @@ Generate a detailed, opponent-specific game plan JSON.`,
                   </div>
                 )}
                 {plan.ai_suggestions && (
-                  <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                  <div className="rounded-lg p-3 border" style={{ backgroundColor: "var(--color-primary,#f97316)15", borderColor: "var(--color-primary,#f97316)35" }}>
                     <div className="flex items-center gap-2 mb-2">
-                      <Zap className="w-3.5 h-3.5 text-orange-500" />
-                      <span className="text-orange-400 text-xs font-medium">Nx Game Plan Notes</span>
+                      <Zap className="w-3.5 h-3.5" style={{ color: "var(--color-primary,#f97316)" }} />
+                      <span className="text-xs font-medium" style={{ color: "var(--color-primary,#f97316)" }}>Nx Game Plan Notes</span>
                     </div>
                     <p className="text-gray-300 text-sm whitespace-pre-line">{plan.ai_suggestions}</p>
                   </div>
@@ -447,7 +447,7 @@ Generate a detailed, opponent-specific game plan JSON.`,
               </div>
               <div className="flex gap-3 pt-1">
                 <button onClick={() => setShowForm(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-lg text-sm">Cancel</button>
-                <button onClick={save} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg text-sm font-medium">Save Plan</button>
+                <button onClick={save} className="flex-1 text-white py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>Save Plan</button>
               </div>
             </div>
           </div>

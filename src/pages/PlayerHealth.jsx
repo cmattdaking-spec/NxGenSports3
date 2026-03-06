@@ -427,7 +427,7 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
               </div>
               <div className="flex gap-3 pt-1">
                 <button onClick={() => setShowForm(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded-lg text-sm">Cancel</button>
-                <button onClick={save} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg text-sm font-medium">Save Record</button>
+                <button onClick={save} className="flex-1 text-white py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>Save Record</button>
               </div>
             </div>
           </div>
