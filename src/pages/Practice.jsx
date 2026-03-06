@@ -35,7 +35,9 @@ export default function Practice() {
     ]);
     setPlans(pr); setPlayers(pl); setHealthRecords(h); setOpponents(op); setLoading(false);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); load(); }, []);
+
+  const canEdit = user && PRACTICE_EDIT_ROLES.includes(user.role);
 
   const openAdd = () => {
     setEditing(null);
