@@ -39,6 +39,7 @@ const navItems = [
 { label: "Eligibility", page: "AcademicEligibility", icon: GraduationCap, roles: null },
 { label: "Recruiting", page: "Recruiting", icon: Star, roles: COORD_ONLY },
 { label: "Analytics", page: "Analytics", icon: BarChart2, roles: null },
+{ label: "Performance", page: "PerformanceAnalytics", icon: TrendingUp, roles: COORDINATOR_ROLES },
 
 { label: "NxMessage", page: "Messages", icon: MessageSquare, roles: null },
 { label: "NxCall", page: "InGameAssistant", icon: Gamepad2, roles: IN_GAME_ROLES },
