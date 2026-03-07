@@ -498,7 +498,7 @@ export default function Recruiting() {
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Height</label>
-                  <input value={form.height || ""} onChange={e => setForm({...form, height: e.target.value})} placeholder='6\'2"'
+                  <input value={form.height || ""} onChange={e => setForm({...form, height: e.target.value})} placeholder={`6'2"`}
                     className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm outline-none" />
                 </div>
                 <div>
