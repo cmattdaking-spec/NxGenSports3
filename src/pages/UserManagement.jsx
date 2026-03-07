@@ -64,10 +64,10 @@ export default function UserManagement() {
     }).catch(() => setLoading(false));
   }, []);
 
-  const canManage = CAN_MANAGE.includes(user?.role);
+  const isSuperAdmin = user?.role === "super_admin";
+  const canManage = isSuperAdmin || CAN_MANAGE.includes(user?.role);
   const canDesignateAC = CAN_DESIGNATE_AC.includes(user?.role);
-  // Only AD and HC can add/remove players and coaches
-  const canAddRemoveUsers = ["admin", "head_coach", "athletic_director"].includes(user?.role);
+  const canAddRemoveUsers = isSuperAdmin || ["admin", "head_coach", "athletic_director"].includes(user?.role);
 
   const currentAC = allUsers.find(u => u.is_associate_head_coach);
 
