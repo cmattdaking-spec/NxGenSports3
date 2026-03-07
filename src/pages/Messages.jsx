@@ -337,7 +337,7 @@ export default function Messages() {
                 </div>
               ) : dmConvos.map(convo => {
                 const otherEmail = convo.type === "direct" ? convo.participants?.find(p => p !== user?.email) : null;
-                const isOnline = otherEmail ? onlineUsers.has(otherEmail) : false;
+                const presenceStatus = otherEmail ? (onlineUsers.has(otherEmail) ? "online" : "offline") : "offline";
                 return (
                 <button key={convo.id} onClick={() => openConversation(convo)}
                   className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg mb-0.5 transition-all text-left ${activeConvo?.id === convo.id ? "bg-[var(--color-primary,#3b82f6)]/15" : "hover:bg-white/5"}`}>
@@ -346,7 +346,7 @@ export default function Messages() {
                       {convo.type === "group" ? <Users className="w-4 h-4 text-[var(--color-primary,#3b82f6)]" /> : <span style={{ color: "var(--color-primary,#3b82f6)" }}>{getConvoDisplayName(convo)[0]?.toUpperCase()}</span>}
                     </div>
                     {convo.type === "direct" && (
-                      <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#111111] ${isOnline ? "bg-green-400" : "bg-gray-600"}`} />
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#111111] ${presenceStatus === "online" ? "bg-green-400" : "bg-gray-600"}`} />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
