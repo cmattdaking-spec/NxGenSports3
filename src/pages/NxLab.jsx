@@ -14,58 +14,74 @@ import VideoAnnotationCanvas from "../components/filmroom/VideoAnnotationCanvas"
 function ScoutingTab() {
   const [opponents, setOpponents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({});
   const [expanded, setExpanded] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiTarget, setAiTarget] = useState(null);
   const [deepAnalysisTarget, setDeepAnalysisTarget] = useState(null);
   const [deepAnalysisLoading, setDeepAnalysisLoading] = useState(false);
-  const [deepReport, setDeepReport] = useState(null);
 
-  const load = () => base44.entities.Opponent.list("-game_date").then(d => { setOpponents(d); setLoading(false); });
+  const load = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await base44.entities.Opponent.list("-game_date");
+      setOpponents(data);
+    } catch (err) {
+      console.error("Error loading opponents:", err);
+      setError("Failed to load opponents");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => { load(); }, []);
 
-  const openAdd = () => { setEditing(null); setForm({ location: "home" }); setShowForm(true); };
-  const openEdit = (o) => { setEditing(o); setForm({...o}); setShowForm(true); };
-  const save = async () => {
-    if (editing) await base44.entities.Opponent.update(editing.id, form);
-    else await base44.entities.Opponent.create(form);
-    setShowForm(false); load();
+  const openAdd = () => { setEditing(null); setShowForm(true); };
+  const openEdit = (o) => { setEditing(o); setShowForm(true); };
+
+  const save = async (form) => {
+    try {
+      if (editing) await base44.entities.Opponent.update(editing.id, form);
+      else await base44.entities.Opponent.create(form);
+      setShowForm(false);
+      load();
+    } catch (err) {
+      console.error("Error saving opponent:", err);
+      alert("Failed to save opponent");
+    }
   };
-  const remove = async (id) => { if (confirm("Delete opponent?")) { await base44.entities.Opponent.delete(id); load(); } };
+
+  const remove = async (id) => {
+    if (!confirm("Delete opponent?")) return;
+    try {
+      await base44.entities.Opponent.delete(id);
+      load();
+    } catch (err) {
+      console.error("Error deleting opponent:", err);
+      alert("Failed to delete opponent");
+    }
+  };
 
   const getScoutReport = async (opp) => {
-    setAiLoading(true); setAiTarget(opp.id);
-    const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a football scouting AI. Generate a concise scouting report for: ${opp.name} (${opp.record || "?"} record, ${opp.location} game on ${opp.game_date}).\nOffensive Tendency: ${opp.offensive_tendency || "Unknown"}\nDefensive Tendency: ${opp.defensive_tendency || "Unknown"}\nKey Players: ${opp.key_players || "Unknown"}\nStrengths: ${opp.strengths || "Unknown"}\nWeaknesses: ${opp.weaknesses || "Unknown"}\n\nProvide: 1) Offensive analysis 2) Defensive analysis 3) Key matchups 4) Top 3 game plan recommendations.`,
-      add_context_from_internet: true
-    });
-    await base44.entities.Opponent.update(opp.id, { ai_scout_report: res });
-    load(); setAiLoading(false); setAiTarget(null);
-  };
-
-  const getDeepAnalysis = async (opp) => {
-    setDeepAnalysisLoading(true); setDeepAnalysisTarget(opp.id); setDeepReport(null);
-    const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an elite football analytics AI. Provide a comprehensive strategic breakdown for facing ${opp.name}. Record: ${opp.record || "Unknown"}, Game: ${opp.game_date} (${opp.location}), Offensive Tendency: ${opp.offensive_tendency || "Not provided"}, Defensive Tendency: ${opp.defensive_tendency || "Not provided"}, Key Players: ${opp.key_players || "Not provided"}.`,
-      add_context_from_internet: true,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          offensive_breakdown: { type: "string" },
-          defensive_breakdown: { type: "string" },
-          key_player_matchups: { type: "array", items: { type: "object", properties: { their_player: { type: "string" }, matchup_note: { type: "string" }, recommendation: { type: "string" } } } },
-          exploitable_weaknesses: { type: "array", items: { type: "string" } },
-          game_plan_adjustments: { type: "array", items: { type: "object", properties: { area: { type: "string" }, adjustment: { type: "string" }, rationale: { type: "string" } } } },
-          threat_level: { type: "string", enum: ["Low", "Medium", "High", "Very High"] },
-          win_probability_factors: { type: "array", items: { type: "string" } },
-          special_teams_notes: { type: "string" }
-        }
-      }
-    });
-    setDeepReport(res); setDeepAnalysisLoading(false);
+    try {
+      setAiLoading(true);
+      setAiTarget(opp.id);
+      const res = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a football scouting AI. Generate a concise scouting report for: ${opp.name} (${opp.record || "?"} record, ${opp.location} game on ${opp.game_date}).\nOffensive Tendency: ${opp.offensive_tendency || "Unknown"}\nDefensive Tendency: ${opp.defensive_tendency || "Unknown"}\nKey Players: ${opp.key_players || "Unknown"}\nStrengths: ${opp.strengths || "Unknown"}\nWeaknesses: ${opp.weaknesses || "Unknown"}\n\nProvide: 1) Offensive analysis 2) Defensive analysis 3) Key matchups 4) Top 3 game plan recommendations.`,
+        add_context_from_internet: true
+      });
+      await base44.entities.Opponent.update(opp.id, { ai_scout_report: res });
+      load();
+    } catch (err) {
+      console.error("Error generating scout report:", err);
+      alert("Failed to generate scout report");
+    } finally {
+      setAiLoading(false);
+      setAiTarget(null);
+    }
   };
 
   const locationBadge = { home: "bg-green-500/20 text-green-400", away: "bg-red-500/20 text-red-400", neutral: "bg-yellow-500/20 text-yellow-400" };
