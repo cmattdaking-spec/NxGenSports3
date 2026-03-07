@@ -33,19 +33,28 @@ export default function GameSchedule() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   useEffect(() => {
-    Promise.all([
-      base44.auth.me().catch(() => null),
-      base44.entities.Opponent.list("game_date"),
-      base44.entities.Player.list(),
-      base44.entities.GamePlan.list()
-    ]).then(([u, op, pl, gp]) => {
-      setUser(u); setOpponents(op); setPlayers(pl); setGamePlans(gp);
-      setLoading(false);
-      // Build team preview
-      const byUnit = { offense: pl.filter(p => p.unit === "offense" && p.status === "active").length, defense: pl.filter(p => p.unit === "defense" && p.status === "active").length, special_teams: pl.filter(p => p.unit === "special_teams" && p.status === "active").length };
-      const injured = pl.filter(p => p.status === "injured").length;
-      setTeamPreview({ total: pl.length, byUnit, injured });
-    });
+    const loadData = async () => {
+      try {
+        const [u, op, pl, gp] = await Promise.all([
+          base44.auth.me().catch(() => null),
+          base44.entities.Opponent.list("game_date"),
+          base44.entities.Player.list(),
+          base44.entities.GamePlan.list()
+        ]);
+        setUser(u);
+        setOpponents(op);
+        setPlayers(pl);
+        setGamePlans(gp);
+        const byUnit = { offense: pl.filter(p => p.unit === "offense" && p.status === "active").length, defense: pl.filter(p => p.unit === "defense" && p.status === "active").length, special_teams: pl.filter(p => p.unit === "special_teams" && p.status === "active").length };
+        const injured = pl.filter(p => p.status === "injured").length;
+        setTeamPreview({ total: pl.length, byUnit, injured });
+      } catch (err) {
+        console.error("Error loading game schedule data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
   const today = new Date();
