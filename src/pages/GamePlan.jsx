@@ -105,6 +105,15 @@ Opponent Scouting Data:
 Our Team:
 - Active ${plan.unit} Players: ${unitPlayers || "Not specified"}
 - Available Plays: ${unitPlays || "Not specified"}
+${filmInsights ? `
+Film Room Data (vs ${plan.opponent}):
+- Session: ${filmInsights.session_title} (${filmInsights.game_date || "recent"})
+- Plays Tagged: ${filmInsights.total_plays}
+- Success Rate: ${filmInsights.success_rate}%
+- Run/Pass: ${filmInsights.run_pass_ratio}
+- Formations Seen: ${filmInsights.formations_seen.join(", ") || "N/A"}
+- Flagged Plays/Issues: ${filmInsights.flagged_plays.join("; ") || "None"}
+USE THIS FILM DATA to inform specific play calls, formation counters, and personnel suggestions.` : "- No film data available for this opponent."}
 
 Generate a detailed, opponent-specific game plan JSON.`,
       response_json_schema: {
