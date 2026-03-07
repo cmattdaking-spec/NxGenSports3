@@ -39,7 +39,8 @@ Stats Summary: ${p.stats_summary || "N/A"}
 Bio: ${p.bio || "N/A"}
 Awards: ${p.awards?.join(", ") || "None"}
 Offers: ${p.offers?.join(", ") || "None"}
-Highlight Film: ${p.highlight_url || "Not provided"}
+Highlight Film URL: ${p.highlight_url || p.hudl_url || "Not provided"}
+${(p.highlight_url || p.hudl_url) ? "IMPORTANT: Use the highlight film URL above to look up and analyze actual game footage if accessible. Evaluate footwork, release, acceleration, coverage technique, etc. from film." : ""}
 Recruiting Status: ${p.recruiting_status}
 ${p.committed_to ? `Committed to: ${p.committed_to}` : ""}
 
