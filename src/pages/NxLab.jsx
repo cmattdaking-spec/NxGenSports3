@@ -363,15 +363,22 @@ export default function NxLab() {
           <FlaskConical className="w-5 h-5" style={{ color: "var(--color-primary,#f97316)" }} />
           <span className="text-white font-black text-lg">Nx<span style={{ color: "var(--color-primary,#f97316)" }}>Lab</span></span>
         </div>
-        <div className="flex gap-1 bg-[#1a1a1a] rounded-lg p-0.5">
-          {[{ id: "film", label: "Film Room", icon: Film }, { id: "scouting", label: "Scouting", icon: Crosshair }].map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setActiveTab(id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${activeTab === id ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
-              style={activeTab === id ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
-              <Icon className="w-3.5 h-3.5" />{label}
-            </button>
-          ))}
-        </div>
+        <div className="flex gap-1 bg-[#1a1a1a] rounded-lg p-0.5 overflow-x-auto">
+           {[
+             { id: "film", label: "Film Room", icon: Film },
+             { id: "scouting", label: "Scouting", icon: Crosshair },
+             { id: "playbook", label: "Playbook", icon: BookOpen },
+             { id: "practice", label: "Practice", icon: ClipboardList },
+             { id: "gameplan", label: "Game Plan", icon: Target },
+             { id: "messages", label: "Messages", icon: MessageSquare }
+           ].map(({ id, label, icon: Icon }) => (
+             <button key={id} onClick={() => setActiveTab(id)}
+               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap ${activeTab === id ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
+               style={activeTab === id ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
+               <Icon className="w-3.5 h-3.5" />{label}
+             </button>
+           ))}
+         </div>
       </div>
 
       {/* SCOUTING TAB */}
