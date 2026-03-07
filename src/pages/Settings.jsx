@@ -149,6 +149,32 @@ export default function Settings() {
         </div>
       )}
 
+      {/* Team Logo */}
+      {canChangeColors && (
+        <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5">
+          <h2 className="text-white font-bold mb-1 flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-[var(--color-primary,#3b82f6)]" /> Team Logo
+          </h2>
+          <p className="text-gray-500 text-xs mb-4">Upload your school or team logo. Displayed on your team portal.</p>
+          <div className="flex items-center gap-4">
+            <div className="w-20 h-20 rounded-2xl border-2 border-gray-700 bg-[#1a1a1a] flex items-center justify-center overflow-hidden flex-shrink-0">
+              {teamLogo
+                ? <img src={teamLogo} alt="Team Logo" className="w-full h-full object-contain p-1" />
+                : <Building2 className="w-8 h-8 text-gray-700" />
+              }
+            </div>
+            <div className="space-y-2 flex-1">
+              <label className="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-300 text-sm cursor-pointer transition-all w-fit">
+                <Upload className="w-4 h-4" />
+                {logoUploading ? "Uploading..." : teamLogo ? "Change Logo" : "Upload Logo"}
+                <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={logoUploading} />
+              </label>
+              <p className="text-gray-600 text-xs">PNG, JPG or SVG recommended. Square logos work best.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Color Scheme */}
       <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5">
         <h2 className="text-white font-bold mb-1 flex items-center gap-2">
