@@ -156,8 +156,10 @@ export default function Messages() {
   };
 
   const sendMessage = async (attachmentUrl = null, attachmentName = null) => {
-    const content = attachmentUrl ? (newMessage.trim() || attachmentName) : newMessage.trim();
+    let content = attachmentUrl ? (newMessage.trim() || attachmentName) : newMessage.trim();
     if (!content || sending) return;
+    if (isAnnouncement) content = `📢 ${content}`;
+    setIsAnnouncement(false);
     const convoId = activeConvo?.id || activeChannel?.id;
     if (!convoId) return;
     setSending(true);
