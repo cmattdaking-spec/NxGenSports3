@@ -23,6 +23,7 @@ export default function DepthChart() {
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [user, setUser] = useState(null);
   const [filterLevel, setFilterLevel] = useState("all");
+  const { getLabel, getLanguageContext } = useTeamLanguage();
 
   const load = async () => {
     const [p, d, w, h] = await Promise.all([
