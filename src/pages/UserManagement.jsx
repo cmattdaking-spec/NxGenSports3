@@ -71,15 +71,16 @@ export default function UserManagement() {
       if (!isSuper && !CAN_MANAGE.includes(u?.role)) return setLoading(false);
       base44.entities.User.list().then(list => {
         if (isSuper) {
-          // Super admin sees all users but cannot access team data — just user records
           setAllUsers(list.filter(m => m.role !== "super_admin"));
         } else {
           const teamId = u.team_id;
-          const filtered = teamId ? list.filter(m => m.team_id === teamId || !m.team_id) : list;
+          const filtered = teamId
+            ? list.filter(m => m.team_id === teamId)
+            : list.filter(m => m.role !== "super_admin");
           setAllUsers(filtered);
         }
         setLoading(false);
-      });
+      }).catch(() => setLoading(false));
     }).catch(() => setLoading(false));
   }, []);
 
