@@ -20,6 +20,14 @@ export default function Messages() {
   const [searchUsers, setSearchUsers] = useState("");
   const messagesEndRef = useRef(null);
   const [sending, setSending] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+
+  const EMOJIS = ["😂","😭","🔥","💪","🏈","🙌","👊","💯","🎯","⚡","🏆","😤","👏","🙏","😮","💀","😎","🤙","👍","❤️","🎉","🤣","😅","😆","😊","🥶","🤯","💥","🚀","🔒"];
+
+  const insertEmoji = (emoji) => {
+    setNewMessage(prev => prev + emoji);
+    setShowEmoji(false);
+  };
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -267,7 +275,21 @@ export default function Messages() {
 
           {/* Input */}
           <div className="p-3 bg-[#111111] border-t border-gray-800">
+            {showEmoji && (
+              <div className="mb-2 bg-[#1a1a1a] border border-gray-700 rounded-xl p-3 flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
+                {EMOJIS.map(e => (
+                  <button key={e} onClick={() => insertEmoji(e)} className="text-xl hover:scale-125 transition-transform leading-none">{e}</button>
+                ))}
+              </div>
+            )}
             <div className="flex items-end gap-2">
+              <button
+                onClick={() => setShowEmoji(v => !v)}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${showEmoji ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
+                style={showEmoji ? { backgroundColor: "var(--color-primary,#3b82f6)22" } : {}}
+              >
+                <Smile className="w-5 h-5" />
+              </button>
               <textarea
                 value={newMessage}
                 onChange={e => setNewMessage(e.target.value)}
