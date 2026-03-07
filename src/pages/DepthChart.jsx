@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Zap, Edit, X, Flame, AlertTriangle } from "lucide-react";
+import { useTeamLanguage, POSITION_DEFS } from "@/components/playbook/useTeamLanguage";
 
-const OFFENSE_POSITIONS = ["QB","RB","FB","WR","TE","LT","LG","C","RG","RT"];
+// Use lettering system positions
+const OFFENSE_POSITIONS = ["QB","X","Z","W","Y","A","FB","H","LT","LG","C","RG","RT"];
 const DEFENSE_POSITIONS = ["DE","DT","NT","OLB","MLB","ILB","CB","SS","FS"];
 const SPECIAL_POSITIONS = ["K","P","LS"];
 const UNIT_POSITIONS = { offense: OFFENSE_POSITIONS, defense: DEFENSE_POSITIONS, special_teams: SPECIAL_POSITIONS };
