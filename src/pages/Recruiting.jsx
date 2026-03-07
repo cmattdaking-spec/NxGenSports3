@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   Star, Plus, Edit, Trash2, X, Upload, Video, ExternalLink,
-  Trophy, Zap, User, Search, Filter, Share2, CheckCircle, AlertCircle
+  Trophy, Zap, User, Search, Filter, Share2, CheckCircle, AlertCircle, Brain
 } from "lucide-react";
+import ScoutAssistant from "../components/recruiting/ScoutAssistant";
 
 const STATUS_CFG = {
   available: { label: "Available", color: "bg-green-500/20 text-green-400 border-green-500/30" },
@@ -151,7 +152,7 @@ export default function Recruiting() {
 
         {/* Tabs */}
         <div className="flex gap-1 mt-4 bg-[#141414] border border-gray-800 rounded-lg p-1 w-fit">
-          {[{ id: "board", label: "Recruit Board" }, { id: "stats", label: "Stats Comparison" }].map(t => (
+          {[{ id: "board", label: "Recruit Board" }, { id: "stats", label: "Stats Comparison" }, { id: "scout", label: "NxScout AI" }].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === t.id ? "text-white" : "text-gray-400 hover:text-white"}`}
               style={tab === t.id ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
@@ -313,6 +314,7 @@ export default function Recruiting() {
             </table>
           </div>
         )}
+        {tab === "scout" && <ScoutAssistant profiles={profiles} />}
       </div>
 
       {/* Profile Detail Modal */}
