@@ -35,9 +35,21 @@ export default function Settings() {
   const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false });
 
   const canChangeColors = user?.role === "head_coach" || user?.role === "admin";
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [teamLogo, setTeamLogo] = useState(null);
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setLogoUploading(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setTeamLogo(file_url);
+    await base44.auth.updateMe({ team_logo_url: file_url });
+    setLogoUploading(false);
+  };
 
   useEffect(() => {
-    base44.auth.me().then(u => { setUser(u); setNotificationsEnabled(u?.notifications_enabled || false); }).catch(() => {});
+    base44.auth.me().then(u => { setUser(u); setNotificationsEnabled(u?.notifications_enabled || false); setTeamLogo(u?.team_logo_url || null); }).catch(() => {});
     base44.entities.AppSettings.list().then((list) => {
       if (list.length > 0) {
         setSettings(list[0]);
