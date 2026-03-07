@@ -63,6 +63,12 @@ export default function UserManagement() {
   const [inviting, setInviting] = useState(false);
   const [inviteMsg, setInviteMsg] = useState({ text: "", type: "success" });
   const [acDesignating, setAcDesignating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState(new Set());
+  const [bulkRole, setBulkRole] = useState("");
+  const [bulkPositions, setBulkPositions] = useState([]);
+  const [bulkPhases, setBulkPhases] = useState([]);
+  const [applyingBulk, setApplyingBulk] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(u => {
