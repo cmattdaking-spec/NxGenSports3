@@ -11,6 +11,8 @@ import {
   Dumbbell, CalendarDays, Clapperboard, Star, Globe
 } from "lucide-react";
 
+// Note: BookOpen is used twice (in import and for NxPrep icon)
+
 const COORDINATOR_ROLES = ["admin","head_coach","associate_head_coach","athletic_director","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach","trainer"];
 const COORD_ONLY = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 const GAME_PLAN_ROLES = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
