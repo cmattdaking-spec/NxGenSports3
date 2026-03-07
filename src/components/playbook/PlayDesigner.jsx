@@ -353,6 +353,18 @@ function animatePlay(canvas, elements, format, onDone) {
 export default function PlayDesigner({ onClose, onSave, initialData, playName }) {
   const canvasRef = useRef(null);
   const [tool, setTool] = useState("place");
+  const { getLabel } = useTeamLanguage();
+
+  // Build player types with team labels applied
+  const PLAYER_TYPES = BASE_PLAYER_TYPES.map(pt => ({
+    ...pt,
+    label: pt.type === "defense" ? getLabel("DE") || "X"
+         : pt.type === "mlb"     ? getLabel("MLB")
+         : pt.type === "cb"      ? getLabel("CB")
+         : pt.code === "MLB"     ? getLabel("MLB")
+         : getLabel(pt.code) || pt.code,
+  }));
+
   const [selectedType, setSelectedType] = useState(PLAYER_TYPES[0]);
   const [color, setColor] = useState("#ff6b00");
   const [lineWidth, setLineWidth] = useState(2.5);
