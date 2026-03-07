@@ -181,8 +181,11 @@ Generate 5 specific play calls and audibles that counter this defense. Use our t
       setResult({ tagged: [], message: "All plays already have tags!" });
       setLoading(false); return;
     }
+    const langCtx = getLanguageContext();
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a football analyst for NxDown. Auto-tag the following plays with optimal formations, down/distance situations, field zones, and an effectiveness rating (1-10).
+      prompt: `You are a football analyst for NxDown. ${langCtx}
+
+Auto-tag the following plays with optimal formations, down/distance situations, field zones, and an effectiveness rating (1-10). Use our team's position labels in formation descriptions.
 
 Plays to tag:
 ${untagged.map(p => `- ID: ${p.id}, Name: ${p.name}, Category: ${p.category}, Unit: ${p.unit}, Description: ${p.description || "none"}`).join("\n")}`,
