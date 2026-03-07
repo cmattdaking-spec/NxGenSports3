@@ -437,7 +437,7 @@ export default function Messages() {
         {threadMsg && (
           <ThreadPanel parentMsg={threadMsg} user={user} onClose={() => setThreadMsg(null)} />
         )}
-        </div>
+        </>
       ) : (
         <div className="hidden md:flex flex-1 items-center justify-center bg-[#0a0a0a]">
           <div className="text-center text-gray-600">
