@@ -117,6 +117,115 @@ export default function UserManagement() {
     );
   }
 
+  if (isSuperAdmin) {
+    // Group users by team_id
+    const teams = allUsers.reduce((acc, u) => {
+      const tid = u.team_id || "(no team)";
+      if (!acc[tid]) acc[tid] = { team_id: tid, school_name: u.school_name || tid, members: [] };
+      acc[tid].members.push(u);
+      return acc;
+    }, {});
+    const teamList = Object.values(teams);
+
+    return (
+      <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl font-black text-white">Team <span style={{ color: "var(--color-primary,#f97316)" }}>Management</span></h1>
+            <p className="text-gray-500 text-sm">{teamList.length} teams · {allUsers.length} total users</p>
+          </div>
+          <button onClick={() => setShowInvite(!showInvite)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold"
+            style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+            <UserPlus className="w-4 h-4" /> Add Team
+          </button>
+        </div>
+
+        <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-3 flex items-start gap-3">
+          <Shield className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-gray-400">
+            <span className="text-purple-400 font-semibold">Super Admin Mode. </span>
+            You can add teams and manage platform access. You cannot view any team's data.
+          </p>
+        </div>
+
+        {showInvite && (
+          <div className="bg-[#141414] border border-gray-700 rounded-2xl p-5 space-y-4">
+            <h3 className="text-white font-semibold flex items-center gap-2">
+              <UserPlus className="w-4 h-4" style={{ color: "var(--color-primary,#f97316)" }} /> Add New Team
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-gray-400 text-xs mb-1 block">Admin Email</label>
+                <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
+                  placeholder="headcoach@school.edu"
+                  className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm outline-none" />
+              </div>
+              <div>
+                <label className="text-gray-400 text-xs mb-1 block">Role</label>
+                <select value={inviteRole} onChange={e => setInviteRole(e.target.value)}
+                  className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm outline-none">
+                  {SUPER_ADMIN_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                </select>
+              </div>
+            </div>
+            {inviteMsg.text && <p className={`text-sm ${inviteMsg.type === "success" ? "text-green-400" : "text-red-400"}`}>{inviteMsg.text}</p>}
+            <div className="flex gap-2">
+              <button onClick={handleInvite} disabled={inviting || !inviteEmail.trim()}
+                className="px-5 py-2 rounded-xl text-white text-sm font-semibold disabled:opacity-50"
+                style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+                {inviting ? "Sending..." : "Send Invitation"}
+              </button>
+              <button onClick={() => setShowInvite(false)} className="px-5 py-2 rounded-xl bg-gray-800 text-gray-300 text-sm">Cancel</button>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {loading ? (
+            <div className="text-center py-12 text-gray-500">
+              <div className="w-6 h-6 border-2 border-gray-600 border-t-orange-500 rounded-full animate-spin mx-auto mb-2" />
+              Loading teams...
+            </div>
+          ) : teamList.length === 0 ? (
+            <div className="text-center py-12 text-gray-600">
+              <Building2 className="w-10 h-10 mx-auto mb-2 opacity-20" />
+              <p className="text-sm">No teams yet. Add the first team.</p>
+            </div>
+          ) : teamList.map(team => (
+            <div key={team.team_id} className="bg-[#141414] border border-gray-800 rounded-2xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-gray-500" />
+                  <span className="text-white font-semibold">{team.school_name}</span>
+                  <span className="text-gray-600 text-xs">·  {team.members.length} users</span>
+                </div>
+                <span className="text-gray-700 text-xs font-mono">{team.team_id}</span>
+              </div>
+              <div className="divide-y divide-gray-800/50">
+                {team.members.map(u => (
+                  <div key={u.id} className="flex items-center gap-3 px-5 py-3">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                      style={{ backgroundColor: "var(--color-primary,#f97316)22", color: "var(--color-primary,#f97316)" }}>
+                      {(u.full_name || u.email)?.[0]?.toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm">{u.full_name || "—"}</p>
+                      <p className="text-gray-500 text-xs">{u.email}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${roleColors[u.role] || "bg-gray-700 text-gray-400"}`}>
+                      {ROLES.find(r => r.value === u.role)?.label || u.role?.replace(/_/g, " ") || "—"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
 
