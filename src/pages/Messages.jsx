@@ -545,6 +545,14 @@ export default function Messages() {
             </div>
           </div>
         </div>
+        {/* Search overlay */}
+        {showSearch && (
+          <MessageSearch messages={messages} allUsers={allUsers} onClose={() => setShowSearch(false)} onJumpTo={jumpToMsg} />
+        )}
+        {/* Pinned sidebar */}
+        {showPinned && (
+          <PinnedMessages pinned={pinnedMessages} onUnpin={unpinMessage} onClose={() => setShowPinned(false)} onJumpTo={jumpToMsg} />
+        )}
         {threadMsg && (
           <ThreadPanel parentMsg={threadMsg} user={user} onClose={() => setThreadMsg(null)} />
         )}
