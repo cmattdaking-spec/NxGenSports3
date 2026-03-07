@@ -281,18 +281,27 @@ export default function Messages() {
                   <User className="w-6 h-6 mx-auto mb-1 opacity-30" />
                   <p className="text-xs">No DMs yet</p>
                 </div>
-              ) : dmConvos.map(convo => (
+              ) : dmConvos.map(convo => {
+                const otherEmail = convo.type === "direct" ? convo.participants?.find(p => p !== user?.email) : null;
+                const isOnline = otherEmail ? onlineUsers.has(otherEmail) : false;
+                return (
                 <button key={convo.id} onClick={() => openConversation(convo)}
                   className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg mb-0.5 transition-all text-left ${activeConvo?.id === convo.id ? "bg-[var(--color-primary,#3b82f6)]/15" : "hover:bg-white/5"}`}>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs" style={{ backgroundColor: "var(--color-primary,#3b82f6)33" }}>
-                    {convo.type === "group" ? <Users className="w-4 h-4 text-[var(--color-primary,#3b82f6)]" /> : <span style={{ color: "var(--color-primary,#3b82f6)" }}>{getConvoDisplayName(convo)[0]?.toUpperCase()}</span>}
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs" style={{ backgroundColor: "var(--color-primary,#3b82f6)33" }}>
+                      {convo.type === "group" ? <Users className="w-4 h-4 text-[var(--color-primary,#3b82f6)]" /> : <span style={{ color: "var(--color-primary,#3b82f6)" }}>{getConvoDisplayName(convo)[0]?.toUpperCase()}</span>}
+                    </div>
+                    {convo.type === "direct" && (
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#111111] ${isOnline ? "bg-green-400" : "bg-gray-600"}`} />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-xs font-semibold truncate">{getConvoDisplayName(convo)}</p>
                     <p className="text-gray-500 text-xs truncate">{convo.last_message || "No messages yet"}</p>
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </>
           )}
         </div>
