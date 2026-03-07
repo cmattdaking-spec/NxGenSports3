@@ -386,6 +386,26 @@ export default function NxLab() {
         <div className="flex-1 overflow-y-auto"><ScoutingTab /></div>
       )}
 
+      {/* PLAYBOOK TAB */}
+      {activeTab === "playbook" && (
+        <div className="flex-1 overflow-y-auto"><PlaybookTab /></div>
+      )}
+
+      {/* PRACTICE TAB */}
+      {activeTab === "practice" && (
+        <div className="flex-1 overflow-y-auto"><PracticeTab /></div>
+      )}
+
+      {/* GAME PLAN TAB */}
+      {activeTab === "gameplan" && (
+        <div className="flex-1 overflow-y-auto"><GamePlanTab /></div>
+      )}
+
+      {/* MESSAGES TAB */}
+      {activeTab === "messages" && (
+        <div className="flex-1 overflow-y-auto"><MessagesTab /></div>
+      )}
+
       {/* FILM TAB */}
       {activeTab === "film" && (
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
