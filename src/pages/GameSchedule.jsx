@@ -93,6 +93,22 @@ Provide a concise game-week scouting preview including threat assessment, keys t
 
   const threatColor = { Low: "bg-green-500/20 text-green-400 border-green-500/30", Medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30", High: "bg-orange-500/20 text-orange-400 border-orange-500/30", Elite: "bg-red-500/20 text-red-400 border-red-500/30" };
 
+  // Calendar helper functions
+  const getDaysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  const getFirstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  
+  const getGamesForDate = (date) => {
+    return opponents.filter(opp => {
+      const gameDate = new Date(opp.game_date);
+      return gameDate.getFullYear() === date.getFullYear() && 
+             gameDate.getMonth() === date.getMonth() && 
+             gameDate.getDate() === date.getDate();
+    });
+  };
+
+  const prevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+  const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+
   const renderGame = (opp, isPast) => {
     const plan = getGamePlan(opp);
     const isExpanded = expanded === opp.id;
