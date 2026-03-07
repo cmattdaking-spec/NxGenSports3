@@ -55,6 +55,8 @@ import GamePlan from './pages/GamePlan';
 import GameSchedule from './pages/GameSchedule';
 import InGameAssistant from './pages/InGameAssistant';
 import Messages from './pages/Messages';
+import NxGenSportsWebsite from './pages/NxGenSportsWebsite';
+import NxLab from './pages/NxLab';
 import PerformanceAnalytics from './pages/PerformanceAnalytics';
 import Playbook from './pages/Playbook';
 import PlayerDevelopment from './pages/PlayerDevelopment';
@@ -67,8 +69,6 @@ import Scouting from './pages/Scouting';
 import Settings from './pages/Settings';
 import StrengthConditioning from './pages/StrengthConditioning';
 import UserManagement from './pages/UserManagement';
-import NxLab from './pages/NxLab';
-import NxGenSportsWebsite from './pages/NxGenSportsWebsite';
 import __Layout from './Layout.jsx';
 
 
@@ -81,6 +81,8 @@ export const PAGES = {
     "GameSchedule": GameSchedule,
     "InGameAssistant": InGameAssistant,
     "Messages": Messages,
+    "NxGenSportsWebsite": NxGenSportsWebsite,
+    "NxLab": NxLab,
     "PerformanceAnalytics": PerformanceAnalytics,
     "Playbook": Playbook,
     "PlayerDevelopment": PlayerDevelopment,
@@ -93,8 +95,6 @@ export const PAGES = {
     "Settings": Settings,
     "StrengthConditioning": StrengthConditioning,
     "UserManagement": UserManagement,
-    "NxLab": NxLab,
-    "NxGenSportsWebsite": NxGenSportsWebsite,
 }
 
 export const pagesConfig = {

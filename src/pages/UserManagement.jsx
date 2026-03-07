@@ -142,7 +142,8 @@ export default function UserManagement() {
     if (!inviteEmail.trim()) return;
     setInviting(true);
     setInviteMsg({ text: "", type: "success" });
-    await base44.users.inviteUser(inviteEmail.trim(), inviteRole === "admin" ? "admin" : "user");
+    // Platform requires "admin" to invite to private apps; role is set after via update
+    await base44.users.inviteUser(inviteEmail.trim(), "admin");
     setInviteMsg({ text: `Invitation sent to ${inviteEmail}`, type: "success" });
     setInviteEmail("");
     setInviting(false);
