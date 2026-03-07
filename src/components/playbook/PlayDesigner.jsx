@@ -16,14 +16,20 @@ const GAME_FORMATS = [
   { id: "flag",    label: "Flag",      players: 5,  hasHashes: false, hashRatio: 0,    endzoneYards: 10 },
 ];
 
-const PLAYER_TYPES = [
-  { label: "QB",  color: "#f59e0b", type: "qb",      shape: "circle" },
-  { label: "O",   color: "#3b82f6", type: "offense",  shape: "circle" },
-  { label: "C",   color: "#6366f1", type: "center",   shape: "square" },
-  { label: "X",   color: "#ef4444", type: "defense",  shape: "circle" },
-  { label: "LB",  color: "#f97316", type: "lb",       shape: "circle" },
-  { label: "DB",  color: "#ec4899", type: "db",       shape: "circle" },
-  { label: "⚽",  color: "#10b981", type: "ball",     shape: "diamond" },
+// Base player types — labels are enriched with team language at render time
+const BASE_PLAYER_TYPES = [
+  { code: "QB",  color: "#f59e0b", type: "qb",      shape: "circle",  unit: "offense" },
+  { code: "X",   color: "#3b82f6", type: "x",       shape: "circle",  unit: "offense" },
+  { code: "Z",   color: "#6366f1", type: "z",       shape: "circle",  unit: "offense" },
+  { code: "W",   color: "#8b5cf6", type: "w",       shape: "circle",  unit: "offense" },
+  { code: "Y",   color: "#06b6d4", type: "y",       shape: "circle",  unit: "offense" },
+  { code: "A",   color: "#10b981", type: "a",       shape: "circle",  unit: "offense" },
+  { code: "C",   color: "#64748b", type: "center",  shape: "square",  unit: "offense" },
+  { code: "OL",  color: "#475569", type: "ol",      shape: "square",  unit: "offense" },
+  { code: "X",   color: "#ef4444", type: "defense", shape: "circle",  unit: "defense" },
+  { code: "MLB", color: "#f97316", type: "mlb",     shape: "circle",  unit: "defense" },
+  { code: "CB",  color: "#ec4899", type: "cb",      shape: "circle",  unit: "defense" },
+  { code: "⚽",  color: "#22c55e", type: "ball",    shape: "diamond", unit: "all"     },
 ];
 
 const TOOLS = [
