@@ -93,6 +93,7 @@ function generateDiagramElements(play, format = "11man") {
 export default function NxPlayAI({ plays, opponents, onClose, onSavePlay, onOpenDesigner }) {
   const [mode, setMode] = useState("variations"); // variations | counters | autotag
   const [loading, setLoading] = useState(false);
+  const { getLanguageContext } = useTeamLanguage();
   const [result, setResult] = useState(null);
   const [selectedPlay, setSelectedPlay] = useState(null);
   const [selectedOpponent, setSelectedOpponent] = useState(null);
