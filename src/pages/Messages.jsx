@@ -109,6 +109,33 @@ export default function Messages() {
     setMessages(msgs);
   };
 
+  // Load pinned messages whenever conversation changes
+  useEffect(() => {
+    const convoId = activeConvo?.id || activeChannel?.id;
+    if (!convoId) { setPinnedMessages([]); return; }
+    // pinned = messages with content starting with "[PIN]" stored as metadata
+    // We store pinned IDs in localStorage keyed by convoId for simplicity
+    const stored = JSON.parse(localStorage.getItem(`pinned_${convoId}`) || "[]");
+    setPinnedMessages(messages.filter(m => stored.includes(m.id)));
+  }, [activeConvo?.id, activeChannel?.id, messages]);
+
+  const pinMessage = (msg) => {
+    const convoId = activeConvo?.id || activeChannel?.id;
+    const stored = JSON.parse(localStorage.getItem(`pinned_${convoId}`) || "[]");
+    if (!stored.includes(msg.id)) {
+      const updated = [...stored, msg.id];
+      localStorage.setItem(`pinned_${convoId}`, JSON.stringify(updated));
+      setPinnedMessages(prev => [...prev, msg]);
+    }
+  };
+
+  const unpinMessage = (msgId) => {
+    const convoId = activeConvo?.id || activeChannel?.id;
+    const stored = JSON.parse(localStorage.getItem(`pinned_${convoId}`) || "[]");
+    localStorage.setItem(`pinned_${convoId}`, JSON.stringify(stored.filter(id => id !== msgId)));
+    setPinnedMessages(prev => prev.filter(m => m.id !== msgId));
+  };
+
   const openChannel = async (ch) => {
     // Find or create a group conversation for this channel
     let convo = conversations.find(c => c.name === `#${ch.name}` && c.type === "group");
