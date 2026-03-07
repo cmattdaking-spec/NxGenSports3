@@ -3,11 +3,11 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import {
-  Users, BookOpen, Target, Calendar, Activity,
-  ChevronLeft, ChevronRight, Home, Zap,
+  Users, BookOpen, Target, Activity,
+  ChevronLeft, ChevronRight, Home,
   Menu, X, TrendingUp, ClipboardList, Crosshair, BarChart2,
   MessageSquare, Settings, GraduationCap, UserCog, Gamepad2,
-  Dumbbell, CalendarDays, Clapperboard, Star, ChevronUp
+  Dumbbell, CalendarDays, Clapperboard, Star
 } from "lucide-react";
 
 const COORDINATOR_ROLES = ["admin","head_coach","associate_head_coach","athletic_director","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach","trainer"];
