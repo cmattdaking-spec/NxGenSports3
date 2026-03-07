@@ -513,6 +513,69 @@ export default function UserManagement() {
         )}
       </div>
 
+      {/* My Mental Readiness */}
+      <div className="bg-[#141414] border border-gray-800 rounded-xl p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Brain className="w-4 h-4 text-purple-400" />
+            <p className="text-white text-sm font-semibold">Mental Readiness</p>
+          </div>
+          {isHeadCoach && (
+            <button onClick={() => setShowMentalReadiness(v => !v)} className="text-xs text-gray-500 hover:text-white flex items-center gap-1">
+              Team View {showMentalReadiness ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+          )}
+        </div>
+        <p className="text-gray-500 text-xs">Report your mental readiness daily — visible to Head Coach.</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-gray-400 text-xs w-full">My readiness today (1-10):</p>
+          {[1,2,3,4,5,6,7,8,9,10].map(n => (
+            <button key={n} onClick={() => setMyReadiness(n)}
+              className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${myReadiness === n ? "text-white" : "bg-gray-800 text-gray-500"}`}
+              style={myReadiness === n ? { backgroundColor: n >= 7 ? "#22c55e" : n >= 4 ? "#f59e0b" : "#ef4444" } : {}}>
+              {n}
+            </button>
+          ))}
+        </div>
+        <input value={myReadinessNote} onChange={e => setMyReadinessNote(e.target.value)} placeholder="Optional note..." className="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg px-3 py-2 text-white text-xs outline-none" />
+        <button onClick={saveReadiness} disabled={savingReadiness || !myReadiness} className="px-4 py-1.5 rounded-lg text-white text-xs font-semibold disabled:opacity-40" style={{ backgroundColor: "var(--color-primary,#3b82f6)" }}>
+          {savingReadiness ? "Saving..." : "Submit"}
+        </button>
+
+        {/* Head Coach Team View */}
+        {isHeadCoach && showMentalReadiness && (
+          <div className="pt-3 border-t border-gray-800">
+            <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Full Team Mental Readiness</p>
+            {allUsers.length === 0 ? <p className="text-gray-600 text-xs">No data yet.</p> : (
+              <div className="space-y-1.5">
+                {allUsers.map(u => (
+                  <div key={u.id} className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ backgroundColor: "var(--color-primary,#3b82f6)22", color: "var(--color-primary,#3b82f6)" }}>
+                      {(u.full_name || u.email)?.[0]?.toUpperCase()}
+                    </div>
+                    <span className="text-gray-300 text-xs flex-1 truncate">{u.full_name || u.email}</span>
+                    <span className="text-gray-600 text-xs capitalize">{u.role?.replace(/_/g, " ")}</span>
+                    {u.mental_readiness != null ? (
+                      <div className="flex items-center gap-1">
+                        <div className="w-20 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${u.mental_readiness * 10}%`, backgroundColor: u.mental_readiness >= 7 ? "#22c55e" : u.mental_readiness >= 4 ? "#f59e0b" : "#ef4444" }} />
+                        </div>
+                        <span className={`text-xs font-bold ${u.mental_readiness >= 7 ? "text-green-400" : u.mental_readiness >= 4 ? "text-yellow-400" : "text-red-400"}`}>{u.mental_readiness}/10</span>
+                      </div>
+                    ) : <span className="text-gray-700 text-xs">not reported</span>}
+                  </div>
+                ))}
+                <p className="text-gray-600 text-xs mt-2">
+                  Avg: {allUsers.filter(u => u.mental_readiness != null).length > 0
+                    ? (allUsers.filter(u => u.mental_readiness != null).reduce((s, u) => s + u.mental_readiness, 0) / allUsers.filter(u => u.mental_readiness != null).length).toFixed(1)
+                    : "—"}/10 · {allUsers.filter(u => u.mental_readiness != null).length} of {allUsers.length} reported
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Permission summary */}
       <div className="bg-[#141414] border border-gray-800 rounded-xl p-4">
         <p className="text-gray-400 text-xs uppercase tracking-wider mb-3 flex items-center gap-2">
