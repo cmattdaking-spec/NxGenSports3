@@ -222,6 +222,11 @@ ${untagged.map(p => `- ID: ${p.id}, Name: ${p.name}, Category: ${p.category}, Un
       ai_suggested: true,
     });
     onSavePlay && onSavePlay(play);
+    // Open designer with auto-generated diagram
+    if (onOpenDesigner) {
+      const elements = generateDiagramElements({ ...v, unit: selectedPlay?.unit || "offense" });
+      onOpenDesigner({ play, elements });
+    }
   };
 
   const saveCounter = async (c) => {
@@ -236,6 +241,10 @@ ${untagged.map(p => `- ID: ${p.id}, Name: ${p.name}, Category: ${p.category}, Un
       notes: c.rationale,
     });
     onSavePlay && onSavePlay(play);
+    if (onOpenDesigner) {
+      const elements = generateDiagramElements({ ...c, unit: "offense" });
+      onOpenDesigner({ play, elements });
+    }
   };
 
   const applyTags = async (tagged) => {
