@@ -471,13 +471,20 @@ export default function Messages() {
                         {msg.content}
                       </div>
                     )}
-                    <div className="flex items-center gap-2 mx-1">
+                    <div className="flex items-center gap-2 mx-1 flex-wrap">
                       <span className="text-gray-600 text-xs">{formatTime(msg.created_date)}</span>
+                      {isPinned && <Pin className="w-3 h-3 text-yellow-500" title="Pinned" />}
                       <button
                         onClick={() => setThreadMsg(isThreaded ? null : msg)}
                         className={`flex items-center gap-1 text-xs transition-all opacity-0 group-hover:opacity-100 ${isThreaded ? "opacity-100 text-[var(--color-primary,#3b82f6)]" : "text-gray-600 hover:text-gray-400"}`}>
                         <MessageCircle className="w-3 h-3" />
                         <span>Reply</span>
+                      </button>
+                      <button
+                        onClick={() => isPinned ? unpinMessage(msg.id) : pinMessage(msg)}
+                        className="flex items-center gap-1 text-xs transition-all opacity-0 group-hover:opacity-100 text-gray-600 hover:text-yellow-400">
+                        <Pin className="w-3 h-3" />
+                        <span>{isPinned ? "Unpin" : "Pin"}</span>
                       </button>
                     </div>
                   </div>
