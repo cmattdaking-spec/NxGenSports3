@@ -459,7 +459,7 @@ export default function Messages() {
                   <div className={`max-w-xs md:max-w-md lg:max-w-lg ${isMe ? "items-end" : "items-start"} flex flex-col gap-1`}>
                     {!isMe && (
                       <div className="flex items-center gap-1.5 ml-1">
-                        <PresenceDot isOnline={onlineUsers.has(msg.sender_email)} />
+                        <PresenceDot status={onlineUsers.has(msg.sender_email) ? "online" : "offline"} />
                         <span className="text-gray-500 text-xs">{msg.sender_name || msg.sender_email}</span>
                       </div>
                     )}
