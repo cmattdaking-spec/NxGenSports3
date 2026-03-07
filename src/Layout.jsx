@@ -19,14 +19,15 @@ const IN_GAME_ROLES = ["admin","head_coach","associate_head_coach","offensive_co
 // ─── CLEANED UP NAV ─────────────────────────────────────────────────────────
 const navItems = [
   { label: "Dashboard",    page: "Dashboard",            icon: Home,           roles: null },
+  { label: "Schedule",     page: "GameSchedule",         icon: CalendarDays,   roles: null },
   { label: "Eligibility",  page: "AcademicEligibility",  icon: GraduationCap,  roles: null },
   { label: "Roster",       page: "Roster",               icon: Users,          roles: null },
   { label: "Health",       page: "PlayerHealth",         icon: Activity,       roles: null },
+  { label: "NxMessages",   page: "Messages",             icon: MessageSquare,  roles: null },
   { label: "NxLab",        page: "NxLab",                icon: Clapperboard,   roles: null },
   { label: "S&C",          page: "StrengthConditioning", icon: Dumbbell,       roles: null },
   { label: "Recruiting",   page: "Recruiting",           icon: Star,           roles: COORD_ONLY },
   { label: "Analytics",    page: "PerformanceAnalytics", icon: BarChart2,      roles: null },
-  { label: "Schedule",     page: "GameSchedule",         icon: CalendarDays,   roles: null },
   { label: "Users",        page: "UserManagement",       icon: UserCog,        roles: ["admin","head_coach","athletic_director"] },
 ];
 
