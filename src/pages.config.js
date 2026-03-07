@@ -66,6 +66,7 @@ import Scouting from './pages/Scouting';
 import Settings from './pages/Settings';
 import StrengthConditioning from './pages/StrengthConditioning';
 import UserManagement from './pages/UserManagement';
+import PerformanceAnalytics from './pages/PerformanceAnalytics';
 import __Layout from './Layout.jsx';
 
 
@@ -89,6 +90,7 @@ export const PAGES = {
     "Settings": Settings,
     "StrengthConditioning": StrengthConditioning,
     "UserManagement": UserManagement,
+    "PerformanceAnalytics": PerformanceAnalytics,
 }
 
 export const pagesConfig = {
