@@ -37,6 +37,7 @@ const navItems = [
   { label: "NxMessage",    page: "Messages",             icon: MessageSquare,  roles: null },
   { label: "NxCall",       page: "InGameAssistant",      icon: Gamepad2,       roles: IN_GAME_ROLES },
   { label: "Users",        page: "UserManagement",       icon: UserCog,        roles: ["admin","head_coach","athletic_director"] },
+  { label: "NxGenSports",  page: "NxGenSportsWebsite",   icon: Globe,          roles: ["admin","head_coach","athletic_director"] },
 ];
 
 export default function Layout({ children, currentPageName }) {
