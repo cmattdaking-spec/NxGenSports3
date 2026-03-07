@@ -145,7 +145,7 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       {/* Tabs */}
       <div className="flex gap-1 mb-5 bg-[#141414] border border-gray-800 rounded-lg p-1 w-fit">
-        {[{ id: "health", label: "Health Records" }, { id: "medical", label: "Medical / Concussion" }].map(t => (
+        {[{ id: "health", label: "Health Records" }, { id: "dashboard", label: "Trainer Dashboard" }, { id: "medical", label: "Medical / Concussion" }].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === t.id ? "text-white" : "text-gray-400 hover:text-white"}`}
             style={tab === t.id ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
@@ -155,6 +155,16 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
       </div>
 
       {tab === "medical" && <MedicalTab players={players} />}
+
+      {tab === "dashboard" && (
+        <div className="mt-2">
+          <div className="mb-6">
+            <h1 className="text-2xl font-black text-white">Trainer <span style={{ color: "var(--color-primary,#f97316)" }}>Dashboard</span></h1>
+            <p className="text-gray-500 text-sm">Health analytics and load management overview</p>
+          </div>
+          <TrainerDashboard records={records} players={players} workouts={workouts} />
+        </div>
+      )}
 
       {tab === "health" && <>
       <div className="flex items-center justify-between mb-6">
