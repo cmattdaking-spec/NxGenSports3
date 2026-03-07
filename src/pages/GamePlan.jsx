@@ -31,6 +31,30 @@ export default function GamePlan() {
     ]);
     setPlans(gp); setOpponents(op); setPlays(pl); setPlayers(pr); setLoading(false);
   };
+
+  const getFilmInsights = async (opponent) => {
+    // Find film sessions matching this opponent
+    const sessions = await base44.entities.FilmSession.filter({ opponent });
+    if (!sessions.length) return null;
+    // Get tags from most recent session
+    const session = sessions[0];
+    const tags = await base44.entities.FilmTag.filter({ session_id: session.id });
+    if (!tags.length) return null;
+    const successRate = Math.round((tags.filter(t => t.result === "success").length / tags.length) * 100);
+    const runTags = tags.filter(t => t.play_type === "run");
+    const passTags = tags.filter(t => t.play_type === "pass");
+    const flagged = tags.filter(t => t.flagged).map(t => t.notes).filter(Boolean).slice(0, 3);
+    const formations = [...new Set(tags.map(t => t.formation).filter(Boolean))].slice(0, 5);
+    return {
+      session_title: session.title,
+      game_date: session.game_date,
+      total_plays: tags.length,
+      success_rate: successRate,
+      run_pass_ratio: `${runTags.length} runs / ${passTags.length} passes`,
+      formations_seen: formations,
+      flagged_plays: flagged,
+    };
+  };
   useEffect(() => { load(); }, []);
 
   const openAdd = () => { setEditing(null); setForm({ unit: "offense", status: "draft", location: "home" }); setShowForm(true); };
