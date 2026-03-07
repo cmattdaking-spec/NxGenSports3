@@ -516,6 +516,14 @@ export default function Messages() {
                 style={showEmoji ? { backgroundColor: "var(--color-primary,#3b82f6)22" } : {}}>
                 <Smile className="w-4 h-4" />
               </button>
+              {activeChannel && (
+                <button onClick={() => setIsAnnouncement(v => !v)}
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${isAnnouncement ? "text-yellow-400" : "text-gray-500 hover:text-gray-300"}`}
+                  style={isAnnouncement ? { backgroundColor: "rgba(234,179,8,0.15)" } : {}}
+                  title="Send as announcement">
+                  <Megaphone className="w-4 h-4" />
+                </button>
+              )}
               <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-gray-500 hover:text-gray-300 transition-all">
                 {uploading ? <div className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" /> : <Paperclip className="w-4 h-4" />}
