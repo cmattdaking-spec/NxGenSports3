@@ -206,12 +206,20 @@ Provide a concise game-week scouting preview including threat assessment, keys t
 
   if (loading) return <LoadingScreen />;
 
+  const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const daysInMonth = getDaysInMonth(currentMonth);
+  const firstDay = getFirstDayOfMonth(currentMonth);
+  const days = [];
+  
+  for (let i = 0; i < firstDay; i++) days.push(null);
+  for (let i = 1; i <= daysInMonth; i++) days.push(i);
+
   return (
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black text-white">Game <span style={{ color: "var(--color-primary,#f97316)" }}>Schedule</span></h1>
-          <p className="text-gray-500 text-sm">{opponents.length} games · {upcoming.length} upcoming</p>
+          <p className="text-gray-500 text-sm">{opponents.length} games scheduled</p>
         </div>
         <Link to={createPageUrl("Scouting")}
           className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
@@ -219,59 +227,70 @@ Provide a concise game-week scouting preview including threat assessment, keys t
         </Link>
       </div>
 
-      {/* Team Preview Card */}
-      {teamPreview && (
-        <div className="bg-[#141414] border border-gray-800 rounded-xl p-4 mb-6">
-          <p className="text-gray-500 text-xs uppercase tracking-wider mb-3">Our Team Snapshot</p>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <div className="text-center">
-              <p className="text-2xl font-black text-white">{teamPreview.total}</p>
-              <p className="text-gray-500 text-xs">Total Players</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-black text-blue-400">{teamPreview.byUnit.offense}</p>
-              <p className="text-gray-500 text-xs">Offense</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-black text-red-400">{teamPreview.byUnit.defense}</p>
-              <p className="text-gray-500 text-xs">Defense</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-black text-teal-400">{teamPreview.byUnit.special_teams}</p>
-              <p className="text-gray-500 text-xs">Special Teams</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-black text-red-500">{teamPreview.injured}</p>
-              <p className="text-gray-500 text-xs">Injured</p>
-            </div>
+      {/* Calendar */}
+      <div className="bg-[#141414] border border-gray-800 rounded-xl overflow-hidden">
+        {/* Month Header */}
+        <div className="flex items-center justify-between p-5 border-b border-gray-800">
+          <h2 className="text-white font-bold text-lg">{monthName}</h2>
+          <div className="flex gap-2">
+            <button onClick={prevMonth} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
+              <ChevronLeft className="w-4 h-4 text-gray-400" />
+            </button>
+            <button onClick={nextMonth} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </button>
           </div>
         </div>
-      )}
 
-      {/* Level Filter */}
-      <div className="flex gap-2 mb-5">
-        {["all", ...LEVELS].map(l => (
-          <button key={l} onClick={() => setFilterLevel(l)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterLevel === l ? "text-white" : "bg-[#141414] border border-gray-800 text-gray-400 hover:text-white"}`}
-            style={filterLevel === l ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
-            {l === "all" ? "All Levels" : l}
-          </button>
-        ))}
+        {/* Day Headers */}
+        <div className="grid grid-cols-7 gap-0 border-b border-gray-800">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            <div key={day} className="p-3 text-center text-gray-500 text-xs font-semibold border-r border-gray-800 last:border-r-0 bg-[#0f0f0f]">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Days */}
+        <div className="grid grid-cols-7 gap-0">
+          {days.map((day, idx) => {
+            const gameDate = day ? new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day) : null;
+            const gamesOnDay = day ? getGamesForDate(gameDate) : [];
+            const isToday = day && new Date().toDateString() === gameDate.toDateString();
+            
+            return (
+              <div key={idx} className={`min-h-24 p-2 border-r border-b border-gray-800 last:border-r-0 ${!day ? 'bg-[#0f0f0f]' : ''}`}>
+                {day && (
+                  <div className={`h-full flex flex-col ${isToday ? 'bg-[var(--color-primary,#f97316)]/10 rounded-lg p-2' : ''}`}>
+                    <div className={`text-sm font-semibold ${isToday ? 'text-[var(--color-primary,#f97316)]' : 'text-gray-400'}`}>
+                      {day}
+                    </div>
+                    {gamesOnDay.length > 0 && (
+                      <div className="mt-1 space-y-1 flex-1">
+                        {gamesOnDay.map(game => (
+                          <div key={game.id} 
+                            onClick={() => setExpanded(expanded === game.id ? null : game.id)}
+                            className="text-xs p-1 rounded cursor-pointer transition-all"
+                            style={{ backgroundColor: "var(--color-primary,#f97316)22", color: "var(--color-primary,#f97316)" }}>
+                            <div className="font-semibold truncate">vs {game.name}</div>
+                            <div className="text-[10px] opacity-75">{game.location}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Upcoming Games */}
-      {filtered(upcoming).length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-gray-500 text-xs uppercase tracking-wider mb-3">Upcoming Games</h2>
-          <div className="space-y-3">{filtered(upcoming).map(o => renderGame(o, false))}</div>
-        </div>
-      )}
-
-      {/* Past Games */}
-      {filtered(past).length > 0 && (
-        <div>
-          <h2 className="text-gray-500 text-xs uppercase tracking-wider mb-3">Past Games</h2>
-          <div className="space-y-3">{filtered(past).map(o => renderGame(o, true))}</div>
+      {/* Selected Game Details */}
+      {expanded && opponents.find(o => o.id === expanded) && (
+        <div className="mt-6 space-y-3">
+          <h2 className="text-gray-500 text-xs uppercase tracking-wider">Selected Game</h2>
+          {renderGame(opponents.find(o => o.id === expanded), false)}
         </div>
       )}
 
