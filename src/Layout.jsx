@@ -6,7 +6,7 @@ import {
   Users, BookOpen, Target, Calendar, Activity,
   ChevronLeft, ChevronRight, Home, Shield, Zap,
   Menu, X, TrendingUp, ClipboardList, Crosshair, BarChart2,
-  ListVideo, MessageSquare, Settings, GraduationCap, UserCog, Gamepad2, Dumbbell, CalendarDays } from
+  ListVideo, MessageSquare, Settings, GraduationCap, UserCog, Gamepad2, Dumbbell, CalendarDays, Clapperboard } from
 "lucide-react";
 
 
