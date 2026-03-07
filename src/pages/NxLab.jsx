@@ -388,11 +388,6 @@ export default function NxLab() {
         <div className="flex-1 overflow-y-auto"><GamePlanTab /></div>
       )}
 
-      {/* MESSAGES TAB */}
-      {activeTab === "messages" && (
-        <div className="flex-1 overflow-y-auto"><MessagesTab /></div>
-      )}
-
       {/* FILM TAB */}
       {activeTab === "film" && (
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
