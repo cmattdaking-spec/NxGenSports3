@@ -503,6 +503,13 @@ export default function Messages() {
                 ))}
               </div>
             )}
+            {isAnnouncement && (
+              <div className="mb-2 flex items-center gap-2 px-2 py-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <Megaphone className="w-3.5 h-3.5 text-yellow-400" />
+                <span className="text-yellow-300 text-xs flex-1">Announcement mode — message will be highlighted</span>
+                <button onClick={() => setIsAnnouncement(false)}><X className="w-3.5 h-3.5 text-yellow-500" /></button>
+              </div>
+            )}
             <div className="flex items-end gap-2">
               <button onClick={() => setShowEmoji(v => !v)}
                 className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${showEmoji ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
