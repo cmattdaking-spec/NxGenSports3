@@ -428,9 +428,9 @@ export default function UserManagement() {
           <div className="text-center py-12 text-gray-600">
             <Users className="w-10 h-10 mx-auto mb-2 opacity-20" />
             <p className="text-sm">No staff members found.</p>
-            {!["admin", "head_coach", "athletic_director"].includes(myEffectiveRole) && (
+            {!["head_coach", "athletic_director"].includes(myCoachingRole) && (
               <p className="text-xs text-gray-700 mt-2 max-w-xs mx-auto">
-                Staff visibility requires Head Coach or Athletic Director access. Ask your administrator to set your coaching role appropriately.
+                Staff visibility requires Head Coach or Athletic Director role. Ask your administrator to update your coaching role.
               </p>
             )}
           </div>
