@@ -292,37 +292,60 @@ export default function Messages() {
         {showNewConvo && (
           <div className="p-4 border-b border-gray-800 bg-[#141414] space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-white text-sm font-semibold">New Direct Message</span>
-              <button onClick={() => setShowNewConvo(false)}><X className="w-4 h-4 text-gray-500" /></button>
+              <span className="text-white text-sm font-semibold">New Message</span>
+              <button onClick={() => { setShowNewConvo(false); setSelectedUsers([]); setSearchUsers(""); setIsCustomGroup(false); }}><X className="w-4 h-4 text-gray-500" /></button>
             </div>
             <div className="flex gap-2">
               <button onClick={() => setNewConvoType("direct")} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${newConvoType === "direct" ? "text-white" : "bg-gray-800 text-gray-400"}`} style={newConvoType === "direct" ? { backgroundColor: "var(--color-primary,#3b82f6)" } : {}}>Direct</button>
               <button onClick={() => setNewConvoType("group")} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${newConvoType === "group" ? "text-white" : "bg-gray-800 text-gray-400"}`} style={newConvoType === "group" ? { backgroundColor: "var(--color-primary,#3b82f6)" } : {}}>Group</button>
             </div>
             {newConvoType === "group" && (
-              <input value={groupName} onChange={e => setGroupName(e.target.value)} placeholder="Group name..." className="w-full bg-[#1e1e1e] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 outline-none" />
+              <>
+                <input value={groupName} onChange={e => setGroupName(e.target.value)} placeholder="Group name..." className="w-full bg-[#1e1e1e] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 outline-none" />
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <div onClick={() => setIsCustomGroup(v => !v)} className={`w-8 h-4 rounded-full transition-all relative ${isCustomGroup ? "bg-[var(--color-primary,#3b82f6)]" : "bg-gray-700"}`}>
+                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isCustomGroup ? "left-4" : "left-0.5"}`} />
+                  </div>
+                  <span className="text-gray-400 text-xs">Custom group (don't auto-add Head Coach)</span>
+                </label>
+              </>
             )}
-            <input value={searchUsers} onChange={e => setSearchUsers(e.target.value)} placeholder="Search people..." className="w-full bg-[#1e1e1e] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 outline-none" />
-            <div className="max-h-40 overflow-y-auto space-y-1">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+              <input value={searchUsers} onChange={e => setSearchUsers(e.target.value)} placeholder="Search by name or role..." className="w-full bg-[#1e1e1e] border border-gray-700 rounded-lg pl-8 pr-3 py-2 text-white text-sm placeholder-gray-500 outline-none" />
+            </div>
+            {selectedUsers.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {selectedUsers.map(u => (
+                  <span key={u.id} className="flex items-center gap-1 bg-[var(--color-primary,#3b82f6)]/20 text-[var(--color-primary,#3b82f6)] text-xs px-2 py-0.5 rounded-full">
+                    {u.full_name || u.email}
+                    <button onClick={() => setSelectedUsers(prev => prev.filter(p => p.id !== u.id))}><X className="w-2.5 h-2.5" /></button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="max-h-48 overflow-y-auto space-y-0.5">
+              {filteredUsers.length === 0 && searchUsers && <p className="text-gray-600 text-xs text-center py-3">No users found</p>}
               {filteredUsers.map(u => (
                 <button key={u.id} onClick={() => {
                   if (newConvoType === "direct") setSelectedUsers([u]);
                   else setSelectedUsers(prev => prev.find(p => p.id === u.id) ? prev.filter(p => p.id !== u.id) : [...prev, u]);
                 }} className={`w-full flex items-center gap-2 p-2 rounded-lg text-left transition-all ${selectedUsers.find(p => p.id === u.id) ? "bg-[var(--color-primary,#3b82f6)]/20" : "hover:bg-white/5"}`}>
-                  <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center text-xs text-white flex-shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center text-xs text-white flex-shrink-0 font-bold">
                     {(u.full_name || u.email)?.[0]?.toUpperCase()}
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-white text-xs font-medium truncate">{u.full_name || u.email}</p>
                     <p className="text-gray-500 text-xs truncate capitalize">{u.role?.replace(/_/g, " ")}</p>
                   </div>
-                  {selectedUsers.find(p => p.id === u.id) && <Check className="w-3 h-3 text-[var(--color-primary,#3b82f6)] ml-auto" />}
+                  {selectedUsers.find(p => p.id === u.id) && <Check className="w-3 h-3 text-[var(--color-primary,#3b82f6)] ml-auto flex-shrink-0" />}
                 </button>
               ))}
             </div>
             {selectedUsers.length > 0 && (
               <button onClick={createConversation} className="w-full py-2 rounded-lg text-white text-sm font-semibold" style={{ backgroundColor: "var(--color-primary,#3b82f6)" }}>
-                Start Conversation
+                Start Conversation ({selectedUsers.length} selected{newConvoType === "group" && !isCustomGroup ? " + HC" : ""})
               </button>
             )}
           </div>
