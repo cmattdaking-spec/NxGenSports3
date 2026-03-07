@@ -48,7 +48,6 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import AcademicEligibility from './pages/AcademicEligibility';
-import Analytics from './pages/Analytics';
 import Dashboard from './pages/Dashboard';
 import DepthChart from './pages/DepthChart';
 import GamePlan from './pages/GamePlan';
@@ -70,7 +69,6 @@ import __Layout from './Layout.jsx';
 
 export const PAGES = {
     "AcademicEligibility": AcademicEligibility,
-    "Analytics": Analytics,
     "Dashboard": Dashboard,
     "DepthChart": DepthChart,
     "GamePlan": GamePlan,
