@@ -1,4 +1,4 @@
-import { Flag, CheckCircle, XCircle, Minus, Trash2, Search, Filter } from "lucide-react";
+import { Flag, CheckCircle, XCircle, Minus, Trash2, Search, MessageSquare } from "lucide-react";
 import { useState } from "react";
 
 const RESULT_STYLES = {
@@ -18,7 +18,7 @@ const PLAY_TYPE_COLORS = {
   score: "bg-green-500/20 text-green-400",
 };
 
-export default function TagList({ tags, onDelete, onTagClick }) {
+export default function TagList({ tags, commentCounts, onDelete, onTagClick, onOpenComments }) {
   const [search, setSearch] = useState("");
   const [filterResult, setFilterResult] = useState("all");
   const [filterType, setFilterType] = useState("all");
@@ -75,10 +75,8 @@ export default function TagList({ tags, onDelete, onTagClick }) {
         </select>
       </div>
 
-      {/* Count */}
       <p className="text-gray-600 text-xs mb-2">{filtered.length} tag{filtered.length !== 1 ? "s" : ""}</p>
 
-      {/* Tag list */}
       <div className="flex-1 overflow-y-auto space-y-1.5 pr-0.5">
         {filtered.length === 0 && (
           <div className="text-center py-10 text-gray-600 text-sm">No tags match your filters</div>
@@ -87,6 +85,7 @@ export default function TagList({ tags, onDelete, onTagClick }) {
           const R = RESULT_STYLES[tag.result] || RESULT_STYLES.neutral;
           const RIcon = R.icon;
           const typeColor = PLAY_TYPE_COLORS[tag.play_type] || "bg-gray-700 text-gray-400";
+          const commentCount = commentCounts?.[tag.id] || 0;
           return (
             <div key={tag.id}
               onClick={() => onTagClick?.(tag)}
@@ -102,16 +101,21 @@ export default function TagList({ tags, onDelete, onTagClick }) {
                     {tag.play_type?.replace(/_/g, " ")}
                   </span>
                   {tag.down && (
-                    <span className="text-xs text-gray-500">
-                      {tag.down}&amp;{tag.distance || "?"}
-                    </span>
+                    <span className="text-xs text-gray-500">{tag.down}&amp;{tag.distance || "?"}</span>
                   )}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {tag.flagged && <Flag className="w-3 h-3 text-yellow-500" />}
                   <RIcon className={`w-3.5 h-3.5 ${R.color}`} />
+                  {/* Comment button */}
+                  <button
+                    onClick={e => { e.stopPropagation(); onOpenComments?.(tag); }}
+                    className="flex items-center gap-0.5 text-gray-500 hover:text-blue-400 transition-colors ml-1">
+                    <MessageSquare className="w-3 h-3" />
+                    {commentCount > 0 && <span className="text-xs">{commentCount}</span>}
+                  </button>
                   <button onClick={e => { e.stopPropagation(); onDelete(tag.id); }}
-                    className="text-gray-700 hover:text-red-400 transition-colors ml-1">
+                    className="text-gray-700 hover:text-red-400 transition-colors ml-0.5">
                     <Trash2 className="w-3 h-3" />
                   </button>
                 </div>

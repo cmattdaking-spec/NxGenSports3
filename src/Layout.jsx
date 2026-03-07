@@ -37,7 +37,7 @@ const navItems = [
 { label: "S&C", page: "StrengthConditioning", icon: Dumbbell, roles: null },
 { label: "Eligibility", page: "AcademicEligibility", icon: GraduationCap, roles: null },
 { label: "Analytics", page: "Analytics", icon: BarChart2, roles: null },
-{ label: "Playlists", page: "Playlists", icon: ListVideo, roles: null },
+
 { label: "NxMessage", page: "Messages", icon: MessageSquare, roles: null },
 { label: "NxCall", page: "InGameAssistant", icon: Gamepad2, roles: IN_GAME_ROLES },
 { label: "Film Room", page: "FilmRoom", icon: Clapperboard, roles: null },
