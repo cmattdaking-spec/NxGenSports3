@@ -68,6 +68,7 @@ import Settings from './pages/Settings';
 import StrengthConditioning from './pages/StrengthConditioning';
 import UserManagement from './pages/UserManagement';
 import NxLab from './pages/NxLab';
+import NxGenSportsWebsite from './pages/NxGenSportsWebsite';
 import __Layout from './Layout.jsx';
 
 
@@ -93,6 +94,7 @@ export const PAGES = {
     "StrengthConditioning": StrengthConditioning,
     "UserManagement": UserManagement,
     "NxLab": NxLab,
+    "NxGenSportsWebsite": NxGenSportsWebsite,
 }
 
 export const pagesConfig = {
