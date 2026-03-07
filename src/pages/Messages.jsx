@@ -436,8 +436,11 @@ export default function Messages() {
               const isMe = msg.sender_email === user?.email;
               const hasAttachment = msg.attachment_url;
               const isThreaded = threadMsg?.id === msg.id;
+              const isAnnouncementMsg = msg.content?.startsWith("📢 ");
+              const isPinned = pinnedMessages.some(p => p.id === msg.id);
               return (
-                <div key={msg.id} className={`flex group ${isMe ? "justify-end" : "justify-start"}`}>
+                <div key={msg.id} ref={el => messageRefs.current[msg.id] = el}
+                  className={`flex group ${isMe ? "justify-end" : "justify-start"} ${isAnnouncementMsg ? "bg-yellow-500/5 rounded-xl px-2 py-1 border border-yellow-500/10" : ""}`}>
                   <div className={`max-w-xs md:max-w-md lg:max-w-lg ${isMe ? "items-end" : "items-start"} flex flex-col gap-1`}>
                     {!isMe && (
                       <div className="flex items-center gap-1.5 ml-1">
