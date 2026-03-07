@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Users, Shield, Mail, Edit2, Check, X, UserPlus, Lock, Star, AlertTriangle, Building2 } from "lucide-react";
+import { Users, Shield, Mail, Edit2, Check, X, UserPlus, Lock, Star, AlertTriangle, Building2, Brain, ChevronDown, ChevronUp } from "lucide-react";
+
+const ALL_POSITIONS = ["QB","RB","FB","WR","TE","OL","DL","LB","CB","S","K","P","LS","DB","DE","DT","NT","OLB","MLB","ILB","SS","FS","LT","LG","C","RG","RT"];
+const PHASES = [
+  { value: "offense", label: "Offense" },
+  { value: "defense", label: "Defense" },
+  { value: "special_teams", label: "Special Teams" },
+];
 
 const ROLES = [
   { value: "athletic_director", label: "Athletic Director" },
@@ -43,6 +50,13 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editRole, setEditRole] = useState("");
+  const [editPositions, setEditPositions] = useState([]);
+  const [editPhases, setEditPhases] = useState([]);
+  const [mentalReadiness, setMentalReadiness] = useState([]);
+  const [showMentalReadiness, setShowMentalReadiness] = useState(false);
+  const [myReadiness, setMyReadiness] = useState(null);
+  const [myReadinessNote, setMyReadinessNote] = useState("");
+  const [savingReadiness, setSavingReadiness] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("position_coach");
