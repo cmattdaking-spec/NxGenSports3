@@ -177,7 +177,15 @@ export default function GameSchedule() {
       {expanded && opponents.find(o => o.id === expanded) && (
         <div className="mt-6 space-y-3">
           <h2 className="text-gray-500 text-xs uppercase tracking-wider">Selected Game</h2>
-          {renderGame(opponents.find(o => o.id === expanded), false)}
+          <GameCard
+            opponent={opponents.find(o => o.id === expanded)}
+            plan={getGamePlan(opponents.find(o => o.id === expanded))}
+            isPast={false}
+            expanded={true}
+            onToggleExpand={setExpanded}
+            onScout={handleScout}
+            onTrack={setLiveTracker}
+          />
         </div>
       )}
 
