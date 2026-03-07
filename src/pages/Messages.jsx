@@ -332,10 +332,16 @@ export default function Messages() {
             {messages.map(msg => {
               const isMe = msg.sender_email === user?.email;
               const hasAttachment = msg.attachment_url;
+              const isThreaded = threadMsg?.id === msg.id;
               return (
-                <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                <div key={msg.id} className={`flex group ${isMe ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-xs md:max-w-md lg:max-w-lg ${isMe ? "items-end" : "items-start"} flex flex-col gap-1`}>
-                    {!isMe && <span className="text-gray-500 text-xs ml-1">{msg.sender_name || msg.sender_email}</span>}
+                    {!isMe && (
+                      <div className="flex items-center gap-1.5 ml-1">
+                        <PresenceDot isOnline={onlineUsers.has(msg.sender_email)} />
+                        <span className="text-gray-500 text-xs">{msg.sender_name || msg.sender_email}</span>
+                      </div>
+                    )}
                     {hasAttachment ? (
                       <div className={`rounded-2xl overflow-hidden border ${isMe ? "border-transparent" : "border-gray-700"}`}
                         style={isMe ? { backgroundColor: "var(--color-primary,#3b82f6)33" } : { backgroundColor: "#1e1e1e" }}>
@@ -359,7 +365,15 @@ export default function Messages() {
                         {msg.content}
                       </div>
                     )}
-                    <span className="text-gray-600 text-xs mx-1">{formatTime(msg.created_date)}</span>
+                    <div className="flex items-center gap-2 mx-1">
+                      <span className="text-gray-600 text-xs">{formatTime(msg.created_date)}</span>
+                      <button
+                        onClick={() => setThreadMsg(isThreaded ? null : msg)}
+                        className={`flex items-center gap-1 text-xs transition-all opacity-0 group-hover:opacity-100 ${isThreaded ? "opacity-100 text-[var(--color-primary,#3b82f6)]" : "text-gray-600 hover:text-gray-400"}`}>
+                        <MessageCircle className="w-3 h-3" />
+                        <span>Reply</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
