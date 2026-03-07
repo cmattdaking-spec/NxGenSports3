@@ -26,6 +26,7 @@ export default function Messages() {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [groupName, setGroupName] = useState("");
   const [searchUsers, setSearchUsers] = useState("");
+  const [isCustomGroup, setIsCustomGroup] = useState(false);
   const [sidebarTab, setSidebarTab] = useState("channels"); // "channels" | "dms"
   const messagesEndRef = useRef(null);
   const [sending, setSending] = useState(false);
@@ -191,8 +192,16 @@ export default function Messages() {
 
   const createConversation = async () => {
     if (selectedUsers.length === 0) return;
-    const participants = [user?.email, ...selectedUsers.map(u => u.email)];
-    const participantNames = [user?.full_name || user?.email, ...selectedUsers.map(u => u.full_name || u.email)];
+    // For non-custom groups, auto-add the head coach
+    let finalUsers = [...selectedUsers];
+    if (newConvoType === "group" && !isCustomGroup) {
+      const headCoach = allUsers.find(u => u.role === "head_coach" && u.email !== user?.email);
+      if (headCoach && !finalUsers.find(u => u.email === headCoach.email)) {
+        finalUsers = [headCoach, ...finalUsers];
+      }
+    }
+    const participants = [user?.email, ...finalUsers.map(u => u.email)];
+    const participantNames = [user?.full_name || user?.email, ...finalUsers.map(u => u.full_name || u.email)];
     const name = newConvoType === "group"
       ? groupName.trim() || participantNames.join(", ")
       : null;
@@ -207,6 +216,7 @@ export default function Messages() {
     setShowNewConvo(false);
     setSelectedUsers([]);
     setGroupName("");
+    setIsCustomGroup(false);
     openConversation(convo);
     setSidebarTab("dms");
   };
