@@ -32,9 +32,30 @@ export default function Messages() {
   const [showEmoji, setShowEmoji] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
-  const [threadMsg, setThreadMsg] = useState(null); // message being threaded
+  const [threadMsg, setThreadMsg] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const presenceRef = useRef(null);
+  // Presence
+  const [myStatus, setMyStatus] = useState("online");
+  const [myCustomStatus, setMyCustomStatus] = useState("");
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  // Search
+  const [showSearch, setShowSearch] = useState(false);
+  // Pinned
+  const [pinnedMessages, setPinnedMessages] = useState([]);
+  const [showPinned, setShowPinned] = useState(false);
+  // Announcement
+  const [isAnnouncement, setIsAnnouncement] = useState(false);
+  // Channel topic edit
+  const [editingTopic, setEditingTopic] = useState(false);
+  const [topicInput, setTopicInput] = useState("");
+  const [channelTopics, setChannelTopics] = useState({});
+  // Jump to message
+  const messageRefs = useRef({});
+  const jumpToMsg = useCallback((msg) => {
+    const el = messageRefs.current[msg.id];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, []);
 
   const EMOJIS = ["😂","😭","🔥","💪","🏈","🙌","👊","💯","🎯","⚡","🏆","😤","👏","🙏","😮","💀","😎","🤙","👍","❤️","🎉","🤣","😅","😆","😊","🥶","🤯","💥","🚀","🔒"];
 
