@@ -426,20 +426,46 @@ export default function UserManagement() {
                   </div>
 
                   {editingId === u.id ? (
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <select
-                        value={editRole}
-                        onChange={e => setEditRole(e.target.value)}
-                        className="bg-[#1e1e1e] border border-gray-600 rounded-lg px-2 py-1.5 text-white text-xs outline-none"
-                      >
+                    <div className="flex flex-col gap-2 flex-shrink-0 max-w-xs w-full">
+                      <select value={editRole} onChange={e => setEditRole(e.target.value)} className="bg-[#1e1e1e] border border-gray-600 rounded-lg px-2 py-1.5 text-white text-xs outline-none w-full">
                         {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                       </select>
-                      <button onClick={() => saveRole(u.id)} className="p-1.5 rounded-lg text-green-400 hover:bg-green-400/10 transition-colors">
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => setEditingId(null)} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-700 transition-colors">
-                        <X className="w-4 h-4" />
-                      </button>
+                      {(editRole === "position_coach" || editRole === "offensive_coordinator" || editRole === "defensive_coordinator") && (
+                        <>
+                          <div>
+                            <p className="text-gray-500 text-xs mb-1">Assigned Positions</p>
+                            <div className="flex flex-wrap gap-1">
+                              {ALL_POSITIONS.map(pos => (
+                                <button key={pos} onClick={() => setEditPositions(prev => prev.includes(pos) ? prev.filter(p => p !== pos) : [...prev, pos])}
+                                  className={`px-1.5 py-0.5 rounded text-xs font-medium transition-all ${editPositions.includes(pos) ? "text-white" : "bg-gray-800 text-gray-500"}`}
+                                  style={editPositions.includes(pos) ? { backgroundColor: "var(--color-primary,#3b82f6)" } : {}}>
+                                  {pos}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 text-xs mb-1">Phases of Game</p>
+                            <div className="flex gap-1">
+                              {PHASES.map(ph => (
+                                <button key={ph.value} onClick={() => setEditPhases(prev => prev.includes(ph.value) ? prev.filter(p => p !== ph.value) : [...prev, ph.value])}
+                                  className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${editPhases.includes(ph.value) ? "text-white" : "bg-gray-800 text-gray-500"}`}
+                                  style={editPhases.includes(ph.value) ? { backgroundColor: "var(--color-primary,#3b82f6)" } : {}}>
+                                  {ph.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      <div className="flex gap-1">
+                        <button onClick={() => saveRole(u.id)} className="flex-1 py-1 rounded-lg text-green-400 border border-green-500/30 text-xs hover:bg-green-400/10 flex items-center justify-center gap-1">
+                          <Check className="w-3 h-3" /> Save
+                        </button>
+                        <button onClick={() => setEditingId(null)} className="flex-1 py-1 rounded-lg text-gray-500 border border-gray-700 text-xs hover:bg-gray-700 flex items-center justify-center gap-1">
+                          <X className="w-3 h-3" /> Cancel
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 flex-shrink-0">
