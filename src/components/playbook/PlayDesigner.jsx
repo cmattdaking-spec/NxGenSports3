@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import { useTeamLanguage } from "@/components/playbook/useTeamLanguage";
 
-// ─── Game Format Configs ──────────────────────────────────────────────────────
+// ─── Player type definitions using lettering system ──────────────────────────
+// Labels are overridden at runtime by team language settings
 const GAME_FORMATS = [
   { id: "11man",   label: "11-Man",    players: 11, hasHashes: true,  hashRatio: 0.28, endzoneYards: 10 },
   { id: "12man",   label: "12-Man",    players: 12, hasHashes: true,  hashRatio: 0.28, endzoneYards: 10 },
