@@ -4,6 +4,7 @@ import {
   Circle, Square, Pen, Move, MousePointer2, Trash2, Play,
   ChevronDown, Users, Flag
 } from "lucide-react";
+import { useTeamLanguage } from "@/components/playbook/useTeamLanguage";
 
 // ─── Game Format Configs ──────────────────────────────────────────────────────
 const GAME_FORMATS = [
