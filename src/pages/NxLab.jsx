@@ -160,42 +160,6 @@ function ScoutingTab() {
   );
 }
 
-// ─── PLAYBOOK TAB ────────────────────────────────────────────────────────────
-function PlaybookTab() {
-  return (
-    <div className="flex items-center justify-center py-20">
-      <div className="text-center">
-        <BookOpen className="w-16 h-16 text-gray-700 mx-auto mb-4" />
-        <p className="text-gray-400 text-lg">Playbook feature coming soon</p>
-      </div>
-    </div>
-  );
-}
-
-// ─── PRACTICE TAB ────────────────────────────────────────────────────────────
-function PracticeTab() {
-  return (
-    <div className="flex items-center justify-center py-20">
-      <div className="text-center">
-        <ClipboardList className="w-16 h-16 text-gray-700 mx-auto mb-4" />
-        <p className="text-gray-400 text-lg">Practice planning feature coming soon</p>
-      </div>
-    </div>
-  );
-}
-
-// ─── GAME PLAN TAB ───────────────────────────────────────────────────────────
-function GamePlanTab() {
-  return (
-    <div className="flex items-center justify-center py-20">
-      <div className="text-center">
-        <Target className="w-16 h-16 text-gray-700 mx-auto mb-4" />
-        <p className="text-gray-400 text-lg">Game plan feature coming soon</p>
-      </div>
-    </div>
-  );
-}
-
 // ─── MAIN NxLab PAGE ─────────────────────────────────────────────────────────
 export default function NxLab() {
   const [activeTab, setActiveTab] = useState("film");
