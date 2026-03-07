@@ -125,7 +125,7 @@ export default function Layout({ children, currentPageName }) {
                 <div className="min-w-0">
                   <p className="text-white text-sm font-medium truncate">{user.full_name || "Coach"}</p>
                   <p className="text-gray-500 text-xs capitalize">
-                    {role.replace(/_/g, " ")}
+                    {coachingRole.replace(/_/g, " ")}
                     {user?.is_associate_head_coach && <span className="text-cyan-400 ml-1">(AC)</span>}
                   </p>
                 </div>
