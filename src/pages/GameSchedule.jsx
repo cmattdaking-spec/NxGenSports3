@@ -27,6 +27,7 @@ export default function GameSchedule() {
   const [scoutReport, setScoutReport] = useState(null);
   const [teamPreview, setTeamPreview] = useState(null);
   const [liveTracker, setLiveTracker] = useState(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   useEffect(() => {
     Promise.all([
