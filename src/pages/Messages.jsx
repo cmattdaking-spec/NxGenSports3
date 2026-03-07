@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   MessageSquare, Plus, Send, Users, User, ChevronLeft,
-  Lock, Search, X, Check, Smile, Hash, Paperclip, FileText, Image, Download
+  Lock, X, Check, Smile, Hash, Paperclip, FileText, Download, MessageCircle
 } from "lucide-react";
 import ChannelsList, { DEFAULT_CHANNELS } from "../components/messages/ChannelsList";
+import ThreadPanel from "../components/messages/ThreadPanel";
+import PresenceDot from "../components/messages/PresenceDot";
 
 export default function Messages() {
   const [user, setUser] = useState(null);

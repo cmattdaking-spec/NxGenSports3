@@ -47,14 +47,52 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import AcademicEligibility from './pages/AcademicEligibility';
+import Dashboard from './pages/Dashboard';
+import DepthChart from './pages/DepthChart';
+import FilmRoom from './pages/FilmRoom';
 import GamePlan from './pages/GamePlan';
+import GameSchedule from './pages/GameSchedule';
+import InGameAssistant from './pages/InGameAssistant';
+import Messages from './pages/Messages';
+import Playbook from './pages/Playbook';
+import PlayerDevelopment from './pages/PlayerDevelopment';
+import PlayerHealth from './pages/PlayerHealth';
+import Playlists from './pages/Playlists';
+import Practice from './pages/Practice';
+import Recruiting from './pages/Recruiting';
+import Roster from './pages/Roster';
+import Scouting from './pages/Scouting';
+import Settings from './pages/Settings';
+import StrengthConditioning from './pages/StrengthConditioning';
+import UserManagement from './pages/UserManagement';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AcademicEligibility": AcademicEligibility,
+    "Dashboard": Dashboard,
+    "DepthChart": DepthChart,
+    "FilmRoom": FilmRoom,
     "GamePlan": GamePlan,
+    "GameSchedule": GameSchedule,
+    "InGameAssistant": InGameAssistant,
+    "Messages": Messages,
+    "Playbook": Playbook,
+    "PlayerDevelopment": PlayerDevelopment,
+    "PlayerHealth": PlayerHealth,
+    "Playlists": Playlists,
+    "Practice": Practice,
+    "Recruiting": Recruiting,
+    "Roster": Roster,
+    "Scouting": Scouting,
+    "Settings": Settings,
+    "StrengthConditioning": StrengthConditioning,
+    "UserManagement": UserManagement,
 }
 
 export const pagesConfig = {
     mainPage: "GamePlan",
     Pages: PAGES,
+    Layout: __Layout,
 };
