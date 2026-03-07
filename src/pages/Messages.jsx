@@ -296,6 +296,12 @@ export default function Messages() {
             </>
           )}
         </div>
+
+        {/* Online indicator legend */}
+        <div className="px-3 pb-3 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
+          <span className="text-gray-600 text-xs">Active recently</span>
+        </div>
       </div>
 
       {/* Chat Area */}
