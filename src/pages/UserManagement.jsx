@@ -53,12 +53,17 @@ export default function UserManagement() {
   useEffect(() => {
     base44.auth.me().then(u => {
       setUser(u);
-      if (!CAN_MANAGE.includes(u?.role)) return setLoading(false);
+      const isSuper = u?.role === "super_admin";
+      if (!isSuper && !CAN_MANAGE.includes(u?.role)) return setLoading(false);
       base44.entities.User.list().then(list => {
-        // Filter to same team_id if set
-        const teamId = u.team_id;
-        const filtered = teamId ? list.filter(m => m.team_id === teamId || !m.team_id) : list;
-        setAllUsers(filtered);
+        if (isSuper) {
+          // Super admin sees all users but cannot access team data — just user records
+          setAllUsers(list.filter(m => m.role !== "super_admin"));
+        } else {
+          const teamId = u.team_id;
+          const filtered = teamId ? list.filter(m => m.team_id === teamId || !m.team_id) : list;
+          setAllUsers(filtered);
+        }
         setLoading(false);
       });
     }).catch(() => setLoading(false));
