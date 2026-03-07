@@ -26,9 +26,6 @@ export default function GameSchedule() {
   const [expanded, setExpanded] = useState(null);
   const [filterLevel, setFilterLevel] = useState("all");
   const [scoutModal, setScoutModal] = useState(null);
-  const [scoutLoading, setScoutLoading] = useState(false);
-  const [scoutReport, setScoutReport] = useState(null);
-  const [teamPreview, setTeamPreview] = useState(null);
   const [liveTracker, setLiveTracker] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
