@@ -29,6 +29,7 @@ const navItems = [
 { label: "Roster", page: "Roster", icon: Users, roles: null },
 { label: "Schedule", page: "GameSchedule", icon: CalendarDays, roles: null },
 { label: "Depth Chart", page: "DepthChart", icon: TrendingUp, roles: null },
+{ label: "Film Room", page: "FilmRoom", icon: Clapperboard, roles: null },
 { label: "Playbook", page: "Playbook", icon: BookOpen, roles: COORD_ONLY },
 { label: "Game Plans", page: "GamePlan", icon: Target, roles: GAME_PLAN_ROLES },
 { label: "Practice", page: "Practice", icon: ClipboardList, roles: null },
