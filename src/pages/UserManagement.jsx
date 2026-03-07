@@ -83,6 +83,30 @@ export default function UserManagement() {
     }).catch(() => setLoading(false));
   }, []);
 
+  const isHeadCoach = user?.role === "head_coach" || user?.role === "admin";
+
+  // Load mental readiness data for head coach view
+  useEffect(() => {
+    if (!user || !isHeadCoach) return;
+    base44.entities.User.list().then(list => {
+      setMentalReadiness(list.filter(u => u.mental_readiness != null));
+    }).catch(() => {});
+  }, [user]);
+
+  // Load my own readiness
+  useEffect(() => {
+    if (!user) return;
+    setMyReadiness(user.mental_readiness || null);
+    setMyReadinessNote(user.mental_readiness_note || "");
+  }, [user]);
+
+  const saveReadiness = async () => {
+    if (!myReadiness) return;
+    setSavingReadiness(true);
+    await base44.auth.updateMe({ mental_readiness: myReadiness, mental_readiness_note: myReadinessNote, mental_readiness_date: new Date().toISOString().split("T")[0] });
+    setSavingReadiness(false);
+  };
+
   const isSuperAdmin = user?.role === "super_admin";
   const canManage = isSuperAdmin || CAN_MANAGE.includes(user?.role);
   const canDesignateAC = CAN_DESIGNATE_AC.includes(user?.role);
