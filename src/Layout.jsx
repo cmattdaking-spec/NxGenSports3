@@ -17,26 +17,15 @@ const GAME_PLAN_ROLES = ["admin","head_coach","associate_head_coach","offensive_
 const IN_GAME_ROLES = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 
 // ─── CLEANED UP NAV ─────────────────────────────────────────────────────────
-// Merged: Analytics + PerformanceAnalytics → "Analytics" (PerformanceAnalytics)
-// Removed standalone Analytics page (redundant with PerformanceAnalytics)
-// Scouting stays (opponent-focused), GamePlan stays (strategy-focused)
 const navItems = [
   { label: "Dashboard",    page: "Dashboard",            icon: Home,           roles: null },
   { label: "Roster",       page: "Roster",               icon: Users,          roles: null },
-  { label: "Schedule",     page: "GameSchedule",         icon: CalendarDays,   roles: null },
-  { label: "Depth Chart",  page: "DepthChart",           icon: TrendingUp,     roles: null },
-  { label: "NxLab",        page: "NxLab",                icon: Clapperboard,   roles: null },
-  { label: "Playbook",     page: "Playbook",             icon: BookOpen,       roles: COORD_ONLY },
-  { label: "Game Plans",   page: "GamePlan",             icon: Target,         roles: GAME_PLAN_ROLES },
-  { label: "Practice",     page: "Practice",             icon: ClipboardList,  roles: null },
   { label: "Health",       page: "PlayerHealth",         icon: Activity,       roles: null },
   { label: "S&C",          page: "StrengthConditioning", icon: Dumbbell,       roles: null },
   { label: "Eligibility",  page: "AcademicEligibility",  icon: GraduationCap,  roles: null },
   { label: "Recruiting",   page: "Recruiting",           icon: Star,           roles: COORD_ONLY },
-  // Merged: Analytics now points to PerformanceAnalytics (film + import + metrics in one place)
   { label: "Analytics",    page: "PerformanceAnalytics", icon: BarChart2,      roles: null },
-  { label: "NxMessage",    page: "Messages",             icon: MessageSquare,  roles: null },
-  { label: "NxCall",       page: "InGameAssistant",      icon: Gamepad2,       roles: IN_GAME_ROLES },
+  { label: "NxLab",        page: "NxLab",                icon: Clapperboard,   roles: null },
   { label: "Users",        page: "UserManagement",       icon: UserCog,        roles: ["admin","head_coach","athletic_director"] },
 ];
 
