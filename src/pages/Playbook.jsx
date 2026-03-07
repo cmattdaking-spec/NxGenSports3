@@ -240,11 +240,12 @@ export default function Playbook() {
         <PlayDesigner
           onClose={() => { setShowDesigner(false); setDesignerPlay(null); }}
           initialData={designerPlay ? { elements: designerPlay._designerElements || [] } : undefined}
-          onSave={async ({ dataUrl, elements }) => {
-            if (designerPlay) {
-              await base44.entities.Play.update(designerPlay.id, { diagram_data: dataUrl, _designerElements: elements });
+          playName={designerPlay?.name}
+          onSave={async ({ dataUrl, elements, format }) => {
+            if (designerPlay?.id) {
+              await base44.entities.Play.update(designerPlay.id, { diagram_data: dataUrl, _designerElements: elements, diagram_format: format });
             } else {
-              await base44.entities.Play.create({ name: "Untitled Play", unit: "offense", category: "run", diagram_data: dataUrl, _designerElements: elements });
+              await base44.entities.Play.create({ name: designerPlay?.name || "Untitled Play", unit: designerPlay?.unit || "offense", category: designerPlay?.category || "run", diagram_data: dataUrl, _designerElements: elements, diagram_format: format });
             }
             load();
           }}
