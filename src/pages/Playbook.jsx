@@ -224,6 +224,11 @@ export default function Playbook() {
           opponents={opponents}
           onClose={() => setShowNxPlayAI(false)}
           onSavePlay={() => { load(); setShowNxPlayAI(false); }}
+          onOpenDesigner={({ play, elements }) => {
+            setShowNxPlayAI(false);
+            setDesignerPlay({ ...play, _designerElements: elements });
+            setShowDesigner(true);
+          }}
         />
       )}
 
