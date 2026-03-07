@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { X, Brain, Zap, Plus, Tag, Shuffle, Pen } from "lucide-react";
+import { useTeamLanguage } from "@/components/playbook/useTeamLanguage";
 
 const CATEGORIES = ["run","pass","screen","play_action","blitz","coverage","zone","man","punt","kick","return"];
 
