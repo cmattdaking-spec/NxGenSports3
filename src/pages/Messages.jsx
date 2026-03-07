@@ -373,20 +373,52 @@ export default function Messages() {
         <>
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 bg-[#111111] border-b border-gray-800">
-            <button className="md:hidden text-gray-400" onClick={() => { setActiveConvo(null); setActiveChannel(null); }}>
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--color-primary,#3b82f6)22" }}>
-              {activeChannel ? <Hash className="w-4 h-4" style={{ color: "var(--color-primary,#3b82f6)" }} /> :
-               activeConvo?.type === "group" ? <Users className="w-4 h-4" style={{ color: "var(--color-primary,#3b82f6)" }} /> :
-               <User className="w-4 h-4" style={{ color: "var(--color-primary,#3b82f6)" }} />}
-            </div>
-            <div>
-              <p className="text-white font-semibold text-sm">{activeTitle}</p>
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <Lock className="w-2.5 h-2.5" />
-                <span>{activeChannel ? activeChannel.description || "Team channel" : `${activeConvo?.type === "group" ? `${activeConvo.participants?.length} members` : "Direct Message"}`}</span>
+          <div className="bg-[#111111] border-b border-gray-800">
+            <div className="flex items-center gap-3 px-4 py-3">
+              <button className="md:hidden text-gray-400" onClick={() => { setActiveConvo(null); setActiveChannel(null); }}>
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--color-primary,#3b82f6)22" }}>
+                {activeChannel ? <Hash className="w-4 h-4" style={{ color: "var(--color-primary,#3b82f6)" }} /> :
+                 activeConvo?.type === "group" ? <Users className="w-4 h-4" style={{ color: "var(--color-primary,#3b82f6)" }} /> :
+                 <User className="w-4 h-4" style={{ color: "var(--color-primary,#3b82f6)" }} />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-semibold text-sm">{activeTitle}</p>
+                {/* Channel topic — click to edit */}
+                {activeChannel ? (
+                  editingTopic ? (
+                    <form onSubmit={e => { e.preventDefault(); setChannelTopics(prev => ({ ...prev, [activeChannel.id]: topicInput })); setEditingTopic(false); }} className="flex items-center gap-1 mt-0.5">
+                      <input autoFocus value={topicInput} onChange={e => setTopicInput(e.target.value)}
+                        className="bg-[#1a1a1a] border border-gray-700 rounded px-2 py-0.5 text-xs text-white outline-none flex-1"
+                        placeholder="Set channel topic..." />
+                      <button type="submit" className="text-xs text-[var(--color-primary,#3b82f6)]">Save</button>
+                      <button type="button" onClick={() => setEditingTopic(false)} className="text-xs text-gray-600">Cancel</button>
+                    </form>
+                  ) : (
+                    <button onClick={() => { setTopicInput(channelTopics[activeChannel.id] || activeChannel.description || ""); setEditingTopic(true); }}
+                      className="text-xs text-gray-500 hover:text-gray-300 truncate max-w-xs text-left transition-all">
+                      {channelTopics[activeChannel.id] || activeChannel.description || "Set channel topic…"}
+                    </button>
+                  )
+                ) : (
+                  <p className="text-xs text-gray-500">{activeConvo?.type === "group" ? `${activeConvo.participants?.length} members` : "Direct Message"}</p>
+                )}
+              </div>
+              {/* Header actions */}
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {pinnedMessages.length > 0 && (
+                  <button onClick={() => setShowPinned(v => !v)}
+                    className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs transition-all ${showPinned ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
+                    style={showPinned ? { backgroundColor: "var(--color-primary,#3b82f6)22" } : {}}>
+                    <Pin className="w-3.5 h-3.5" />
+                    <span>{pinnedMessages.length}</span>
+                  </button>
+                )}
+                <button onClick={() => setShowSearch(v => !v)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-white transition-all">
+                  <Search className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
