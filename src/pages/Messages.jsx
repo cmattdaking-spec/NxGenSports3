@@ -360,10 +360,25 @@ export default function Messages() {
           )}
         </div>
 
-        {/* Online indicator legend */}
-        <div className="px-3 pb-3 flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
-          <span className="text-gray-600 text-xs">Active recently</span>
+        {/* My status */}
+        <div className="relative px-3 pb-3 border-t border-gray-800 pt-2">
+          <button onClick={() => setShowStatusModal(v => !v)}
+            className="w-full flex items-center gap-2 hover:bg-white/5 rounded-lg px-2 py-1.5 transition-all">
+            <PresenceDot status={myStatus} customStatus={myCustomStatus} size="md" />
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-white text-xs font-medium">{user?.full_name || user?.email}</p>
+              <p className="text-gray-600 text-xs truncate">{myCustomStatus || myStatus}</p>
+            </div>
+            <ChevronUp className="w-3 h-3 text-gray-600" />
+          </button>
+          {showStatusModal && (
+            <UserStatusModal
+              current={myStatus}
+              customStatus={myCustomStatus}
+              onSave={(s, c) => { setMyStatus(s); setMyCustomStatus(c); }}
+              onClose={() => setShowStatusModal(false)}
+            />
+          )}
         </div>
       </div>
 
