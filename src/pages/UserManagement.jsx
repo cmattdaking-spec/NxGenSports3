@@ -416,13 +416,24 @@ export default function UserManagement() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-white font-medium text-sm">{u.full_name || "—"}</p>
                       {isAC && <span className="text-xs bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded-full font-semibold">AC</span>}
+                      {u.mental_readiness != null && (
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${u.mental_readiness >= 7 ? "bg-green-500/20 text-green-400" : u.mental_readiness >= 4 ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400"}`}>
+                          🧠 {u.mental_readiness}/10
+                        </span>
+                      )}
                     </div>
                     <p className="text-gray-500 text-xs flex items-center gap-1 mt-0.5">
                       <Mail className="w-3 h-3" />{u.email}
                     </p>
+                    {u.assigned_positions?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {u.assigned_positions.map(pos => <span key={pos} className="text-xs bg-blue-500/15 text-blue-400 px-1.5 py-0 rounded">{pos}</span>)}
+                        {u.assigned_phases?.map(ph => <span key={ph} className="text-xs bg-orange-500/15 text-orange-400 px-1.5 py-0 rounded capitalize">{ph}</span>)}
+                      </div>
+                    )}
                   </div>
 
                   {editingId === u.id ? (
