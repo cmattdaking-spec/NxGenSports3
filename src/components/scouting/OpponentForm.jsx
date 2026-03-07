@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { X } from "lucide-react";
 
 export default function OpponentForm({ opponent, onSave, onCancel, loading }) {
-  const [form, setForm] = require("react").useState(opponent || { location: "home" });
+  const [form, setForm] = useState(opponent || { location: "home" });
 
   const handleSave = () => {
     if (!form.name || !form.game_date) return;
