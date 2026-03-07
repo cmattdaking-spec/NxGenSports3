@@ -140,12 +140,15 @@ Return variations that exploit different defensive looks. Use team position labe
     setLoading(true); setResult(null);
     const playList = plays.slice(0, 30).map(p => `${p.name} (${p.category}, ${p.formation || ""})`).join(", ");
     const opp = opponents.find(o => o.id === selectedOpponent);
+    const langCtx = getLanguageContext();
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an elite offensive coordinator for NxDown. The opponent is running a "${defenseScheme}" defensive scheme.
+      prompt: `You are an elite offensive coordinator for NxDown. ${langCtx}
+
+The opponent is running a "${defenseScheme}" defensive scheme.
 ${opp ? `Scouting notes: ${opp.defensive_tendency}. Key players: ${opp.key_players}.` : ""}
 Our current plays: ${playList}
 
-Generate 5 specific play calls and audibles that counter this defense effectively.`,
+Generate 5 specific play calls and audibles that counter this defense. Use our team's position language (X, Z, W, Y, A, MIKE, SAM, WILL) when describing routes and assignments.`,
       response_json_schema: {
         type: "object",
         properties: {
