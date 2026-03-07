@@ -9,13 +9,7 @@ import ScoutPreviewModal from "../components/schedule/ScoutPreviewModal";
 import GameCard from "../components/schedule/GameCard";
 import { SpinnerLoader } from "../components/SkeletonLoader";
 
-const LEVELS = ["Varsity","JV","Freshman"];
 
-const LEVEL_COLOR = {
-  Varsity: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  JV: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  Freshman: "bg-green-500/20 text-green-400 border-green-500/30"
-};
 
 export default function GameSchedule() {
   const [opponents, setOpponents] = useState([]);
