@@ -375,8 +375,8 @@ ${untagged.map(p => `- ID: ${p.id}, Name: ${p.name}, Category: ${p.category}, Un
                         <p className="text-gray-400 text-xs">{c.rationale}</p>
                         {c.description && <p className="text-gray-500 text-xs mt-1">{c.description}</p>}
                       </div>
-                      <button onClick={() => saveCounter(c)} className="flex-shrink-0 p-1.5 bg-orange-500/10 border border-orange-500/30 text-orange-400 rounded-lg hover:bg-orange-500/20 transition-all">
-                        <Plus className="w-3.5 h-3.5" />
+                      <button onClick={() => saveCounter(c)} title="Save & open in Designer" className="flex-shrink-0 flex items-center gap-1 px-2 py-1.5 bg-orange-500/10 border border-orange-500/30 text-orange-400 rounded-lg hover:bg-orange-500/20 transition-all text-xs font-medium">
+                        <Plus className="w-3 h-3" /><Pen className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
