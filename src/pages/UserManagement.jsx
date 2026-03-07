@@ -460,13 +460,13 @@ export default function UserManagement() {
                       )}
 
                       {canAddRemoveUsers && (
-                        <button
-                          onClick={() => { setEditingId(u.id); setEditRole(u.role || "position_coach"); }}
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-gray-700 transition-all"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
+                          <button
+                            onClick={() => { setEditingId(u.id); setEditRole(u.role || "position_coach"); setEditPositions(u.assigned_positions || []); setEditPhases(u.assigned_phases || []); }}
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-gray-700 transition-all"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                     </div>
                   )}
                 </div>
