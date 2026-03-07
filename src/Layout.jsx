@@ -76,7 +76,7 @@ export default function Layout({ children, currentPageName }) {
         return true;
       });
 
-  const SidebarContent = () => (
+  const sidebarContent = (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className={`flex items-center gap-3 px-4 py-5 border-b border-gray-800 ${collapsed ? "justify-center" : ""}`}>
@@ -116,7 +116,8 @@ export default function Layout({ children, currentPageName }) {
       {/* Settings + User */}
       <div className="border-t border-gray-800 p-2 space-y-1">
         <Link to={createPageUrl("Settings")} onClick={() => setMobileOpen(false)}
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${currentPageName === "Settings" ? "bg-[var(--color-primary,#3b82f6)] text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${currentPageName === "Settings" ? "text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+          style={currentPageName === "Settings" ? { backgroundColor: "var(--color-primary, #3b82f6)" } : {}}>
           <Settings className="w-5 h-5 flex-shrink-0" />
           {!collapsed && <span className="text-sm font-medium">Settings</span>}
         </Link>
@@ -146,7 +147,7 @@ export default function Layout({ children, currentPageName }) {
     <div className="flex h-screen bg-[#0a0a0a] overflow-hidden">
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col flex-shrink-0 bg-[#111111] border-r border-gray-800 transition-all duration-300 relative ${collapsed ? "w-16" : "w-56"}`}>
-        <SidebarContent />
+        {sidebarContent}
         <button onClick={() => setCollapsed(!collapsed)}
           className="absolute -right-3 top-20 w-6 h-6 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all z-10"
           onMouseEnter={e => e.currentTarget.style.backgroundColor = "var(--color-primary, #3b82f6)"}
@@ -160,7 +161,7 @@ export default function Layout({ children, currentPageName }) {
         <div className="fixed inset-0 z-40 md:hidden" style={{ pointerEvents: "all" }}>
           <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
           <aside className="absolute left-0 top-0 bottom-0 w-56 bg-[#111111] border-r border-gray-800 z-50" onClick={e => e.stopPropagation()}>
-            <SidebarContent />
+            {sidebarContent}
           </aside>
         </div>
       )}
