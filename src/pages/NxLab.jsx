@@ -9,6 +9,9 @@ import SessionSidebar from "../components/filmroom/SessionSidebar";
 import TagComments from "../components/filmroom/TagComments";
 import AIVideoAnalysis from "../components/filmroom/AIVideoAnalysis";
 import VideoAnnotationCanvas from "../components/filmroom/VideoAnnotationCanvas";
+import OpponentCard from "../components/scouting/OpponentCard";
+import DeepAnalysisModal from "../components/scouting/DeepAnalysisModal";
+import OpponentForm from "../components/scouting/OpponentForm";
 
 // ─── SCOUTING SUB-COMPONENT ──────────────────────────────────────────────────
 function ScoutingTab() {
