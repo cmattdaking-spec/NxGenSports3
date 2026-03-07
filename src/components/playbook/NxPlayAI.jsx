@@ -1,10 +1,95 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { X, Brain, Zap, Plus, Tag, Shuffle } from "lucide-react";
+import { X, Brain, Zap, Plus, Tag, Shuffle, Pen } from "lucide-react";
 
 const CATEGORIES = ["run","pass","screen","play_action","blitz","coverage","zone","man","punt","kick","return"];
 
-export default function NxPlayAI({ plays, opponents, onClose, onSavePlay }) {
+// Generate canvas elements from AI play description
+function generateDiagramElements(play, format = "11man") {
+  const W = 800, EZ_H = 52, FIELD_H = 520 - 2 * EZ_H;
+  const LOS_Y = EZ_H + FIELD_H * 0.62;
+  const cx = W / 2;
+
+  const elements = [];
+  let id = Date.now();
+
+  const isOffense = play.unit === "offense" || !play.unit;
+  const cat = play.category || "run";
+  const playerCount = { flag: 5, "7on7": 7, "8man": 8, "11man": 11, "12man": 12 }[format] || 11;
+
+  // Place O-line
+  if (playerCount >= 7) {
+    const linePositions = playerCount >= 11
+      ? [-80, -40, 0, 40, 80]
+      : playerCount >= 8
+        ? [-60, -30, 0, 30, 60]
+        : [-40, 0, 40];
+    linePositions.forEach((offset, i) => {
+      elements.push({
+        id: id++, type: "player",
+        x: cx + offset, y: LOS_Y + 2,
+        label: offset === 0 ? "C" : "O",
+        pColor: offset === 0 ? "#6366f1" : "#3b82f6",
+        shape: offset === 0 ? "square" : "circle",
+      });
+    });
+  }
+
+  // QB behind center
+  const qbY = LOS_Y + 30;
+  elements.push({ id: id++, type: "player", x: cx, y: qbY, label: "QB", pColor: "#f59e0b", shape: "circle" });
+
+  // Skill players
+  if (cat === "run" || cat === "play_action") {
+    // RB
+    elements.push({ id: id++, type: "player", x: cx - 20, y: qbY + 28, label: "O", pColor: "#3b82f6", shape: "circle" });
+    // WRs wide
+    if (playerCount >= 8) {
+      elements.push({ id: id++, type: "player", x: 55, y: LOS_Y, label: "O", pColor: "#3b82f6", shape: "circle" });
+      elements.push({ id: id++, type: "player", x: W - 55, y: LOS_Y, label: "O", pColor: "#3b82f6", shape: "circle" });
+    }
+    // Draw run route from QB
+    elements.push({ id: id++, type: "arrow", x1: cx, y1: qbY + 15, x2: cx - 20, y2: qbY + 70, color: "#f59e0b", lineWidth: 2.5 });
+    // Handoff arrow
+    elements.push({ id: id++, type: "arrow", x1: cx - 20, y1: qbY + 40, x2: cx - 60, y2: qbY + 80, color: "#10b981", lineWidth: 2.5 });
+  } else if (cat === "pass" || cat === "screen" || cat === "play_action") {
+    // WRs
+    const wrPositions = playerCount >= 8 ? [55, W - 55] : [70, W - 70];
+    wrPositions.forEach((x, i) => {
+      elements.push({ id: id++, type: "player", x, y: LOS_Y, label: "O", pColor: "#3b82f6", shape: "circle" });
+      // Route: go or curl
+      if (i === 0) {
+        elements.push({ id: id++, type: "freehand", points: [
+          { x, y: LOS_Y - 3 }, { x: x + 5, y: LOS_Y - 30 }, { x: x + 30, y: LOS_Y - 80 }
+        ], color: "#ff6b00", lineWidth: 2.5 });
+      } else {
+        elements.push({ id: id++, type: "freehand", points: [
+          { x, y: LOS_Y - 3 }, { x: x - 10, y: LOS_Y - 40 }, { x: x - 50, y: LOS_Y - 70 }
+        ], color: "#3b82f6", lineWidth: 2.5 });
+      }
+    });
+    // TE
+    if (playerCount >= 11) {
+      elements.push({ id: id++, type: "player", x: cx + 90, y: LOS_Y, label: "O", pColor: "#3b82f6", shape: "circle" });
+      elements.push({ id: id++, type: "freehand", points: [
+        { x: cx + 90, y: LOS_Y - 3 }, { x: cx + 90, y: LOS_Y - 35 }, { x: cx + 130, y: LOS_Y - 60 }
+      ], color: "#10b981", lineWidth: 2.5 });
+    }
+    // QB throw arc
+    elements.push({ id: id++, type: "arrow", x1: cx, y1: qbY, x2: cx - 50 + 80, y2: LOS_Y - 75, color: "#f59e0b", lineWidth: 1.5 });
+  }
+
+  // Defense
+  const defY = LOS_Y - 28;
+  const defPositions = playerCount >= 11 ? [-80, -40, 0, 40, 80] : [-50, 0, 50];
+  defPositions.forEach(offset => {
+    elements.push({ id: id++, type: "player", x: cx + offset, y: defY, label: "X", pColor: "#ef4444", shape: "circle" });
+  });
+
+  return elements;
+}
+
+export default function NxPlayAI({ plays, opponents, onClose, onSavePlay, onOpenDesigner }) {
   const [mode, setMode] = useState("variations"); // variations | counters | autotag
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
