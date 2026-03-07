@@ -85,6 +85,7 @@ export default function GamePlan() {
     const unitPlays = plays.filter(p => p.unit === plan.unit).map(p => `${p.name} (${p.category})`).join(", ");
     const unitPlayers = players.filter(p => p.unit === plan.unit && p.status === "active")
       .map(p => `${p.first_name} ${p.last_name} (${p.position}, Rating: ${p.overall_rating || "N/A"})`).join(", ");
+    const filmInsights = await getFilmInsights(plan.opponent);
 
     const res = await base44.integrations.Core.InvokeLLM({
       prompt: `You are an elite football AI coordinator for NxDown. Generate a comprehensive, opponent-specific ${plan.unit} game plan.
