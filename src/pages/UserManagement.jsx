@@ -421,7 +421,8 @@ export default function UserManagement() {
           <div className="divide-y divide-gray-800">
             {allUsers.map(u => {
               const isAC = u.is_associate_head_coach;
-              const effectiveRole = isAC && u.role !== "head_coach" ? `${u.role} (AC)` : u.role;
+              const displayRole = u.coaching_role || u.role;
+              const effectiveRole = isAC && displayRole !== "head_coach" ? `${displayRole} (AC)` : displayRole;
               return (
                 <div key={u.id} className={`flex items-center gap-4 px-5 py-4 transition-colors ${isAC ? "bg-cyan-500/3" : ""}`}>
                   <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm relative"
