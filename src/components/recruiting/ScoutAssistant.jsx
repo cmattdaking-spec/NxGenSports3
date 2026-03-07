@@ -50,6 +50,7 @@ Provide a thorough scouting report with grades, strengths, weaknesses, fit analy
 
     const res = await base44.integrations.Core.InvokeLLM({
       prompt,
+      add_context_from_internet: !!(p.highlight_url || p.hudl_url),
       response_json_schema: {
         type: "object",
         properties: {
