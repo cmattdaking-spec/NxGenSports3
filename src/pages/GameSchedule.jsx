@@ -67,41 +67,7 @@ export default function GameSchedule() {
 
   const getGamePlan = (opponent) => gamePlans.find(gp => gp.opponent === opponent.name);
 
-  const generateScoutPreview = async (opponent) => {
-    setScoutModal(opponent);
-    setScoutLoading(true);
-    setScoutReport(null);
-    const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an elite football scout for NxDown. Generate a quick scouting preview for an upcoming opponent.
 
-Opponent: ${opponent.name}
-Date: ${opponent.game_date}
-Location: ${opponent.location}
-Record: ${opponent.record || "Unknown"}
-Conference: ${opponent.conference || "Unknown"}
-Offensive Tendency: ${opponent.offensive_tendency || "Unknown"}
-Defensive Tendency: ${opponent.defensive_tendency || "Unknown"}
-Key Players: ${opponent.key_players || "Unknown"}
-Known Strengths: ${opponent.strengths || "Unknown"}
-Known Weaknesses: ${opponent.weaknesses || "Unknown"}
-
-Provide a concise game-week scouting preview including threat assessment, keys to winning, and immediate prep priorities.`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          threat_level: { type: "string", enum: ["Low","Medium","High","Elite"] },
-          summary: { type: "string" },
-          offensive_keys: { type: "array", items: { type: "string" } },
-          defensive_keys: { type: "array", items: { type: "string" } },
-          matchups_to_watch: { type: "array", items: { type: "string" } },
-          immediate_prep_priorities: { type: "array", items: { type: "string" } },
-          win_probability_factors: { type: "array", items: { type: "string" } }
-        }
-      }
-    });
-    setScoutReport(res);
-    setScoutLoading(false);
-  };
 
   const threatColor = { Low: "bg-green-500/20 text-green-400 border-green-500/30", Medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30", High: "bg-orange-500/20 text-orange-400 border-orange-500/30", Elite: "bg-red-500/20 text-red-400 border-red-500/30" };
 
