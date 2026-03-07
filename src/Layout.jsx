@@ -63,7 +63,7 @@ export default function Layout({ children, currentPageName }) {
   const coachingRole = user?.coaching_role || "position_coach";
   const effectiveRole = user?.is_associate_head_coach ? "associate_head_coach" : coachingRole;
 
-  const filteredNav = role === "super_admin"
+  const filteredNav = user?.role === "super_admin"
     ? [{ label: "Teams", page: "UserManagement", icon: UserCog, roles: null }]
     : navItems.filter((item) => {
         if (item.roles && !item.roles.includes(effectiveRole)) return false;
