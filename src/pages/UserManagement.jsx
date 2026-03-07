@@ -14,6 +14,11 @@ const ROLES = [
   { value: "trainer", label: "Trainer" },
 ];
 
+const SUPER_ADMIN_ROLES = [
+  { value: "admin", label: "Admin" },
+  { value: "head_coach", label: "Head Coach" },
+];
+
 const roleColors = {
   admin: "bg-purple-500/20 text-purple-400",
   athletic_director: "bg-yellow-500/20 text-yellow-400",

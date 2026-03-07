@@ -76,10 +76,13 @@ export default function Layout({ children, currentPageName }) {
   const role = user?.role || "coach";
   const effectiveRole = (user?.is_associate_head_coach && role !== "head_coach") ? "associate_head_coach" : role;
 
-  const filteredNav = navItems.filter((item) => {
-    if (item.roles && !item.roles.includes(effectiveRole)) return false;
-    return true;
-  });
+  // super_admin only sees Users page (team management)
+  const filteredNav = role === "super_admin"
+    ? [{ label: "Teams", page: "UserManagement", icon: UserCog, roles: null }]
+    : navItems.filter((item) => {
+        if (item.roles && !item.roles.includes(effectiveRole)) return false;
+        return true;
+      });
 
   const SidebarContent = () =>
   <div className="flex flex-col h-full">
