@@ -235,7 +235,7 @@ Note any S&C-related readiness concerns. Use team position labels throughout.`,
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="bg-[#141414] border border-gray-700 rounded-xl w-full max-w-md">
             <div className="flex items-center justify-between p-5 border-b border-gray-800">
-              <h2 className="text-white font-bold">{editing} Depth Chart</h2>
+              <h2 className="text-white font-bold">{getLabel(editing)} Depth Chart <span className="text-gray-600 text-sm font-normal">({editing})</span></h2>
               <button onClick={() => setEditing(null)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
             <div className="p-5 space-y-3">
