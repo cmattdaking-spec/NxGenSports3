@@ -500,8 +500,8 @@ export default function UserManagement() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${roleColors[u.role] || "bg-gray-700 text-gray-400"}`}>
-                        {ROLES.find(r => r.value === u.role)?.label || u.role?.replace(/_/g, " ") || "—"}
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${roleColors[displayRole] || "bg-gray-700 text-gray-400"}`}>
+                        {ROLES.find(r => r.value === displayRole)?.label || displayRole?.replace(/_/g, " ") || "—"}
                       </span>
 
                       {/* AC toggle — Head Coach only, for non-HC staff */}
