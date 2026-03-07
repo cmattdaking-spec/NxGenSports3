@@ -73,14 +73,14 @@ export default function UserManagement() {
         if (isSuper) {
           setAllUsers(list.filter(m => m.role !== "super_admin"));
         } else {
-          const teamId = u.team_id;
-          const filtered = teamId
-            ? list.filter(m => m.team_id === teamId)
-            : list.filter(m => m.role !== "super_admin");
-          setAllUsers(filtered);
+          // Only platform admins can list all users; filter out super_admin entries
+          setAllUsers(list.filter(m => m.role !== "super_admin"));
         }
         setLoading(false);
-      }).catch(() => setLoading(false));
+      }).catch((err) => {
+        // head_coach role cannot list users — platform security restriction
+        setLoading(false);
+      });
     }).catch(() => setLoading(false));
   }, []);
 
