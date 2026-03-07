@@ -457,12 +457,75 @@ export default function UserManagement() {
 
       {/* Staff Table */}
       <div className="bg-[#141414] border border-gray-800 rounded-2xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-gray-800 flex items-center justify-between">
-          <p className="text-gray-400 text-xs uppercase tracking-wider">Staff Members</p>
-          <div className="flex items-center gap-1 text-gray-600 text-xs">
-            <Lock className="w-3 h-3" />
-            <span>Account-isolated</span>
+        <div className="px-5 py-4 border-b border-gray-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-gray-400 text-xs uppercase tracking-wider">Staff Members</p>
+            <div className="flex items-center gap-1 text-gray-600 text-xs">
+              <Lock className="w-3 h-3" />
+              <span>Account-isolated</span>
+            </div>
           </div>
+          
+          {/* Search and Filters */}
+          <div className="flex flex-col md:flex-row gap-2">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search by name, email, role, or position..."
+              className="flex-1 bg-[#1e1e1e] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 outline-none focus:border-[var(--color-primary,#3b82f6)]"
+            />
+            <div className="text-xs text-gray-500">
+              {filteredUsers.length} of {allUsers.length}
+            </div>
+          </div>
+
+          {/* Bulk Actions */}
+          {selectedUsers.size > 0 && (
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-blue-400 text-sm font-semibold">{selectedUsers.size} selected</p>
+                <button onClick={() => setSelectedUsers(new Set())} className="text-xs text-gray-500 hover:text-gray-300">Clear</button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <select
+                  value={bulkRole}
+                  onChange={e => setBulkRole(e.target.value)}
+                  className="bg-[#1e1e1e] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none"
+                >
+                  <option value="">Set Role...</option>
+                  {ROLES.filter(r => r.value !== "admin").map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                </select>
+                {(bulkRole === "position_coach" || bulkRole === "offensive_coordinator" || bulkRole === "defensive_coordinator") && (
+                  <select
+                    multiple
+                    value={bulkPositions}
+                    onChange={e => setBulkPositions(Array.from(e.target.selectedOptions, o => o.value))}
+                    className="bg-[#1e1e1e] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none"
+                  >
+                    {ALL_POSITIONS.map(pos => <option key={pos} value={pos}>{pos}</option>)}
+                  </select>
+                )}
+                <select
+                  multiple
+                  value={bulkPhases}
+                  onChange={e => setBulkPhases(Array.from(e.target.selectedOptions, o => o.value))}
+                  className="bg-[#1e1e1e] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none"
+                >
+                  {PHASES.map(ph => <option key={ph.value} value={ph.value}>{ph.label}</option>)}
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={applyBulkAction}
+                  disabled={applyingBulk || (Object.keys({bulkRole, bulkPositions, bulkPhases}).every(k => !{bulkRole, bulkPositions, bulkPhases}[k]?.length && !{bulkRole, bulkPositions, bulkPhases}[k]))}
+                  className="flex-1 px-3 py-1.5 rounded-lg text-white text-xs font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition-all"
+                >
+                  {applyingBulk ? "Applying..." : "Apply to Selected"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         {loading ? (
           <div className="text-center py-12 text-gray-500">
