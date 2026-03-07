@@ -103,10 +103,13 @@ export default function NxPlayAI({ plays, opponents, onClose, onSavePlay, onOpen
     if (!selectedPlay) return;
     setLoading(true); setResult(null);
     const opp = opponents.find(o => o.id === selectedOpponent);
+    const langCtx = getLanguageContext();
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an elite football AI coordinator for NxDown. Generate 4 creative variations of the play "${selectedPlay.name}" (${selectedPlay.category}, ${selectedPlay.formation || "no formation"}).
+      prompt: `You are an elite football AI coordinator for NxDown. ${langCtx}
+
+Generate 4 creative variations of the play "${selectedPlay.name}" (${selectedPlay.category}, ${selectedPlay.formation || "no formation"}).
 ${opp ? `\nOpponent defensive tendency: ${opp.defensive_tendency}\nOpponent strengths: ${opp.strengths}\nOpponent weaknesses: ${opp.weaknesses}` : ""}
-Return variations that exploit different defensive looks.`,
+Return variations that exploit different defensive looks. Use team position labels (X, Z, W, Y, A, MIKE, SAM, WILL etc.) when referencing positions.`,
       response_json_schema: {
         type: "object",
         properties: {
