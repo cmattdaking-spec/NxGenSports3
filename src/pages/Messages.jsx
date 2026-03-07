@@ -28,6 +28,9 @@ export default function Messages() {
   const [showEmoji, setShowEmoji] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const [threadMsg, setThreadMsg] = useState(null); // message being threaded
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const presenceRef = useRef(null);
 
   const EMOJIS = ["😂","😭","🔥","💪","🏈","🙌","👊","💯","🎯","⚡","🏆","😤","👏","🙏","😮","💀","😎","🤙","👍","❤️","🎉","🤣","😅","😆","😊","🥶","🤯","💥","🚀","🔒"];
 
