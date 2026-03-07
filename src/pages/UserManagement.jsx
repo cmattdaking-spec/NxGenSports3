@@ -116,8 +116,17 @@ export default function UserManagement() {
   const currentAC = allUsers.find(u => u.is_associate_head_coach);
 
   const saveRole = async (userId) => {
-    await base44.entities.User.update(userId, { role: editRole, assigned_positions: editPositions, assigned_phases: editPhases });
-    setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, role: editRole, assigned_positions: editPositions, assigned_phases: editPhases } : u));
+    // HC and AD get platform "admin" role so they can list/manage users
+    const platformRole = ["head_coach", "athletic_director"].includes(editRole) ? "admin" : editRole;
+    await base44.entities.User.update(userId, {
+      role: platformRole,
+      coaching_role: editRole,
+      assigned_positions: editPositions,
+      assigned_phases: editPhases,
+    });
+    setAllUsers(prev => prev.map(u => u.id === userId
+      ? { ...u, role: platformRole, coaching_role: editRole, assigned_positions: editPositions, assigned_phases: editPhases }
+      : u));
     setEditingId(null);
   };
 
