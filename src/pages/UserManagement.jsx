@@ -154,10 +154,24 @@ export default function UserManagement() {
     if (!inviteEmail.trim()) return;
     setInviting(true);
     setInviteMsg({ text: "", type: "success" });
-    // Platform requires "admin" to invite to private apps; role is set after via update
-    await base44.users.inviteUser(inviteEmail.trim(), "admin");
-    setInviteMsg({ text: `Invitation sent to ${inviteEmail}`, type: "success" });
-    setInviteEmail("");
+    try {
+      // Create Invite record with team, role, and positions
+      await base44.entities.Invite.create({
+        email: inviteEmail.trim(),
+        team_id: user?.team_id,
+        coaching_role: inviteRole,
+        assigned_positions: [],
+        assigned_phases: [],
+        status: "pending",
+        invited_by: user?.email
+      });
+      // Send Base44 invite (requires admin role for platform access)
+      await base44.users.inviteUser(inviteEmail.trim(), "admin");
+      setInviteMsg({ text: `Invitation sent to ${inviteEmail}`, type: "success" });
+      setInviteEmail("");
+    } catch (err) {
+      setInviteMsg({ text: `Error: ${err.message}`, type: "error" });
+    }
     setInviting(false);
     setTimeout(() => setInviteMsg({ text: "", type: "" }), 4000);
   };
