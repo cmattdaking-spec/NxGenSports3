@@ -43,6 +43,14 @@ export default function Messages() {
     base44.auth.me().then(u => {
       setUser(u);
       loadConversations(u);
+      // Simulate presence: mark all users as online if they messaged in last 10 min
+      base44.entities.Message.list("-created_date", 50).then(recent => {
+        const cutoff = Date.now() - 10 * 60 * 1000;
+        const active = new Set(
+          recent.filter(m => new Date(m.created_date).getTime() > cutoff).map(m => m.sender_email)
+        );
+        setOnlineUsers(active);
+      }).catch(() => {});
     }).catch(() => {});
     base44.entities.User.list().then(setAllUsers).catch(() => {});
   }, []);
