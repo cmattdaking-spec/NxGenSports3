@@ -550,7 +550,18 @@ export default function UserManagement() {
               const displayRole = u.coaching_role || u.role;
               const effectiveRole = isAC && displayRole !== "head_coach" ? `${displayRole} (AC)` : displayRole;
               return (
-                <div key={u.id} className={`flex items-center gap-4 px-5 py-4 transition-colors ${isAC ? "bg-cyan-500/3" : ""}`}>
+                <div key={u.id} className={`flex items-center gap-4 px-5 py-4 transition-colors ${isAC ? "bg-cyan-500/3" : ""} ${isSelected ? "bg-blue-500/5" : ""}`}>
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={e => {
+                      const newSet = new Set(selectedUsers);
+                      if (e.target.checked) newSet.add(u.id);
+                      else newSet.delete(u.id);
+                      setSelectedUsers(newSet);
+                    }}
+                    className="w-4 h-4 rounded border-gray-700 cursor-pointer"
+                  />
                   <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm relative"
                     style={{ backgroundColor: "var(--color-primary,#3b82f6)33" }}>
                     <span style={{ color: "var(--color-primary,#3b82f6)" }}>{(u.full_name || u.email)?.[0]?.toUpperCase()}</span>
