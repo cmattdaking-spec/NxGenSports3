@@ -101,17 +101,20 @@ export default function DepthChart() {
       return `${p.first_name} ${p.last_name} (${positions}, Rating: ${p.overall_rating || "N/A"}, Status: ${p.status}, Readiness: ${readiness}, S&C Load: ${loadScore ? loadScore.toFixed(1)+"/10" : "No data"})`;
     }).join("\n");
 
+    const langCtx = getLanguageContext();
+    const posLabels = positions.map(p => `${getLabel(p)} (${p})`).join(", ");
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a football coaching assistant for NxDown. Based on the following ${unit} players, suggest an optimal depth chart. 
+      prompt: `You are a football coaching assistant for NxDown. ${langCtx}
 
-IMPORTANT: Factor in player READINESS (S&C load and health status). Players marked "High Load/Fatigued" or "Limited" should be considered for lower depth chart spots or rest. Players who are "OUT" should not be starters.
+Based on the following ${unit} players, suggest an optimal depth chart.
+IMPORTANT: Factor in player READINESS (S&C load and health status). Players marked "High Load/Fatigued" or "Limited" should be considered for lower depth chart spots. Players who are "OUT" should not be starters.
 Players may play multiple positions — assign them optimally.
 
 Players:
 ${playerData}
 
-Provide depth chart recommendations for ${unit} positions: ${positions.join(", ")}
-Note any S&C-related readiness concerns.`,
+Provide depth chart recommendations for ${unit} positions: ${posLabels}
+Note any S&C-related readiness concerns. Use team position labels throughout.`,
     });
     setAiSuggestion(res);
     setAiLoading(false);
