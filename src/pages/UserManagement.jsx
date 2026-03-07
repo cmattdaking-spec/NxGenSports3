@@ -505,7 +505,7 @@ export default function UserManagement() {
                       </span>
 
                       {/* AC toggle — Head Coach only, for non-HC staff */}
-                      {canDesignateAC && u.role !== "head_coach" && u.role !== "athletic_director" && (
+                      {canDesignateAC && displayRole !== "head_coach" && displayRole !== "athletic_director" && (
                         <button
                           onClick={() => toggleAC(u)}
                           disabled={acDesignating}
