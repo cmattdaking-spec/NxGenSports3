@@ -300,6 +300,7 @@ export default function Messages() {
 
       {/* Chat Area */}
       {hasActive ? (
+        <div className="flex-1 flex overflow-hidden">
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 bg-[#111111] border-b border-gray-800">
