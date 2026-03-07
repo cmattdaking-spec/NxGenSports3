@@ -68,16 +68,18 @@ export default function UserManagement() {
     base44.auth.me().then(u => {
       setUser(u);
       const isSuper = u?.role === "super_admin";
-      const effectiveRole = getEffectiveRole(u);
-      if (!isSuper && !CAN_MANAGE.includes(effectiveRole)) return setLoading(false);
       
-      // Head Coach and Athletic Director can see all their team's staff
+      // Fetch all users regardless
       base44.entities.User.list().then(list => {
         if (isSuper) {
           setAllUsers(list.filter(m => m.role !== "super_admin"));
         } else {
-          // Filter to team members only (same team_id)
-          const teamUsers = list.filter(m => m.role !== "super_admin" && m.team_id === u?.team_id);
+          // Non-admins: show everyone on same team OR themselves if no team
+          const myTeam = u?.team_id;
+          const teamUsers = list.filter(m => 
+            m.role !== "super_admin" && 
+            (m.team_id === myTeam || m.id === u?.id)
+          );
           setAllUsers(teamUsers);
         }
         setLoading(false);
