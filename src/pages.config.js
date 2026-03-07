@@ -65,6 +65,7 @@ import Settings from './pages/Settings';
 import StrengthConditioning from './pages/StrengthConditioning';
 import UserManagement from './pages/UserManagement';
 import FilmRoom from './pages/FilmRoom';
+import Recruiting from './pages/Recruiting';
 import __Layout from './Layout.jsx';
 
 
@@ -87,6 +88,7 @@ export const PAGES = {
     "StrengthConditioning": StrengthConditioning,
     "UserManagement": UserManagement,
     "FilmRoom": FilmRoom,
+    "Recruiting": Recruiting,
 }
 
 export const pagesConfig = {
