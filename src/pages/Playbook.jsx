@@ -66,10 +66,18 @@ export default function Playbook() {
   const openEdit = (p) => { setEditing(p); setForm({...p}); setShowForm(true); };
 
   const save = async () => {
-    if (editing) await base44.entities.Play.update(editing.id, form);
-    else await base44.entities.Play.create(form);
-    setShowForm(false);
-    load();
+    if (editing) {
+      await base44.entities.Play.update(editing.id, form);
+      setShowForm(false);
+      load();
+    } else {
+      const newPlay = await base44.entities.Play.create(form);
+      setShowForm(false);
+      load();
+      // Auto-open designer for new play
+      setDesignerPlay(newPlay);
+      setShowDesigner(true);
+    }
   };
 
   const remove = async (id) => {
