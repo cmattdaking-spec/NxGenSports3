@@ -7,7 +7,7 @@ import {
   ChevronLeft, ChevronRight, Home,
   Menu, X, TrendingUp, ClipboardList, Crosshair, BarChart2,
   MessageSquare, Settings, GraduationCap, UserCog, Gamepad2,
-  Dumbbell, CalendarDays, Clapperboard, Star
+  Dumbbell, CalendarDays, Clapperboard, Star, Globe
 } from "lucide-react";
 
 const COORDINATOR_ROLES = ["admin","head_coach","associate_head_coach","athletic_director","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach","trainer"];
