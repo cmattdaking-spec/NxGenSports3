@@ -69,16 +69,19 @@ export default function UserManagement() {
       setUser(u);
       const isSuper = u?.role === "super_admin";
       if (!isSuper && !CAN_MANAGE.includes(u?.role)) return setLoading(false);
+      
+      // Head Coach and Athletic Director can see all their team's staff
       base44.entities.User.list().then(list => {
         if (isSuper) {
           setAllUsers(list.filter(m => m.role !== "super_admin"));
         } else {
-          // Only platform admins can list all users; filter out super_admin entries
-          setAllUsers(list.filter(m => m.role !== "super_admin"));
+          // Filter to team members only (same team_id)
+          const teamUsers = list.filter(m => m.role !== "super_admin" && m.team_id === u?.team_id);
+          setAllUsers(teamUsers);
         }
         setLoading(false);
       }).catch((err) => {
-        // head_coach role cannot list users — platform security restriction
+        console.error("Error loading users:", err);
         setLoading(false);
       });
     }).catch(() => setLoading(false));
