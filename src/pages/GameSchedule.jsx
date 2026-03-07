@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Calendar, MapPin, ChevronDown, ChevronUp, Shield, Swords, Target, TrendingUp, Brain, X, Gamepad2 } from "lucide-react";
+import { Calendar, MapPin, ChevronDown, ChevronUp, Shield, Swords, Target, TrendingUp, Brain, X, Gamepad2, ChevronLeft, ChevronRight } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
