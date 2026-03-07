@@ -112,9 +112,9 @@ export default function UserManagement() {
   };
 
   const isSuperAdmin = user?.role === "super_admin";
-  const canManage = isSuperAdmin || CAN_MANAGE.includes(user?.role);
-  const canDesignateAC = CAN_DESIGNATE_AC.includes(user?.role);
-  const canAddRemoveUsers = isSuperAdmin || ["admin", "head_coach", "athletic_director"].includes(user?.role);
+  const canManage = isSuperAdmin || CAN_MANAGE.includes(myEffectiveRole) || user?.role === "admin";
+  const canDesignateAC = CAN_DESIGNATE_AC.includes(myEffectiveRole) || user?.role === "admin";
+  const canAddRemoveUsers = isSuperAdmin || ["admin", "head_coach", "athletic_director"].includes(myEffectiveRole) || user?.role === "admin";
 
   const currentAC = allUsers.find(u => u.is_associate_head_coach);
 
