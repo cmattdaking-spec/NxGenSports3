@@ -186,7 +186,11 @@ Note any S&C-related readiness concerns. Use team position labels throughout.`,
           return (
             <div key={pos} className="bg-[#141414] border border-gray-800 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-black text-lg font-mono" style={{ color: "var(--color-primary,#f97316)" }}>{pos}</span>
+                <div>
+                  <span className="font-black text-lg font-mono" style={{ color: "var(--color-primary,#f97316)" }}>{getLabel(pos)}</span>
+                  {getLabel(pos) !== pos && <span className="text-gray-700 text-xs ml-1.5 font-mono">({pos})</span>}
+                  <p className="text-gray-600 text-xs leading-none mt-0.5">{POSITION_DEFS.find(d => d.code === pos)?.desc || ""}</p>
+                </div>
                 {canEdit && (
                   <button onClick={() => openEdit(pos)} className="text-gray-500 transition-colors"
                     onMouseEnter={e => e.currentTarget.style.color="var(--color-primary,#f97316)"}
