@@ -90,7 +90,7 @@ export default function UserManagement() {
   // Resolve effective coaching role (HC/AD are stored as platform "admin")
   const getEffectiveRole = (u) => u?.coaching_role || u?.role;
   const myEffectiveRole = getEffectiveRole(user);
-  const isHeadCoach = myEffectiveRole === "head_coach" || user?.role === "admin";
+  const isHeadCoach = myEffectiveRole === "head_coach" || myEffectiveRole === "athletic_director" || user?.role === "admin";
 
   // Load mental readiness data for head coach view
   useEffect(() => {
