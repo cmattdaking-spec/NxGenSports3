@@ -144,7 +144,8 @@ export default function Layout({ children, currentPageName }) {
   );
 
   return (
-    <div className="flex h-screen bg-[#0a0a0a] overflow-hidden">
+    <EnrollmentCheck>
+      <div className="flex h-screen bg-[#0a0a0a] overflow-hidden">
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col flex-shrink-0 bg-[#111111] border-r border-gray-800 transition-all duration-300 relative ${collapsed ? "w-16" : "w-56"}`}>
         {sidebarContent}
