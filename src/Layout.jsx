@@ -60,8 +60,8 @@ export default function Layout({ children, currentPageName }) {
     }).catch(() => {});
   }, []);
 
-  const role = user?.role || "coach";
-  const effectiveRole = (user?.is_associate_head_coach && role !== "head_coach") ? "associate_head_coach" : role;
+  const coachingRole = user?.coaching_role || "position_coach";
+  const effectiveRole = user?.is_associate_head_coach ? "associate_head_coach" : coachingRole;
 
   const filteredNav = role === "super_admin"
     ? [{ label: "Teams", page: "UserManagement", icon: UserCog, roles: null }]
