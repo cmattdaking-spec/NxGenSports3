@@ -544,7 +544,8 @@ export default function UserManagement() {
           </div>
         ) : (
           <div className="divide-y divide-gray-800">
-            {allUsers.map(u => {
+            {filteredUsers.map(u => {
+              const isSelected = selectedUsers.has(u.id);
               const isAC = u.is_associate_head_coach;
               const displayRole = u.coaching_role || u.role;
               const effectiveRole = isAC && displayRole !== "head_coach" ? `${displayRole} (AC)` : displayRole;
