@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Plus, Edit, Trash2, X, Activity, AlertTriangle, CheckCircle, Clock, Brain, ShieldAlert, Flame } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
 import MedicalTab from "../components/health/MedicalTab";
+import TrainerDashboard from "../components/health/TrainerDashboard";
 
 const AVAILABILITY = ["full","limited","out","day_to_day"];
 const LOAD_ALERT_ROLES = ["head_coach","admin","trainer","strength_conditioning_coordinator"];

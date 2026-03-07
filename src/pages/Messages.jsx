@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   MessageSquare, Plus, Send, Users, User, ChevronLeft,
-  Lock, Search, X, Check
+  Lock, Search, X, Check, Smile
 } from "lucide-react";
 
 export default function Messages() {

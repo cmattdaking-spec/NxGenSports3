@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings as SettingsIcon, LogOut, Palette, Check, User, Shield, Bell, Lock, Eye, EyeOff } from "lucide-react";
+import { Settings as SettingsIcon, LogOut, Palette, Check, User, Shield, Bell, Lock, Eye, EyeOff, Upload, Building2 } from "lucide-react";
 import UsersSection from "../components/settings/UsersSection";
 
 const COLOR_SCHEMES = [
