@@ -129,6 +129,45 @@ export default function UserManagement() {
 
   const currentAC = allUsers.find(u => u.is_associate_head_coach);
 
+  // Filter users by search query
+  const filteredUsers = allUsers.filter(u => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      (u.full_name?.toLowerCase().includes(searchLower) || false) ||
+      (u.email?.toLowerCase().includes(searchLower) || false) ||
+      (u.coaching_role?.toLowerCase().includes(searchLower) || false) ||
+      (u.assigned_positions?.some(p => p.toLowerCase().includes(searchLower)) || false)
+    );
+  });
+
+  const applyBulkAction = async () => {
+    if (selectedUsers.size === 0) return;
+    setApplyingBulk(true);
+    const updates = {
+      ...(bulkRole && { coaching_role: bulkRole }),
+      ...(bulkPositions.length > 0 && { assigned_positions: bulkPositions }),
+      ...(bulkPhases.length > 0 && { assigned_phases: bulkPhases }),
+    };
+    
+    if (Object.keys(updates).length === 0) {
+      setApplyingBulk(false);
+      return;
+    }
+
+    for (const userId of Array.from(selectedUsers)) {
+      await base44.entities.User.update(userId, updates);
+    }
+
+    setAllUsers(prev => prev.map(u => 
+      selectedUsers.has(u.id) ? { ...u, ...updates } : u
+    ));
+    setSelectedUsers(new Set());
+    setBulkRole("");
+    setBulkPositions([]);
+    setBulkPhases([]);
+    setApplyingBulk(false);
+  };
+
   const saveRole = async (userId) => {
     // Just save the coaching role — no platform role confusion
     await base44.entities.User.update(userId, {
