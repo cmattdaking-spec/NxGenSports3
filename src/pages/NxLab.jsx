@@ -313,10 +313,7 @@ export default function NxLab() {
         <div className="flex gap-1 bg-[#1a1a1a] rounded-lg p-0.5 overflow-x-auto">
            {[
              { id: "film", label: "Film Room", icon: Film },
-             { id: "scouting", label: "Scouting", icon: Crosshair },
-             { id: "playbook", label: "Playbook", icon: BookOpen },
-             { id: "practice", label: "Practice", icon: ClipboardList },
-             { id: "gameplan", label: "Game Plan", icon: Target }
+             { id: "scouting", label: "Scouting", icon: Crosshair }
            ].map(({ id, label, icon: Icon }) => (
              <button key={id} onClick={() => setActiveTab(id)}
                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap ${activeTab === id ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
