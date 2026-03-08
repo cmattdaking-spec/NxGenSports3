@@ -171,11 +171,12 @@ export default function GameSchedule() {
           <GameCard
             opponent={opponents.find(o => o.id === expanded)}
             plan={getGamePlan(opponents.find(o => o.id === expanded))}
-            isPast={false}
+            isPast={new Date(opponents.find(o => o.id === expanded)?.game_date) < new Date()}
             expanded={true}
             onToggleExpand={setExpanded}
             onScout={handleScout}
             onTrack={setLiveTracker}
+            onRefresh={() => base44.entities.Opponent.list("game_date").then(setOpponents)}
           />
         </div>
       )}
