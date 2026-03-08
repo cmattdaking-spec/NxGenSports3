@@ -317,15 +317,20 @@ export default function Settings() {
         </div>
       </div>
 
+      {/* System Designer — role-gated internally */}
+      {user && (
+        <SystemDesigner user={user} />
+      )}
+
       {/* Team Position Language — coordinators and above */}
-      {user && ["admin", "head_coach", "associate_head_coach", "offensive_coordinator", "defensive_coordinator", "special_teams_coordinator"].includes(user.role) && (
+      {user && ["admin", "head_coach", "associate_head_coach", "offensive_coordinator", "defensive_coordinator", "special_teams_coordinator"].includes(user.coaching_role || user.role) && (
         <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5">
           <TeamLanguagePanel />
         </div>
       )}
 
       {/* Users / Staff Management — admin, AD, HC only */}
-      {user && ["admin", "athletic_director", "head_coach"].includes(user.role) && (
+      {user && ["admin", "athletic_director", "head_coach"].includes(user.coaching_role || user.role) && (
         <UsersSection currentUser={user} />
       )}
 
