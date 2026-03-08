@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Edit, Trash2, X, Zap, Crosshair, ExternalLink, ChevronDown, ChevronUp, Brain, Shield, Swords, Users, Target } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
+import PlayLinker from "../components/scouting/PlayLinker";
 
 export default function Scouting() {
   const [opponents, setOpponents] = useState([]);
