@@ -37,9 +37,7 @@ export default function GameSchedule() {
         setOpponents(op);
         setPlayers(pl);
         setGamePlans(gp);
-        const byUnit = { offense: pl.filter(p => p.unit === "offense" && p.status === "active").length, defense: pl.filter(p => p.unit === "defense" && p.status === "active").length, special_teams: pl.filter(p => p.unit === "special_teams" && p.status === "active").length };
-        const injured = pl.filter(p => p.status === "injured").length;
-        setTeamPreview({ total: pl.length, byUnit, injured });
+        // team preview stats (unused visually but kept for future use)
       } catch (err) {
         console.error("Error loading game schedule data:", err);
       } finally {
