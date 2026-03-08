@@ -36,7 +36,8 @@ export default function Settings() {
   const [pwSuccess, setPwSuccess] = useState(false);
   const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false });
 
-  const canChangeColors = user?.role === "head_coach" || user?.role === "admin";
+  const coachingRole = user?.coaching_role || user?.role;
+  const canChangeColors = ["head_coach", "athletic_director", "admin"].includes(coachingRole);
   const [logoUploading, setLogoUploading] = useState(false);
   const [teamLogo, setTeamLogo] = useState(null);
 
@@ -46,7 +47,13 @@ export default function Settings() {
     setLogoUploading(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     setTeamLogo(file_url);
-    await base44.auth.updateMe({ team_logo_url: file_url });
+    // Save to AppSettings (team-wide) so all members see it
+    if (settings?.id) {
+      await base44.entities.AppSettings.update(settings.id, { team_logo_url: file_url });
+    } else {
+      const created = await base44.entities.AppSettings.create({ team_logo_url: file_url });
+      setSettings(created);
+    }
     setLogoUploading(false);
   };
 
