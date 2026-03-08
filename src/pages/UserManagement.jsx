@@ -542,7 +542,7 @@ export default function UserManagement() {
   }
 
   if (isSuperAdmin) {
-    return <SuperAdminView allUsers={allUsers} loading={loading} />;
+    return <SuperAdminView allUsers={allUsers} loading={loading} onRefresh={() => loadUsers(user)} />;
   }
 
   // ── Staff Management View ──────────────────────────────────────────────────
