@@ -488,10 +488,18 @@ Generate a complete, structured practice plan with specific drills, focus areas,
                 initialData={designerPlay ? { elements: designerPlay._designerElements || [] } : undefined}
                 playName={designerPlay?.name}
                 onSave={async ({ dataUrl, elements, format }) => {
+                  // Upload the base64 image as a file and store the URL
+                  let diagramUrl = null;
+                  if (dataUrl) {
+                    const blob = await fetch(dataUrl).then(r => r.blob());
+                    const file = new File([blob], "diagram.png", { type: "image/png" });
+                    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                    diagramUrl = file_url;
+                  }
                   if (designerPlay?.id) {
-                    await base44.entities.Play.update(designerPlay.id, { diagram_data: dataUrl, _designerElements: elements, diagram_format: format });
+                    await base44.entities.Play.update(designerPlay.id, { diagram_data: diagramUrl, diagram_format: format });
                   } else {
-                    await base44.entities.Play.create({ name: designerPlay?.name || "Untitled Play", unit: designerPlay?.unit || "offense", category: designerPlay?.category || "run", diagram_data: dataUrl, _designerElements: elements, diagram_format: format });
+                    await base44.entities.Play.create({ name: designerPlay?.name || "Untitled Play", unit: designerPlay?.unit || "offense", category: designerPlay?.category || "run", diagram_data: diagramUrl, diagram_format: format });
                   }
                   loadPlaybookData();
                 }}
