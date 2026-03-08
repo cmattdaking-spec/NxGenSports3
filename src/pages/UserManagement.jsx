@@ -478,6 +478,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editRole, setEditRole] = useState("");
+  const [editName, setEditName] = useState("");
   const [editPositions, setEditPositions] = useState([]);
   const [editPhases, setEditPhases] = useState([]);
   const [showMentalReadiness, setShowMentalReadiness] = useState(false);
