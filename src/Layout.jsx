@@ -141,6 +141,12 @@ export default function Layout({ children, currentPageName }) {
     </div>
   );
 
+  // Redirect root to Dashboard
+  const location = useLocation();
+  if (location.pathname === "/" || location.pathname === "") {
+    return <Navigate to="/Dashboard" replace />;
+  }
+
   return (
     <EnrollmentCheck>
       <div className="flex h-screen bg-[#0a0a0a] overflow-hidden">
