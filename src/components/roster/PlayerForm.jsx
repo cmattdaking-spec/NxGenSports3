@@ -173,5 +173,3 @@ export default function PlayerForm({ form, setForm, editing, onSave, onClose }) 
     </div>
   );
 }
-
-import React from "react";
