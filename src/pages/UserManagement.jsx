@@ -822,6 +822,8 @@ export default function UserManagement() {
 
                   {editingId === u.id ? (
                     <div className="flex flex-col gap-2 flex-shrink-0 max-w-xs w-full">
+                      <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Full name"
+                        className="bg-[#1e1e1e] border border-gray-600 rounded-lg px-2 py-1.5 text-white text-xs outline-none w-full" />
                       <select value={editRole} onChange={e => setEditRole(e.target.value)}
                         className="bg-[#1e1e1e] border border-gray-600 rounded-lg px-2 py-1.5 text-white text-xs outline-none w-full">
                         {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
