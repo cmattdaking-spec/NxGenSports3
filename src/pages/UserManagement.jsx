@@ -46,6 +46,9 @@ function SuperAdminView({ allUsers, loading }) {
   const [msg, setMsg] = useState({ text: "", type: "" });
   const [expandedTeam, setExpandedTeam] = useState(null);
   const [teamSearch, setTeamSearch] = useState("");
+  const [editingUser, setEditingUser] = useState(null);
+  const [editUserForm, setEditUserForm] = useState({});
+  const [savingUser, setSavingUser] = useState(false);
 
   const teams = allUsers.reduce((acc, u) => {
     const tid = u.team_id || "(no team)";
