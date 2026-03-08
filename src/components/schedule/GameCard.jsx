@@ -103,6 +103,38 @@ export default function GameCard({ opponent, plan, isPast, expanded, onToggleExp
               <p className="text-gray-600 text-sm">No scouting data yet. <Link to={createPageUrl("Scouting")} className="text-blue-400 hover:underline">Add scouting info →</Link></p>
             </div>
           )}
+          {/* Game Logger */}
+          <div className="col-span-2 pt-2 border-t border-gray-800">
+            <GameLogger opponent={opponent} onSaved={onRefresh} />
+          </div>
+          {/* Linked Plays */}
+          <div className="col-span-2">
+            <p className="text-gray-500 text-xs uppercase tracking-wider mb-2">Linked Game Plan Plays</p>
+            <PlayLinker
+              opponentId={opponent.id}
+              opponentName={opponent.name}
+              linkedPlays={opponent.linked_play_ids || []}
+              onUpdate={async (ids) => {
+                await base44.entities.Opponent.update(opponent.id, { linked_play_ids: ids });
+                onRefresh?.();
+              }}
+            />
+          </div>
+          {/* Key Events */}
+          {opponent.key_events?.length > 0 && (
+            <div className="col-span-2">
+              <p className="text-gray-500 text-xs uppercase tracking-wider mb-2">Key Game Events</p>
+              <div className="space-y-1.5">
+                {opponent.key_events.map((ev, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-[#1a1a1a] rounded-lg px-2.5 py-1.5">
+                    <span className="text-xs bg-gray-800 text-gray-400 px-1.5 rounded font-mono">Q{ev.quarter}</span>
+                    <span className="text-xs font-medium" style={{ color: "var(--color-primary,#f97316)" }}>{ev.event_type}</span>
+                    <span className="text-gray-300 text-xs">{ev.description}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
