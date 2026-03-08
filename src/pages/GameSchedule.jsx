@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Calendar, ChevronLeft, ChevronRight, Target } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 import LoadingScreen from "../components/LoadingScreen";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
