@@ -502,7 +502,12 @@ export default function UserManagement() {
         setAllUsers(list.filter(m => m.role !== "super_admin"));
       } else {
         const myTeam = currentUser?.team_id;
-        setAllUsers(list.filter(m => m.role !== "super_admin" && (m.team_id === myTeam || m.id === currentUser?.id)));
+        // Strictly scope to own team only — never leak cross-school data
+        setAllUsers(
+          myTeam
+            ? list.filter(m => m.role !== "super_admin" && m.team_id === myTeam)
+            : []
+        );
       }
       setLoading(false);
     }).catch(() => setLoading(false));
