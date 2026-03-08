@@ -39,7 +39,7 @@ const CAN_MANAGE = ["admin", "head_coach", "athletic_director"];
 const CAN_DESIGNATE_AC = ["head_coach", "admin"];
 
 // ─── Super Admin View ─────────────────────────────────────────────────────────
-function SuperAdminView({ allUsers, loading }) {
+function SuperAdminView({ allUsers, loading, onRefresh }) {
   const [showAddTeam, setShowAddTeam] = useState(false);
   const [form, setForm] = useState({ email: "", school_name: "", team_id: "", coaching_role: "head_coach" });
   const [submitting, setSubmitting] = useState(false);
