@@ -22,7 +22,7 @@ export default function PlayerForm({ form, setForm, editing, onSave, onClose }) 
     setForm({ ...form, [key]: curr.includes(val) ? curr.filter(x => x !== val) : [...curr, val] });
   };
 
-  const [tab, setTab] = React.useState("basic");
+  const [tab, setTab] = useState("basic");
 
   const tabs = [
     { id: "basic", label: "Basic Info" },
