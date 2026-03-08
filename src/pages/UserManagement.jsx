@@ -253,21 +253,71 @@ function SuperAdminView({ allUsers, loading, onRefresh }) {
               <div className="divide-y divide-gray-800/50">
                 {team.members.map(u => {
                   const dispRole = u.coaching_role || u.role;
+                  const isEditing = editingUser === u.id;
                   return (
-                    <div key={u.id} className="flex items-center gap-3 px-5 py-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                        style={{ backgroundColor: "var(--color-primary,#f97316)22", color: "var(--color-primary,#f97316)" }}>
-                        {(u.full_name || u.email)?.[0]?.toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm">{u.full_name || "—"}</p>
-                        <p className="text-gray-500 text-xs">{u.email}</p>
-                      </div>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${roleColors[dispRole] || "bg-gray-700 text-gray-400"}`}>
-                        {ROLES.find(r => r.value === dispRole)?.label || dispRole?.replace(/_/g, " ") || "—"}
-                      </span>
-                      {u.is_associate_head_coach && (
-                        <span className="text-xs bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded-full">AC</span>
+                    <div key={u.id} className="px-5 py-3">
+                      {isEditing ? (
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-gray-500 text-xs mb-0.5 block">Name</label>
+                              <input value={editUserForm.full_name} onChange={e => setEditUserForm(p => ({ ...p, full_name: e.target.value }))}
+                                className="w-full bg-[#1e1e1e] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none" />
+                            </div>
+                            <div>
+                              <label className="text-gray-500 text-xs mb-0.5 block">Role</label>
+                              <select value={editUserForm.coaching_role} onChange={e => setEditUserForm(p => ({ ...p, coaching_role: e.target.value }))}
+                                className="w-full bg-[#1e1e1e] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none">
+                                {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-gray-500 text-xs mb-0.5 block">Team ID</label>
+                              <input value={editUserForm.team_id} onChange={e => setEditUserForm(p => ({ ...p, team_id: e.target.value }))}
+                                list="team-ids-list"
+                                className="w-full bg-[#1e1e1e] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none font-mono" />
+                              <datalist id="team-ids-list">
+                                {allTeamIds.map(tid => <option key={tid} value={tid} />)}
+                              </datalist>
+                            </div>
+                            <div>
+                              <label className="text-gray-500 text-xs mb-0.5 block">School Name</label>
+                              <input value={editUserForm.school_name} onChange={e => setEditUserForm(p => ({ ...p, school_name: e.target.value }))}
+                                className="w-full bg-[#1e1e1e] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none" />
+                            </div>
+                          </div>
+                          <div className="flex gap-1.5">
+                            <button onClick={() => saveEditUser(u.id)} disabled={savingUser}
+                              className="px-3 py-1 rounded-lg text-green-400 border border-green-500/30 text-xs hover:bg-green-400/10 flex items-center gap-1 disabled:opacity-50">
+                              <Check className="w-3 h-3" /> {savingUser ? "Saving..." : "Save"}
+                            </button>
+                            <button onClick={() => setEditingUser(null)}
+                              className="px-3 py-1 rounded-lg text-gray-500 border border-gray-700 text-xs hover:bg-gray-700 flex items-center gap-1">
+                              <X className="w-3 h-3" /> Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                            style={{ backgroundColor: "var(--color-primary,#f97316)22", color: "var(--color-primary,#f97316)" }}>
+                            {(u.full_name || u.email)?.[0]?.toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm">{u.full_name || "—"}</p>
+                            <p className="text-gray-500 text-xs">{u.email}</p>
+                          </div>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${roleColors[dispRole] || "bg-gray-700 text-gray-400"}`}>
+                            {ROLES.find(r => r.value === dispRole)?.label || dispRole?.replace(/_/g, " ") || "—"}
+                          </span>
+                          {u.is_associate_head_coach && (
+                            <span className="text-xs bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded-full">AC</span>
+                          )}
+                          <button onClick={() => startEditUser(u)}
+                            className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-gray-700 transition-all flex-shrink-0">
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   );
