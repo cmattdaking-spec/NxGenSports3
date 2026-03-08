@@ -11,7 +11,7 @@ const LEVEL_COLOR = {
   Freshman: "bg-green-500/20 text-green-400 border-green-500/30"
 };
 
-export default function GameCard({ opponent, plan, isPast, expanded, onToggleExpand, onScout, onTrack }) {
+export default function GameCard({ opponent, plan, isPast, expanded, onToggleExpand, onScout, onTrack, onRefresh }) {
   return (
     <div className={`bg-[#141414] border rounded-xl overflow-hidden transition-all ${isPast ? "opacity-70 border-gray-800" : "border-gray-800 hover:border-gray-700"}`}>
       <div className="p-4">
