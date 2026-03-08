@@ -168,6 +168,19 @@ Generate a detailed JSON report with strategic insights.`,
           {!opp.offensive_tendency && !opp.ai_scout_report && (
             <p className="text-gray-600 text-sm">No scout data yet. Use Nx Scout or Nx Analysis to generate a report.</p>
           )}
+          {/* Linked Playbook Plays */}
+          <div>
+            <p className="text-gray-500 text-xs uppercase tracking-wider mb-2">Linked Game Plan Plays</p>
+            <PlayLinker
+              opponentId={opp.id}
+              opponentName={opp.name}
+              linkedPlays={opp.linked_play_ids || []}
+              onUpdate={async (ids) => {
+                await base44.entities.Opponent.update(opp.id, { linked_play_ids: ids });
+                load();
+              }}
+            />
+          </div>
         </div>
       )}
     </div>
