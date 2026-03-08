@@ -1,6 +1,9 @@
 import { ChevronDown, ChevronUp, Shield, Swords, Target, Gamepad2, TrendingUp, Brain } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
+import GameLogger from "./GameLogger";
+import PlayLinker from "../scouting/PlayLinker";
+import { base44 } from "@/api/base44Client";
 
 const LEVEL_COLOR = {
   Varsity: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
