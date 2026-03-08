@@ -558,9 +558,15 @@ export default function UserManagement() {
   };
 
   const saveRole = async (userId) => {
-    await base44.entities.User.update(userId, { coaching_role: editRole, assigned_positions: editPositions, assigned_phases: editPhases });
-    setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, coaching_role: editRole, assigned_positions: editPositions, assigned_phases: editPhases } : u));
+    await base44.entities.User.update(userId, { coaching_role: editRole, full_name: editName, assigned_positions: editPositions, assigned_phases: editPhases });
+    setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, coaching_role: editRole, full_name: editName, assigned_positions: editPositions, assigned_phases: editPhases } : u));
     setEditingId(null);
+  };
+
+  const removeFromTeam = async (userId) => {
+    if (!window.confirm("Remove this user from your team? They will lose access to your team's data.")) return;
+    await base44.entities.User.update(userId, { team_id: null, school_name: null, coaching_role: null });
+    setAllUsers(prev => prev.filter(u => u.id !== userId));
   };
 
   const toggleAC = async (targetUser) => {
