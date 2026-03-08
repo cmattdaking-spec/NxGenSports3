@@ -21,6 +21,11 @@ export default function GameCard({ opponent, plan, isPast, expanded, onToggleExp
               <h3 className="text-white font-bold text-lg">vs. {opponent.name}</h3>
               {opponent.level && <span className={`text-xs px-2 py-0.5 rounded-full border ${LEVEL_COLOR[opponent.level] || "bg-gray-500/20 text-gray-400"}`}>{opponent.level}</span>}
               {opponent.record && <span className="text-gray-500 text-xs">({opponent.record})</span>}
+              {opponent.game_result && (
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${opponent.game_result === "W" ? "bg-green-500/20 text-green-400" : opponent.game_result === "L" ? "bg-red-500/20 text-red-400" : "bg-yellow-500/20 text-yellow-400"}`}>
+                  {opponent.game_result} {opponent.our_score}–{opponent.their_score}
+                </span>
+              )}
             </div>
             <div className="flex flex-wrap gap-3 text-xs text-gray-500">
               <span>{opponent.game_date}</span>
