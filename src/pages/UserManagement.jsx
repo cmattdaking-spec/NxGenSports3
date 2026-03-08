@@ -61,6 +61,27 @@ function SuperAdminView({ allUsers, loading }) {
     t.team_id?.toLowerCase().includes(teamSearch.toLowerCase())
   );
 
+  const allTeamIds = [...new Set(allUsers.map(u => u.team_id).filter(Boolean))];
+
+  const startEditUser = (u) => {
+    setEditingUser(u.id);
+    setEditUserForm({
+      full_name: u.full_name || "",
+      coaching_role: u.coaching_role || "position_coach",
+      team_id: u.team_id || "",
+      school_name: u.school_name || "",
+    });
+  };
+
+  const saveEditUser = async (userId) => {
+    setSavingUser(true);
+    await base44.entities.User.update(userId, editUserForm);
+    setEditingUser(null);
+    setSavingUser(false);
+    // trigger re-render via parent reload
+    onRefresh?.();
+  };
+
   const handleAddTeam = async () => {
     if (!form.email.trim() || !form.school_name.trim()) return;
     setSubmitting(true);
