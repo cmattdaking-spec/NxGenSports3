@@ -8,7 +8,7 @@ import {
   ChevronLeft, ChevronRight, Home,
   Menu, X, TrendingUp, ClipboardList, Crosshair, BarChart2,
   MessageSquare, Settings, GraduationCap, UserCog, Gamepad2,
-  Dumbbell, CalendarDays, Clapperboard, Star, Globe
+  Dumbbell, CalendarDays, Clapperboard, Star, Globe, ChevronDown
 } from "lucide-react";
 
 // Note: BookOpen is used twice (in import and for NxPrep icon)
