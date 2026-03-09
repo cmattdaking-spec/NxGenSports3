@@ -430,3 +430,11 @@ function ADPortalContent() {
     </div>
   );
 }
+
+export default function ADPortal() {
+  return (
+    <AuthGuard roles={["admin", "athletic_director", "head_coach"]}>
+      <ADPortalContent />
+    </AuthGuard>
+  );
+}
