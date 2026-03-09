@@ -481,6 +481,7 @@ export default function UserManagement() {
   const [editName, setEditName] = useState("");
   const [editPositions, setEditPositions] = useState([]);
   const [editPhases, setEditPhases] = useState([]);
+  const [editSports, setEditSports] = useState([]);
   const [showMentalReadiness, setShowMentalReadiness] = useState(false);
   const [myReadiness, setMyReadiness] = useState(null);
   const [myReadinessNote, setMyReadinessNote] = useState("");
