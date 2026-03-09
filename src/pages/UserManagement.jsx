@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import AuthGuard from "@/components/AuthGuard";
 import {
   Users, Shield, Mail, Edit2, Check, X, UserPlus, Lock, Star,
   AlertTriangle, Building2, Brain, ChevronDown, ChevronUp, Plus,
