@@ -3,6 +3,7 @@ import { Link, useLocation, Navigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import EnrollmentCheck from "@/components/EnrollmentCheck";
+import { SportLogoSVG } from "@/components/SportLogos";
 import {
   Users, BookOpen, Target, Activity,
   ChevronLeft, ChevronRight, Home,
