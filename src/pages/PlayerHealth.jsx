@@ -53,6 +53,20 @@ export default function PlayerHealth() {
   const canEdit = user?.role !== "athletic_director";
   const canSeeLoadAlerts = user && LOAD_ALERT_ROLES.includes(user.role);
 
+  // Granular permission gate — trainers + HC/AD always get access; others need explicit grant
+  const ALWAYS_MEDICAL = ["head_coach","associate_head_coach","athletic_director","trainer","strength_conditioning_coordinator"];
+  const hasMedicalAccess = user && (ALWAYS_MEDICAL.includes(user.coaching_role) || user.can_view_medical === true || user.role === "admin");
+
+  if (user && !hasMedicalAccess) return (
+    <div className="bg-[#0a0a0a] min-h-full flex items-center justify-center">
+      <div className="text-center">
+        <Activity className="w-12 h-12 mx-auto mb-3 text-gray-700" />
+        <p className="text-white font-semibold">Access Restricted</p>
+        <p className="text-gray-500 text-sm mt-1">Medical data access must be granted by your Head Coach or Athletic Director.</p>
+      </div>
+    </div>
+  );
+
   const openAdd = () => {
     setEditing(null);
     setForm({ availability: "full", cleared_to_play: true, date: new Date().toISOString().split("T")[0] });
