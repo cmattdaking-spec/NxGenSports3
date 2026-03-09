@@ -266,8 +266,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="absolute inset-0 bg-[#0a0a0a] z-50 flex items-center justify-center">
               <div className="relative flex items-center justify-center">
                 <div className="w-16 h-16 border-2 border-gray-800 border-t-[var(--color-primary,#f97316)] rounded-full animate-spin absolute" />
-                <img src={SPORT_LOGOS[activeSport] || SUITE_LOGO}
-                  alt={brandName} className="w-8 h-8 rounded-lg object-cover" />
+                <SportLogoSVG sport={activeSport} className="w-8 h-8" />
               </div>
             </div>
           )}
