@@ -78,7 +78,13 @@ export default function Layout({ children, currentPageName }) {
   }, [currentPageName]);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    base44.auth.me().then(u => {
+      setUser(u);
+      const sports = u?.assigned_sports?.length ? u.assigned_sports : ["football"];
+      setAssignedSports(sports);
+      const saved = u?.active_sport || sports[0];
+      setActiveSport(saved);
+    }).catch(() => {});
     base44.entities.AppSettings.list().then((list) => {
       if (list.length > 0) {
         if (list[0].primary_color) {
