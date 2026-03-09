@@ -34,13 +34,15 @@ export default function EnrollmentCheck({ children }) {
         if (invites.length > 0) {
           const invite = invites[0];
 
-          // Auto-assign team, role, and positions
+          // Auto-assign team, role, positions, sports, and school code
           await base44.auth.updateMe({
             team_id: invite.team_id,
+            school_name: invite.school_name || invite.team_id,
+            school_code: invite.school_code || null,
             coaching_role: invite.coaching_role,
             assigned_positions: invite.assigned_positions || [],
             assigned_phases: invite.assigned_phases || [],
-            school_name: invite.team_id // Store team reference
+            assigned_sports: invite.assigned_sports?.length ? invite.assigned_sports : ["football"],
           });
 
           // Mark invite as accepted
