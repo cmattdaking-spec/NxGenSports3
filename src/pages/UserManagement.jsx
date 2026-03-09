@@ -245,7 +245,14 @@ function SuperAdminView({ allUsers, loading, onRefresh }) {
                 </div>
                 <div className="text-left">
                   <p className="text-white font-semibold text-sm">{team.school_name}</p>
-                  <p className="text-gray-600 text-xs font-mono">{team.team_id}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-gray-600 text-xs font-mono">{team.team_id}</p>
+                    {team.members[0]?.school_code && (
+                      <span className="text-cyan-400 text-xs font-mono bg-cyan-500/10 border border-cyan-500/20 px-1.5 py-0.5 rounded-full">
+                        {team.members[0].school_code}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
