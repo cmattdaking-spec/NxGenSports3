@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import ADPortal from './pages/ADPortal';
 import AcademicEligibility from './pages/AcademicEligibility';
 import Dashboard from './pages/Dashboard';
 import DepthChart from './pages/DepthChart';
@@ -71,11 +72,11 @@ import Scouting from './pages/Scouting';
 import Settings from './pages/Settings';
 import StrengthConditioning from './pages/StrengthConditioning';
 import UserManagement from './pages/UserManagement';
-import ADPortal from './pages/ADPortal';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "ADPortal": ADPortal,
     "AcademicEligibility": AcademicEligibility,
     "Dashboard": Dashboard,
     "DepthChart": DepthChart,
@@ -100,7 +101,6 @@ export const PAGES = {
     "Settings": Settings,
     "StrengthConditioning": StrengthConditioning,
     "UserManagement": UserManagement,
-    "ADPortal": ADPortal,
 }
 
 export const pagesConfig = {

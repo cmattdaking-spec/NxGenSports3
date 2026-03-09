@@ -20,7 +20,7 @@ const COORD_ONLY = ["admin","head_coach","associate_head_coach","offensive_coord
 const GAME_PLAN_ROLES = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 const IN_GAME_ROLES = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 
-const SUITE_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/c0e3b2a13_generated_image.png";
+const SUITE_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/29e077944_generated_image.png";
 
 const SPORT_LOGOS = {
   football:     "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/661cb3b76_image_aaa46895.png",
@@ -229,9 +229,13 @@ export default function Layout({ children, currentPageName }) {
     </div>
   );
 
-  // Redirect root to Dashboard
+  // Redirect root — ADs go to ADPortal, everyone else to Dashboard
   const location = useLocation();
   if (location.pathname === "/" || location.pathname === "") {
+    const isAthlDir = effectiveRole === "athletic_director" || user?.role === "admin" && user?.coaching_role === "athletic_director";
+    if (isAD && !isHeadCoach) {
+      return <Navigate to="/ADPortal" replace />;
+    }
     return <Navigate to="/Dashboard" replace />;
   }
 
