@@ -826,11 +826,24 @@ export default function UserManagement() {
                     <p className="text-gray-500 text-xs flex items-center gap-1 mt-0.5">
                       <Mail className="w-3 h-3" />{u.email}
                     </p>
-                    {(u.assigned_positions?.length > 0 || u.assigned_phases?.length > 0) && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {u.assigned_positions?.map(pos => <span key={pos} className="text-xs bg-blue-500/15 text-blue-400 px-1.5 rounded">{pos}</span>)}
-                        {u.assigned_phases?.map(ph => <span key={ph} className="text-xs bg-orange-500/15 text-orange-400 px-1.5 rounded capitalize">{ph.replace("_", " ")}</span>)}
-                      </div>
+                    {(u.assigned_positions?.length > 0 || u.assigned_phases?.length > 0 || u.assigned_sports?.length > 0) && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {u.assigned_positions?.map(pos => <span key={pos} className="text-xs bg-blue-500/15 text-blue-400 px-1.5 rounded">{pos}</span>)}
+                      {u.assigned_phases?.map(ph => <span key={ph} className="text-xs bg-orange-500/15 text-orange-400 px-1.5 rounded capitalize">{ph.replace("_", " ")}</span>)}
+                      {u.assigned_sports?.map(s => <span key={s} className="text-xs bg-purple-500/15 text-purple-400 px-1.5 rounded capitalize">{s.replace("_"," ")}</span>)}
+                    </div>
+                    )}
+                    {canAddRemoveUsers && (
+                    <div className="flex gap-2 mt-1">
+                      <button onClick={() => togglePermission(u.id, "can_view_medical")}
+                        className={`text-xs px-2 py-0.5 rounded border transition-all ${u.can_view_medical ? "border-teal-500/40 bg-teal-500/10 text-teal-400" : "border-gray-700 text-gray-600 hover:text-teal-400"}`}>
+                        🏥 Medical
+                      </button>
+                      <button onClick={() => togglePermission(u.id, "can_view_academic")}
+                        className={`text-xs px-2 py-0.5 rounded border transition-all ${u.can_view_academic ? "border-yellow-500/40 bg-yellow-500/10 text-yellow-400" : "border-gray-700 text-gray-600 hover:text-yellow-400"}`}>
+                        🎓 Academic
+                      </button>
+                    </div>
                     )}
                   </div>
 
