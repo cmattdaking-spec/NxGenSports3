@@ -870,6 +870,19 @@ export default function UserManagement() {
                           </div>
                         </>
                       )}
+                      {/* Sports assignment */}
+                      <div>
+                        <p className="text-gray-500 text-xs mb-1">Assigned Sports</p>
+                        <div className="flex flex-wrap gap-1">
+                          {["football","basketball","baseball","softball","soccer","volleyball","boxing","golf","tennis","wrestling","cross_country","lacrosse"].map(s => (
+                            <button key={s} onClick={() => setEditSports(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s])}
+                              className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${editSports.includes(s) ? "text-white" : "bg-gray-800 text-gray-500"}`}
+                              style={editSports.includes(s) ? { backgroundColor: "var(--color-primary,#3b82f6)" } : {}}>
+                              {s.replace("_"," ")}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       <div className="flex gap-1">
                         <button onClick={() => saveRole(u.id)} className="flex-1 py-1 rounded-lg text-green-400 border border-green-500/30 text-xs hover:bg-green-400/10 flex items-center justify-center gap-1">
                           <Check className="w-3 h-3" /> Save
