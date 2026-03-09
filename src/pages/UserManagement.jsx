@@ -564,9 +564,17 @@ export default function UserManagement() {
   };
 
   const saveRole = async (userId) => {
-    await base44.entities.User.update(userId, { coaching_role: editRole, full_name: editName, assigned_positions: editPositions, assigned_phases: editPhases });
-    setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, coaching_role: editRole, full_name: editName, assigned_positions: editPositions, assigned_phases: editPhases } : u));
+    await base44.entities.User.update(userId, { coaching_role: editRole, full_name: editName, assigned_positions: editPositions, assigned_phases: editPhases, assigned_sports: editSports });
+    setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, coaching_role: editRole, full_name: editName, assigned_positions: editPositions, assigned_phases: editPhases, assigned_sports: editSports } : u));
     setEditingId(null);
+  };
+
+  const togglePermission = async (userId, field) => {
+    const target = allUsers.find(u => u.id === userId);
+    if (!target) return;
+    const newVal = !target[field];
+    await base44.entities.User.update(userId, { [field]: newVal });
+    setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, [field]: newVal } : u));
   };
 
   const removeFromTeam = async (userId) => {
