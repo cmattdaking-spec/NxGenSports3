@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Plus, Search, Users, Filter } from "lucide-react";
 import PlayerCard from "../components/roster/PlayerCard";
 import PlayerForm from "../components/roster/PlayerForm";
+import { useSport } from "@/components/SportContext";
 
 const POSITIONS = ["QB","RB","FB","WR","TE","LT","LG","C","RG","RT","DE","DT","NT","OLB","MLB","ILB","CB","SS","FS","K","P","LS"];
 const UNITS = ["offense","defense","special_teams"];
@@ -10,6 +11,7 @@ const YEARS = ["Freshman","Sophomore","Junior","Senior","Grad"];
 const CAN_EDIT = ["admin","head_coach","athletic_director"];
 
 export default function Roster() {
+  const { activeSport, canEditAll, user: ctxUser, sportFilter } = useSport();
   const [players, setPlayers] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,15 +25,15 @@ export default function Roster() {
   const [form, setForm] = useState({});
   const [expanded, setExpanded] = useState(null);
 
-  const load = () => base44.entities.Player.list().then(d => { setPlayers(d); setLoading(false); });
+  const load = () => base44.entities.Player.filter({ sport: activeSport }).then(d => { setPlayers(d); setLoading(false); });
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
     load();
-  }, []);
+  }, [activeSport]);
 
   const myRole = user?.coaching_role || user?.role;
-  const canEdit = CAN_EDIT.includes(myRole) || CAN_EDIT.includes(user?.role);
+  const canEdit = canEditAll || CAN_EDIT.includes(myRole) || CAN_EDIT.includes(user?.role);
 
   const filtered = players.filter(p => {
     const name = `${p.first_name} ${p.last_name}`.toLowerCase();
@@ -47,14 +49,14 @@ export default function Roster() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ status: "active", unit: "offense", academic_eligible: true, levels: ["Varsity"], secondary_positions: [] });
+    setForm({ status: "active", unit: "offense", academic_eligible: true, levels: ["Varsity"], secondary_positions: [], sport: activeSport });
     setShowForm(true);
   };
   const openEdit = (p) => { setEditing(p); setForm({ ...p }); setShowForm(true); };
 
   const save = async () => {
     if (editing) await base44.entities.Player.update(editing.id, form);
-    else await base44.entities.Player.create(form);
+    else await base44.entities.Player.create({ ...form, sport: activeSport });
     setShowForm(false);
     load();
   };
@@ -77,7 +79,7 @@ export default function Roster() {
             <Users className="w-5 h-5" style={{ color: "var(--color-primary,#f97316)" }} />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white">Player <span style={{ color: "var(--color-primary,#f97316)" }}>Management</span></h1>
+            <h1 className="text-2xl font-black text-white capitalize">{activeSport.replace(/_/g," ")} <span style={{ color: "var(--color-primary,#f97316)" }}>Roster</span></h1>
             <p className="text-gray-500 text-sm">{players.length} players · {active} active · {injured > 0 ? `${injured} injured · ` : ""}{ineligible > 0 ? `${ineligible} ineligible` : ""}</p>
           </div>
         </div>
