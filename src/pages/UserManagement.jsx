@@ -1053,3 +1053,11 @@ function UserManagementContent() {
     </div>
   );
 }
+
+export default function UserManagement() {
+  return (
+    <AuthGuard roles={["admin", "super_admin", "head_coach", "athletic_director"]}>
+      <UserManagementContent />
+    </AuthGuard>
+  );
+}
