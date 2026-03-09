@@ -64,6 +64,9 @@ export default function Layout({ children, currentPageName }) {
   const [teamLogo, setTeamLogo] = useState(null);
   const [pageLoading, setPageLoading] = useState(false);
   const [prevPage, setPrevPage] = useState(currentPageName);
+  const [activeSport, setActiveSport] = useState("football");
+  const [showSportPicker, setShowSportPicker] = useState(false);
+  const [assignedSports, setAssignedSports] = useState(["football"]);
 
   useEffect(() => {
     if (currentPageName !== prevPage) {
