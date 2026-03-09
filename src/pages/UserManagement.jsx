@@ -88,12 +88,16 @@ function SuperAdminView({ allUsers, loading, onRefresh }) {
     setMsg({ text: "", type: "" });
     try {
       const generatedTeamId = form.team_id.trim() || form.school_name.trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+      const schoolCode = generateSchoolCode();
       await base44.entities.Invite.create({
         email: form.email.trim(),
         team_id: generatedTeamId,
+        school_name: form.school_name.trim(),
+        school_code: schoolCode,
         coaching_role: form.coaching_role,
         assigned_positions: [],
         assigned_phases: [],
+        assigned_sports: ["football"],
         status: "pending",
         invited_by: "super_admin",
       });
