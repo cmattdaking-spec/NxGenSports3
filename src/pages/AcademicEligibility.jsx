@@ -7,7 +7,7 @@ import { GraduationCap, CheckCircle, XCircle, Search, FileText, ClipboardCheck, 
 const ELIGIBILITY_EDIT = ["athletic_director", "admin", "head_coach"];
 const DOCS_EDIT = ["athletic_director", "admin", "head_coach"];
 
-export default function AcademicEligibility() {
+function AcademicEligibilityContent() {
   const { activeSport } = useSport();
   const [players, setPlayers] = useState([]);
   const [docs, setDocs] = useState([]);
@@ -359,5 +359,13 @@ export default function AcademicEligibility() {
         </>
       )}
     </div>
+  );
+}
+
+export default function AcademicEligibility() {
+  return (
+    <AuthGuard>
+      <AcademicEligibilityContent />
+    </AuthGuard>
   );
 }
