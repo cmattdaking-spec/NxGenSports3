@@ -22,8 +22,22 @@ export default function AcademicEligibility() {
     ]).then(([p, d]) => { setPlayers(p); setDocs(d); setLoading(false); });
   }, []);
 
-  const canEditEligibility = ELIGIBILITY_EDIT.includes(user?.role);
-  const canEditDocs = DOCS_EDIT.includes(user?.role);
+  const canEditEligibility = ELIGIBILITY_EDIT.includes(user?.coaching_role) || user?.role === "admin";
+  const canEditDocs = DOCS_EDIT.includes(user?.coaching_role) || user?.role === "admin";
+
+  // Granular permission gate
+  const ALWAYS_ACADEMIC = ["head_coach","associate_head_coach","athletic_director"];
+  const hasAcademicAccess = user && (ALWAYS_ACADEMIC.includes(user.coaching_role) || user.can_view_academic === true || user.role === "admin");
+
+  if (user && !hasAcademicAccess) return (
+    <div className="bg-[#0a0a0a] min-h-full flex items-center justify-center">
+      <div className="text-center">
+        <GraduationCap className="w-12 h-12 mx-auto mb-3 text-gray-700" />
+        <p className="text-white font-semibold">Access Restricted</p>
+        <p className="text-gray-500 text-sm mt-1">Academic data access must be granted by your Head Coach or Athletic Director.</p>
+      </div>
+    </div>
+  );
 
   const getDoc = (playerId) => docs.find(d => d.player_id === playerId);
 
