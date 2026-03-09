@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Edit, Trash2, X, Zap, Brain, Dumbbell, ChevronDown, ChevronUp, AlertTriangle, Flame, Star, Target, TrendingUp } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
+import { useSport } from "@/components/SportContext";
 
 const TYPES = ["strength","conditioning","speed","agility","recovery","full_body","position_specific"];
 const INTENSITIES = ["low","moderate","high","max"];
@@ -30,6 +31,7 @@ const POSITIONS = ["QB","RB","FB","WR","TE","LT","LG","C","RG","RT","DE","DT","N
 const LOAD_ALERT_ROLES = ["head_coach","admin","trainer","strength_conditioning_coordinator"];
 
 export default function StrengthConditioning() {
+  const { activeSport } = useSport();
   const [plans, setPlans] = useState([]);
   const [players, setPlayers] = useState([]);
   const [healthRecords, setHealthRecords] = useState([]);
@@ -63,8 +65,8 @@ export default function StrengthConditioning() {
 
   const load = async () => {
     const [p, pl, h] = await Promise.all([
-      base44.entities.WorkoutPlan.list("-date", 100),
-      base44.entities.Player.list(),
+      base44.entities.WorkoutPlan.filter({ sport: activeSport }, "-date", 100),
+      base44.entities.Player.filter({ sport: activeSport }),
       base44.entities.PlayerHealth.list("-date", 50)
     ]);
     setPlans(p); setPlayers(pl); setHealthRecords(h);
@@ -73,13 +75,13 @@ export default function StrengthConditioning() {
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
-    load();
+    load(); // eslint-disable-next-line react-hooks/exhaustive-deps
     Promise.all([
       base44.entities.PlayerStat.list("-week", 200),
       base44.entities.PlayerHealth.list("-date", 100),
       base44.entities.PracticePlan.list("-date", 20),
     ]).then(([st, hr, pr]) => { setDevStats(st); setDevHealth(hr); setDevPractices(pr); });
-  }, []);
+  }, [activeSport]);
 
   // Compute load alerts once we have data
   useEffect(() => {
@@ -107,7 +109,7 @@ export default function StrengthConditioning() {
 
   const save = async () => {
     if (editing) await base44.entities.WorkoutPlan.update(editing.id, form);
-    else await base44.entities.WorkoutPlan.create(form);
+    else await base44.entities.WorkoutPlan.create({ ...form, sport: activeSport });
     setShowForm(false); load();
   };
 
@@ -126,7 +128,7 @@ export default function StrengthConditioning() {
     const playerSummary = players.slice(0, 30).map(p => `${p.first_name} ${p.last_name} (${p.position}, ${p.year || "?"}yr, Weight: ${p.weight || "?"}lbs, Strength: ${p.strength || "N/A"}, Speed: ${p.speed || "N/A"})`).join("\n");
     const recentLoads = plans.filter(p => p.status === "completed").slice(0, 5).map(p => `${p.name} (${p.type}, ${p.intensity} intensity, ${p.date})`).join(", ");
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an elite Strength & Conditioning coach for a football team using NxDown. Generate a comprehensive weekly workout plan for the team.
+      prompt: `You are an elite Strength & Conditioning coach for a ${activeSport} team using NxGen Sports. Generate a comprehensive weekly workout plan for the team.
 
 Team Players (sample):
 ${playerSummary}
@@ -188,7 +190,8 @@ Generate a 5-day workout week plan with specific exercises, sets, reps, and coac
       load_score: day.load_score || 5,
       ai_generated: true,
       notes: day.focus,
-      level: "All"
+      level: "All",
+      sport: activeSport
     });
     load();
   };
@@ -262,7 +265,7 @@ Avg Grade: ${avgGrade}, Recent Injuries: ${injuries}, Status: ${player.status}`,
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-black text-white">Strength & <span style={{ color: "var(--color-primary,#f97316)" }}>Conditioning</span></h1>
+          <h1 className="text-2xl font-black text-white capitalize">{activeSport.replace(/_/g," ")} <span style={{ color: "var(--color-primary,#f97316)" }}>S&C</span></h1>
           <p className="text-gray-500 text-sm">{plans.length} workout plans</p>
         </div>
         {activeTab === "sc" && (

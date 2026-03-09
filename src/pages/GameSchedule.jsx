@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Calendar, ChevronLeft, ChevronRight, Target } from "lucide-react";
+import { useSport } from "@/components/SportContext";
 import LoadingScreen from "../components/LoadingScreen";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
@@ -12,6 +13,7 @@ import { SpinnerLoader } from "../components/SkeletonLoader";
 
 
 export default function GameSchedule() {
+  const { activeSport } = useSport();
   const [opponents, setOpponents] = useState([]);
   const [players, setPlayers] = useState([]);
   const [gamePlans, setGamePlans] = useState([]);
@@ -27,10 +29,10 @@ export default function GameSchedule() {
     const loadData = async () => {
       try {
         const [u, op, pl, gp] = await Promise.all([
-          base44.auth.me().catch(() => null),
-          base44.entities.Opponent.list("game_date"),
-          base44.entities.Player.list(),
-          base44.entities.GamePlan.list()
+        base44.auth.me().catch(() => null),
+        base44.entities.Opponent.filter({ sport: activeSport }, "game_date"),
+        base44.entities.Player.filter({ sport: activeSport }),
+        base44.entities.GamePlan.filter({ sport: activeSport })
         ]);
         setUser(u);
         setOpponents(op);
@@ -44,7 +46,7 @@ export default function GameSchedule() {
       }
     };
     loadData();
-  }, []);
+  }, [activeSport]);
 
   const today = new Date();
   today.setHours(0,0,0,0);
@@ -94,7 +96,7 @@ export default function GameSchedule() {
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-white">Game <span style={{ color: "var(--color-primary,#f97316)" }}>Schedule</span></h1>
+          <h1 className="text-2xl font-black text-white capitalize">{activeSport.replace(/_/g," ")} <span style={{ color: "var(--color-primary,#f97316)" }}>Schedule</span></h1>
           <p className="text-gray-500 text-sm">{opponents.length} games scheduled</p>
         </div>
         <Link to={createPageUrl("Scouting")}
@@ -174,7 +176,7 @@ export default function GameSchedule() {
             onToggleExpand={setExpanded}
             onScout={handleScout}
             onTrack={setLiveTracker}
-            onRefresh={() => base44.entities.Opponent.list("game_date").then(setOpponents)}
+            onRefresh={() => base44.entities.Opponent.filter({ sport: activeSport }, "game_date").then(setOpponents)}
           />
         </div>
       )}
