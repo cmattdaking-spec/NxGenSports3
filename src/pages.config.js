@@ -65,12 +65,12 @@ import PlayerHealth from './pages/PlayerHealth';
 import Playlists from './pages/Playlists';
 import Practice from './pages/Practice';
 import Recruiting from './pages/Recruiting';
+import Reports from './pages/Reports';
 import Roster from './pages/Roster';
 import Scouting from './pages/Scouting';
 import Settings from './pages/Settings';
 import StrengthConditioning from './pages/StrengthConditioning';
 import UserManagement from './pages/UserManagement';
-import Reports from './pages/Reports';
 import __Layout from './Layout.jsx';
 
 
@@ -93,12 +93,12 @@ export const PAGES = {
     "Playlists": Playlists,
     "Practice": Practice,
     "Recruiting": Recruiting,
+    "Reports": Reports,
     "Roster": Roster,
     "Scouting": Scouting,
     "Settings": Settings,
     "StrengthConditioning": StrengthConditioning,
     "UserManagement": UserManagement,
-    "Reports": Reports,
 }
 
 export const pagesConfig = {
