@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { BookOpen, ClipboardList, Target, Zap, Brain, Sparkles, Search, Plus, Edit, Trash2, X, ChevronDown, ChevronUp, Calendar, MapPin, Pen, Eye, Lock, Clock } from "lucide-react";
+import { useSport } from "@/components/SportContext";
 import NxPlanAI from "@/components/gameplan/NxPlanAI";
 import PlayDesigner from "@/components/playbook/PlayDesigner";
 import PlayDiagramViewer from "@/components/playbook/PlayDiagramViewer";
@@ -17,6 +18,7 @@ const CAN_CREATE = ["admin","head_coach","associate_head_coach","offensive_coord
 const PRACTICE_EDIT_ROLES = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 
 export default function NxPrep() {
+  const { activeSport } = useSport();
   const [activeTab, setActiveTab] = useState("playbook");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -71,13 +73,13 @@ export default function NxPrep() {
     loadGamePlanData();
     loadPracticeData();
     setLoading(false);
-  }, []);
+  }, [activeSport]);
 
   const loadPlaybookData = async () => {
     try {
       const [playData, oppData] = await Promise.all([
-        base44.entities.Play.list(),
-        base44.entities.Opponent.list()
+        base44.entities.Play.filter({ sport: activeSport }),
+        base44.entities.Opponent.filter({ sport: activeSport })
       ]);
       setPlays(playData);
       setOpponents(oppData);
@@ -91,8 +93,8 @@ export default function NxPrep() {
   const loadGamePlanData = async () => {
     try {
       const [gpData, oppData] = await Promise.all([
-        base44.entities.GamePlan.list("-game_date"),
-        base44.entities.Opponent.list("game_date")
+        base44.entities.GamePlan.filter({ sport: activeSport }, "-game_date"),
+        base44.entities.Opponent.filter({ sport: activeSport }, "game_date")
       ]);
       setGamePlans(gpData);
       setOpponents(oppData);
@@ -107,9 +109,9 @@ export default function NxPrep() {
     try {
       const [pr, pl, h, op] = await Promise.all([
         base44.entities.PracticePlan.list("-date"),
-        base44.entities.Player.list(),
+        base44.entities.Player.filter({ sport: activeSport }),
         base44.entities.PlayerHealth.list(),
-        base44.entities.Opponent.list("-game_date")
+        base44.entities.Opponent.filter({ sport: activeSport }, "-game_date")
       ]);
       setPlans(pr);
       setPlayers(pl);
@@ -138,7 +140,7 @@ export default function NxPrep() {
       setShowPlayForm(false);
       loadPlaybookData();
     } else {
-      const newPlay = await base44.entities.Play.create(playForm);
+      const newPlay = await base44.entities.Play.create({ ...playForm, sport: activeSport });
       setShowPlayForm(false);
       setDesignerPlay(newPlay);
       setShowDesigner(true);
@@ -158,7 +160,7 @@ export default function NxPrep() {
     setAiSuggestions("");
     const existing = plays.map(p => `${p.name} (${p.category}, ${p.unit})`).join(", ");
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a football offensive/defensive coordinator AI. Based on a high school/college football team, suggest 5 highly effective plays that would complement their existing playbook.\n\nExisting plays: ${existing || "None yet"}\n\nProvide play suggestions with:\n- Play name\n- Formation\n- Category (run/pass/screen/play_action/blitz/coverage/zone/man)\n- Brief description\n- Best down & distance situation\n\nFormat clearly and be specific.`,
+      prompt: `You are a ${activeSport} offensive/defensive coordinator AI. Based on a high school/college football team, suggest 5 highly effective plays that would complement their existing playbook.\n\nExisting plays: ${existing || "None yet"}\n\nProvide play suggestions with:\n- Play name\n- Formation\n- Category (run/pass/screen/play_action/blitz/coverage/zone/man)\n- Brief description\n- Best down & distance situation\n\nFormat clearly and be specific.`,
     });
     setAiSuggestions(res);
     setAiLoading(false);
@@ -168,7 +170,7 @@ export default function NxPrep() {
   const saveGamePlan = async () => {
     setGpSaving(true);
     if (editingGP) await base44.entities.GamePlan.update(editingGP.id, gpForm);
-    else await base44.entities.GamePlan.create(gpForm);
+    else await base44.entities.GamePlan.create({ ...gpForm, sport: activeSport });
     setShowGPForm(false);
     setGpSaving(false);
     loadGamePlanData();
@@ -230,7 +232,7 @@ export default function NxPrep() {
     const upcomingOpponents = opponents.filter(o => new Date(o.game_date) >= new Date()).slice(0, 3);
 
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an elite football coaching AI for NxDown. Generate a complete, tailored practice session.
+      prompt: `You are an elite ${activeSport} coaching AI for NxGen Sports. Generate a complete, tailored practice session.
 
 Team Status:
 - Total Players: ${players.length}

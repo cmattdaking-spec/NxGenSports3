@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSport } from "@/components/SportContext";
 import { base44 } from "@/api/base44Client";
 import { Plus, Edit, Trash2, X, Activity, AlertTriangle, CheckCircle, Clock, Brain, ShieldAlert, Flame } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
@@ -17,6 +18,7 @@ const AVAILABILITY_CONFIG = {
 const RISK_COLOR = { Low: "text-green-400 bg-green-500/20 border-green-500/30", Medium: "text-yellow-400 bg-yellow-500/20 border-yellow-500/30", High: "text-red-400 bg-red-500/20 border-red-500/30", Critical: "text-red-500 bg-red-600/20 border-red-600/30" };
 
 export default function PlayerHealth() {
+  const { activeSport } = useSport();
   const [records, setRecords] = useState([]);
   const [players, setPlayers] = useState([]);
   const [stats, setStats] = useState([]);
@@ -36,9 +38,9 @@ export default function PlayerHealth() {
   const load = async () => {
     const [r, p, s, w] = await Promise.all([
       base44.entities.PlayerHealth.list("-date"),
-      base44.entities.Player.list(),
+      base44.entities.Player.filter({ sport: activeSport }),
       base44.entities.PlayerStat.list("-week", 100),
-      base44.entities.WorkoutPlan.list("-date", 60)
+      base44.entities.WorkoutPlan.filter({ sport: activeSport }, "-date", 60)
     ]);
     setRecords(r); setPlayers(p); setStats(s); setWorkouts(w); setLoading(false);
     // Compute S&C load alerts
@@ -48,7 +50,7 @@ export default function PlayerHealth() {
       setLoadAlerts([{ message: `${recentHigh.length} high-intensity S&C sessions in the last 7 days — players may be fatigued. Consider scheduling recovery workouts.` }]);
     }
   };
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); load(); }, []);
+  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); load(); }, [activeSport]);
 
   const canEdit = user?.role !== "athletic_director";
   const canSeeLoadAlerts = user && LOAD_ALERT_ROLES.includes(user.role);

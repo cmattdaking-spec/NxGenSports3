@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Tag, Film, Zap, X, Menu, Users, PenTool, Crosshair, Brain, Shield, Swords, Target, Plus, Edit, Trash2, ExternalLink, ChevronDown, ChevronUp, FlaskConical } from "lucide-react";
+import { useSport } from "@/components/SportContext";
 import LoadingScreen from "../components/LoadingScreen";
 import VideoPlayer from "../components/filmroom/VideoPlayer";
 import TagForm from "../components/filmroom/TagForm";
@@ -185,8 +186,9 @@ export default function NxLab() {
   const videoContainerRef = useRef(null);
   const presenceIntervalRef = useRef(null);
 
+  const { activeSport } = useSport();
   useEffect(() => {
-    Promise.all([base44.entities.FilmSession.list("-created_date"), base44.auth.me()])
+    Promise.all([base44.entities.FilmSession.filter({ sport: activeSport }), base44.auth.me()])
       .then(([s, u]) => { setUser(u); setSessions(s); if (s.length > 0) loadSession(s[0], u); else setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
@@ -229,7 +231,7 @@ export default function NxLab() {
     setCommentCounts(counts); setLoading(false);
   };
 
-  const createSession = async (data) => { const s = await base44.entities.FilmSession.create({ ...data, tag_count: 0 }); setSessions(prev => [s, ...prev]); loadSession(s); };
+  const createSession = async (data) => { const s = await base44.entities.FilmSession.create({ ...data, tag_count: 0, sport: activeSport }); setSessions(prev => [s, ...prev]); loadSession(s); };
   const deleteSession = async (id) => {
     await base44.entities.FilmSession.delete(id);
     const updated = sessions.filter(s => s.id !== id); setSessions(updated);
