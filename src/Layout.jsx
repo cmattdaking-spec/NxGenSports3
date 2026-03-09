@@ -18,6 +18,28 @@ const COORD_ONLY = ["admin","head_coach","associate_head_coach","offensive_coord
 const GAME_PLAN_ROLES = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 const IN_GAME_ROLES = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 
+const SPORT_NAMES = {
+  football:     "NxDown",
+  basketball:   "NxBucket",
+  baseball:     "NxPitch",
+  softball:     "NxPitch",
+  soccer:       "NxGoal",
+  volleyball:   "NxSet",
+  boxing:       "NxRound",
+  golf:         "NxHole",
+  tennis:       "NxServe",
+  wrestling:    "NxMatch",
+  cross_country:"NxRace",
+  track:        "NxRace",
+  lacrosse:     "NxCage",
+};
+
+const SPORT_LABELS = {
+  football:"Football", basketball:"Basketball", baseball:"Baseball", softball:"Softball",
+  soccer:"Soccer", volleyball:"Volleyball", boxing:"Boxing", golf:"Golf",
+  tennis:"Tennis", wrestling:"Wrestling", cross_country:"Cross Country / Track", track:"Track", lacrosse:"Lacrosse"
+};
+
 // ─── CLEANED UP NAV ─────────────────────────────────────────────────────────
 const navItems = [
   { label: "Dashboard",    page: "Dashboard",            icon: Home,           roles: null },
