@@ -4,6 +4,7 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import EnrollmentCheck from "@/components/EnrollmentCheck";
 import { SportLogoSVG } from "@/components/SportLogos";
+import { SportContext } from "@/components/SportContext";
 import {
   Users, BookOpen, Target, Activity,
   ChevronLeft, ChevronRight, Home,
@@ -74,6 +75,7 @@ const navItems = [
   { label: "Analytics",    page: "PerformanceAnalytics", icon: BarChart2,      roles: null },
   { label: "Reports",      page: "Reports",              icon: TrendingUp,     roles: null },
   { label: "Users",        page: "UserManagement",       icon: UserCog,        roles: ["admin","head_coach","athletic_director"] },
+  { label: "AD Portal",   page: "ADPortal",              icon: Globe,          roles: ["admin","athletic_director"] },
 ];
 
 export default function Layout({ children, currentPageName }) {
@@ -101,7 +103,7 @@ export default function Layout({ children, currentPageName }) {
       setUser(u);
       const sports = u?.assigned_sports?.length ? u.assigned_sports : ["football"];
       setAssignedSports(sports);
-      const saved = u?.active_sport || sports[0];
+      const saved = u?.primary_sport || u?.active_sport || sports[0];
       setActiveSport(saved);
     }).catch(() => {});
     base44.entities.AppSettings.list().then((list) => {
@@ -118,10 +120,14 @@ export default function Layout({ children, currentPageName }) {
   const coachingRole = user?.coaching_role || "position_coach";
   const effectiveRole = user?.is_associate_head_coach ? "associate_head_coach" : coachingRole;
   const isAD = effectiveRole === "athletic_director" || user?.role === "admin";
+  const isHeadCoach = coachingRole === "head_coach";
+  const isSuperAdmin = user?.role === "super_admin";
+  const canEditAll = isAD || isHeadCoach;
   const brandName = SPORT_NAMES[activeSport] || "NxDown";
   const [brandPrefix, brandSuffix] = brandName.startsWith("Nx") ? ["Nx", brandName.slice(2)] : [brandName, ""];
 
   const switchSport = async (sport) => {
+    if (user?.primary_sport && !isAD) return; // locked to primary sport
     setActiveSport(sport);
     setShowSportPicker(false);
     if (user) await base44.auth.updateMe({ active_sport: sport });
@@ -130,7 +136,9 @@ export default function Layout({ children, currentPageName }) {
   const filteredNav = user?.role === "super_admin"
     ? [{ label: "Teams", page: "UserManagement", icon: UserCog, roles: null }]
     : navItems.filter((item) => {
-        if (item.roles && !item.roles.includes(effectiveRole)) return false;
+        if (!item.roles) return true;
+        if (item.roles.includes(user?.role)) return true;
+        if (!item.roles.includes(effectiveRole)) return false;
         return true;
       });
 
@@ -148,7 +156,7 @@ export default function Layout({ children, currentPageName }) {
             <span className="text-white font-black text-xl tracking-tight">{brandPrefix}<span style={{ color: "var(--color-primary, #3b82f6)" }}>{brandSuffix}</span></span>
             <p className="text-gray-500 text-xs capitalize">{SPORT_LABELS[activeSport] || "Football"} Systems</p>
             {/* Sport switcher */}
-            {assignedSports.length > 1 && (
+            {(isAD || assignedSports.length > 1) && !user?.primary_sport && (
               <div className="relative mt-1">
                 <button onClick={() => setShowSportPicker(v => !v)}
                   className="flex items-center gap-1 text-gray-500 hover:text-white text-xs transition-colors">
@@ -227,7 +235,20 @@ export default function Layout({ children, currentPageName }) {
     return <Navigate to="/Dashboard" replace />;
   }
 
+  const sportContextValue = {
+    activeSport,
+    user,
+    isAD,
+    isHeadCoach,
+    isSuperAdmin,
+    canEditAll,
+    teamId: user?.team_id,
+    sportFilter: { sport: activeSport, ...(user?.team_id ? { team_id: user.team_id } : {}) },
+    switchSport,
+  };
+
   return (
+    <SportContext.Provider value={sportContextValue}>
     <EnrollmentCheck>
       <div className="flex h-screen bg-[#0a0a0a] overflow-hidden">
       {/* Desktop Sidebar */}
@@ -276,5 +297,6 @@ export default function Layout({ children, currentPageName }) {
       </div>
     </div>
     </EnrollmentCheck>
+    </SportContext.Provider>
   );
 }
