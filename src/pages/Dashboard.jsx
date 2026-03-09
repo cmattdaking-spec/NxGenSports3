@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
+import { useSport } from "@/components/SportContext";
 import {
   Users, BookOpen, Target, Activity, TrendingUp,
   ClipboardList, Crosshair, Zap, AlertTriangle,
@@ -9,7 +10,14 @@ import {
   Star, Lock, Building2
 } from "lucide-react";
 
+const SPORT_NAMES = {
+  football:"NxDown", basketball:"NxBucket", baseball:"NxPitch", softball:"NxPitch",
+  soccer:"NxGoal", volleyball:"NxSet", boxing:"NxRound", golf:"NxHole",
+  tennis:"NxServe", wrestling:"NxMatch", cross_country:"NxRace", track:"NxRace", lacrosse:"NxCage"
+};
+
 export default function Dashboard() {
+  const { activeSport } = useSport();
   const [players, setPlayers] = useState([]);
   const [healthRecords, setHealthRecords] = useState([]);
   const [plays, setPlays] = useState([]);
@@ -25,12 +33,12 @@ export default function Dashboard() {
   useEffect(() => {
     Promise.all([
       base44.auth.me().catch(() => null),
-      base44.entities.Player.list(),
+      base44.entities.Player.filter({ sport: activeSport }),
       base44.entities.PlayerHealth.list(),
-      base44.entities.Play.list(),
-      base44.entities.GamePlan.list(),
+      base44.entities.Play.filter({ sport: activeSport }),
+      base44.entities.GamePlan.filter({ sport: activeSport }),
       base44.entities.PracticePlan.list(),
-      base44.entities.Opponent.list()
+      base44.entities.Opponent.filter({ sport: activeSport })
     ]).then(([u, p, h, pl, gp, pr, op]) => {
       setUser(u);
       setPlayers(p);
@@ -42,7 +50,7 @@ export default function Dashboard() {
       setLoading(false);
       loadAISuggestions(u, p, h, pl, gp, pr, op);
     });
-  }, []);
+  }, [activeSport]);
 
   const loadAISuggestions = async (u, p, h, pl, gp, pr, op) => {
     if (!u) return;
@@ -53,7 +61,7 @@ export default function Dashboard() {
     const upcomingPractice = pr.find(practice => practice.status !== "completed" && new Date(practice.date) >= new Date());
     const context = `Role: ${role}. Players: ${p.length}. Injured: ${injured}. Plays in playbook: ${pl.length}. Game plans: ${gp.length}. Next game: ${nextGame ? nextGame.name + " on " + nextGame.game_date : "none"}. Upcoming practice: ${upcomingPractice ? upcomingPractice.title + " on " + upcomingPractice.date : "none"}.`;
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an AI assistant for a football team management app. Based on the current team data, generate 3 personalized action suggestions for a user with role "${role}". Keep each suggestion concise (under 15 words). Focus on the most impactful next steps given the data. Context: ${context}`,
+      prompt: `You are an AI assistant for a ${activeSport} team management app. Based on the current team data, generate 3 personalized action suggestions for a user with role "${role}". Keep each suggestion concise (under 15 words). Focus on the most impactful next steps given the data. Context: ${context}`,
       response_json_schema: {
         type: "object",
         properties: {
@@ -131,15 +139,15 @@ export default function Dashboard() {
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white">
-                    Nx<span style={{ color: "var(--color-primary,#f97316)" }}>Down</span>
+                    Nx<span style={{ color: "var(--color-primary,#f97316)" }}>{(SPORT_NAMES[activeSport] || "NxDown").slice(2)}</span>
                   </h1>
                   <span className="hidden md:inline text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full font-semibold tracking-wider">PRO</span>
                 </div>
                 <p className="text-gray-400 text-sm font-medium">
-                  {user
-                    ? <>Welcome back, <span className="text-white font-semibold">{user.full_name?.split(" ")[0] || "Coach"}</span></>
-                    : "Next-Gen Football Systems"
-                  }
+                {user
+                  ? <>Welcome back, <span className="text-white font-semibold">{user.full_name?.split(" ")[0] || "Coach"}</span></>
+                  : `Next-Gen ${activeSport.charAt(0).toUpperCase() + activeSport.slice(1)} Systems`
+                }
                   {user?.school_name && (
                     <span className="ml-2 text-gray-600">· <Building2 className="w-3 h-3 inline mb-0.5" /> {user.school_name}</span>
                   )}
