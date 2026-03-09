@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSport } from "@/components/SportContext";
 import { base44 } from "@/api/base44Client";
 import { GraduationCap, CheckCircle, XCircle, Search, FileText, ClipboardCheck, AlertCircle } from "lucide-react";
 
@@ -6,6 +7,7 @@ const ELIGIBILITY_EDIT = ["athletic_director", "admin", "head_coach"];
 const DOCS_EDIT = ["athletic_director", "admin", "head_coach"];
 
 export default function AcademicEligibility() {
+  const { activeSport } = useSport();
   const [players, setPlayers] = useState([]);
   const [docs, setDocs] = useState([]);
   const [user, setUser] = useState(null);
@@ -17,10 +19,10 @@ export default function AcademicEligibility() {
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
     Promise.all([
-      base44.entities.Player.list(),
+      base44.entities.Player.filter({ sport: activeSport }),
       base44.entities.PlayerDocument.list()
     ]).then(([p, d]) => { setPlayers(p); setDocs(d); setLoading(false); });
-  }, []);
+  }, [activeSport]);
 
   const canEditEligibility = ELIGIBILITY_EDIT.includes(user?.coaching_role) || user?.role === "admin";
   const canEditDocs = DOCS_EDIT.includes(user?.coaching_role) || user?.role === "admin";
@@ -93,7 +95,7 @@ export default function AcademicEligibility() {
             <GraduationCap className="w-5 h-5" style={{ color: "var(--color-primary,#3b82f6)" }} />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white">Academic Eligibility</h1>
+            <h1 className="text-2xl font-black text-white capitalize">{activeSport.replace(/_/g," ")} Eligibility</h1>
             <p className="text-gray-500 text-sm">
               <span className="text-green-400">{eligible.length} eligible</span>
               {" · "}

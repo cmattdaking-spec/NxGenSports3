@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSport } from "@/components/SportContext";
 import { base44 } from "@/api/base44Client";
 import { BarChart2, Upload, Database, Activity, Plus, RefreshCw, Film, TrendingUp } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
@@ -15,6 +16,7 @@ const TABS = [
 ];
 
 export default function PerformanceAnalytics() {
+  const { activeSport } = useSport();
   const [tab, setTab] = useState("dashboard");
   const [imports, setImports] = useState([]);
   const [metrics, setMetrics] = useState([]);
@@ -27,9 +29,9 @@ export default function PerformanceAnalytics() {
   useEffect(() => {
     Promise.all([
       base44.entities.PerformanceImport.list("-created_date"),
-      base44.entities.PerformanceMetric.list("-game_date", 100),
-      base44.entities.Player.list("-created_date", 100),
-      base44.entities.FilmSession.list("-created_date", 20),
+      base44.entities.PerformanceMetric.filter({ sport: activeSport }, "-game_date", 100),
+      base44.entities.Player.filter({ sport: activeSport }, "-created_date", 100),
+      base44.entities.FilmSession.filter({ sport: activeSport }, "-created_date", 20),
     ]).then(([imp, met, pls, films]) => {
       setImports(imp);
       setMetrics(met);
@@ -37,7 +39,7 @@ export default function PerformanceAnalytics() {
       setFilmSessions(films);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, []);
+  }, [activeSport]);
 
   const handleImported = (record, analysis) => {
     setImports(prev => [record, ...prev]);
@@ -76,7 +78,7 @@ export default function PerformanceAnalytics() {
               <TrendingUp className="w-5 h-5" style={{ color: "var(--color-primary,#f97316)" }} />
             </div>
             <div>
-              <h1 className="text-white font-black text-xl">Performance <span style={{ color: "var(--color-primary,#f97316)" }}>Analytics</span></h1>
+              <h1 className="text-white font-black text-xl capitalize">{activeSport.replace(/_/g," ")} <span style={{ color: "var(--color-primary,#f97316)" }}>Analytics</span></h1>
               <p className="text-gray-500 text-xs">Hudl · ODK · Catapult · GPS · Film Data</p>
             </div>
           </div>
