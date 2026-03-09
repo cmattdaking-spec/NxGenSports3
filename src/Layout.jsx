@@ -121,13 +121,33 @@ export default function Layout({ children, currentPageName }) {
       <div className={`flex items-center gap-3 px-4 py-5 border-b border-gray-800 ${collapsed ? "justify-center" : ""}`}>
         <img
           src={teamLogo || "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8dea6f5ebfce20bad2a8c/871a00698_image_aaa46895.png"}
-          alt="NxDown"
+          alt={brandName}
           className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
         />
         {!collapsed && (
-          <div>
-            <span className="text-white font-black text-xl tracking-tight">Nx<span style={{ color: "var(--color-primary, #3b82f6)" }}>Down</span></span>
-            <p className="text-gray-500 text-xs">Next-Gen Football Systems</p>
+          <div className="flex-1 min-w-0">
+            <span className="text-white font-black text-xl tracking-tight">{brandPrefix}<span style={{ color: "var(--color-primary, #3b82f6)" }}>{brandSuffix}</span></span>
+            <p className="text-gray-500 text-xs capitalize">{SPORT_LABELS[activeSport] || "Football"} Systems</p>
+            {/* Sport switcher */}
+            {assignedSports.length > 1 && (
+              <div className="relative mt-1">
+                <button onClick={() => setShowSportPicker(v => !v)}
+                  className="flex items-center gap-1 text-gray-500 hover:text-white text-xs transition-colors">
+                  Switch sport <ChevronDown className="w-3 h-3" />
+                </button>
+                {showSportPicker && (
+                  <div className="absolute top-full left-0 mt-1 bg-[#1a1a1a] border border-gray-700 rounded-lg shadow-xl z-50 min-w-36 overflow-hidden">
+                    {(isAD ? Object.keys(SPORT_NAMES) : assignedSports).map(s => (
+                      <button key={s} onClick={() => switchSport(s)}
+                        className={`w-full text-left px-3 py-2 text-xs transition-colors ${activeSport === s ? "text-white" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+                        style={activeSport === s ? { backgroundColor: "var(--color-primary,#3b82f6)22", color: "var(--color-primary,#3b82f6)" } : {}}>
+                        {SPORT_LABELS[s] || s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
