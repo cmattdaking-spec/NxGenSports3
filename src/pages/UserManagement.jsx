@@ -509,7 +509,7 @@ function InviteForm({ user, onClose, onInvited }) {
 }
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
-export default function UserManagement() {
+function UserManagementContent() {
   const [user, setUser] = useState(null);
   const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
