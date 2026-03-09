@@ -16,7 +16,7 @@ const SPORT_LABELS = {
 
 const NXGEN_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/29e077944_generated_image.png";
 
-export default function ADPortal() {
+function ADPortalContent() {
   const [user, setUser] = useState(null);
   const [players, setPlayers] = useState([]);
   const [healthRecords, setHealthRecords] = useState([]);
