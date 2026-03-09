@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSport } from "@/components/SportContext";
 import { base44 } from "@/api/base44Client";
+import AuthGuard from "@/components/AuthGuard";
 import { GraduationCap, CheckCircle, XCircle, Search, FileText, ClipboardCheck, AlertCircle } from "lucide-react";
 
 const ELIGIBILITY_EDIT = ["athletic_director", "admin", "head_coach"];
