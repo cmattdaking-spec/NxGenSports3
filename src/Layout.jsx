@@ -98,6 +98,15 @@ export default function Layout({ children, currentPageName }) {
 
   const coachingRole = user?.coaching_role || "position_coach";
   const effectiveRole = user?.is_associate_head_coach ? "associate_head_coach" : coachingRole;
+  const isAD = effectiveRole === "athletic_director" || user?.role === "admin";
+  const brandName = SPORT_NAMES[activeSport] || "NxDown";
+  const [brandPrefix, brandSuffix] = brandName.startsWith("Nx") ? ["Nx", brandName.slice(2)] : [brandName, ""];
+
+  const switchSport = async (sport) => {
+    setActiveSport(sport);
+    setShowSportPicker(false);
+    if (user) await base44.auth.updateMe({ active_sport: sport });
+  };
 
   const filteredNav = user?.role === "super_admin"
     ? [{ label: "Teams", page: "UserManagement", icon: UserCog, roles: null }]
