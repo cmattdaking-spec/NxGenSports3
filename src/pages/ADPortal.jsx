@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import AuthGuard from "@/components/AuthGuard";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
