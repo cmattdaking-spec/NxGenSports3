@@ -331,6 +331,16 @@ function SuperAdminView({ allUsers, loading, onRefresh }) {
   );
 }
 
+const ALL_SPORTS = ["football","basketball","baseball","softball","soccer","volleyball","boxing","golf","tennis","wrestling","cross_country","track","lacrosse"];
+const SPORT_LABELS_MAP = { football:"Football", basketball:"Basketball", baseball:"Baseball", softball:"Softball", soccer:"Soccer", volleyball:"Volleyball", boxing:"Boxing", golf:"Golf", tennis:"Tennis", wrestling:"Wrestling", cross_country:"Cross Country", track:"Track", lacrosse:"Lacrosse" };
+
+function generateSchoolCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "X";
+  for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
 // ─── Staff Invite Form ────────────────────────────────────────────────────────
 function InviteForm({ user, onClose, onInvited }) {
   const [form, setForm] = useState({
@@ -338,6 +348,7 @@ function InviteForm({ user, onClose, onInvited }) {
     coaching_role: "position_coach",
     positions: [],
     phases: [],
+    sports: ["football"],
   });
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState({ text: "", type: "" });
@@ -352,13 +363,16 @@ function InviteForm({ user, onClose, onInvited }) {
       await base44.entities.Invite.create({
         email: form.email.trim(),
         team_id: user?.team_id,
+        school_name: user?.school_name,
+        school_code: user?.school_code,
         coaching_role: form.coaching_role,
         assigned_positions: form.positions,
         assigned_phases: form.phases,
+        assigned_sports: form.sports,
         status: "pending",
         invited_by: user?.email,
       });
-      await base44.users.inviteUser(form.email.trim(), "admin");
+      await base44.users.inviteUser(form.email.trim(), "user");
       setMsg({ text: `Invitation sent to ${form.email}`, type: "success" });
       onInvited?.();
       setTimeout(() => { setMsg({ text: "", type: "" }); onClose(); }, 2500);
@@ -370,6 +384,7 @@ function InviteForm({ user, onClose, onInvited }) {
 
   const togglePos = (pos) => setForm(p => ({ ...p, positions: p.positions.includes(pos) ? p.positions.filter(x => x !== pos) : [...p.positions, pos] }));
   const togglePhase = (ph) => setForm(p => ({ ...p, phases: p.phases.includes(ph) ? p.phases.filter(x => x !== ph) : [...p.phases, ph] }));
+  const toggleSport = (s) => setForm(p => ({ ...p, sports: p.sports.includes(s) ? p.sports.filter(x => x !== s) : [...p.sports, s] }));
 
   return (
     <div className="bg-[#141414] border border-gray-700 rounded-2xl p-5 space-y-4">
@@ -382,11 +397,15 @@ function InviteForm({ user, onClose, onInvited }) {
       </div>
 
       {/* School context */}
-      <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg px-3 py-2 flex items-center gap-2">
+      <div className="bg-[#1a1a1a] border border-gray-800 rounded-lg px-3 py-2 flex items-center gap-2 flex-wrap">
         <Building2 className="w-3.5 h-3.5 text-gray-500" />
         <span className="text-gray-400 text-xs">Inviting to: </span>
         <span className="text-white text-xs font-semibold">{user?.school_name || "Your School"}</span>
-        <span className="text-gray-600 text-xs font-mono ml-1">({user?.team_id || "no team"})</span>
+        {user?.school_code && (
+          <span className="text-cyan-400 text-xs font-mono bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full ml-1">
+            {user.school_code}
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -408,12 +427,18 @@ function InviteForm({ user, onClose, onInvited }) {
         </div>
       </div>
 
-      {/* Role badge preview */}
-      <div className="flex items-center gap-2">
-        <span className="text-gray-500 text-xs">Role preview:</span>
-        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${roleColors[form.coaching_role] || "bg-gray-700 text-gray-400"}`}>
-          {ROLES.find(r => r.value === form.coaching_role)?.label}
-        </span>
+      {/* Sports Assignment */}
+      <div>
+        <label className="text-gray-400 text-xs mb-2 block">Assigned Sports <span className="text-red-400">*</span></label>
+        <div className="flex flex-wrap gap-1.5">
+          {ALL_SPORTS.map(s => (
+            <button key={s} onClick={() => toggleSport(s)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${form.sports.includes(s) ? "text-white" : "bg-gray-800 text-gray-500 hover:text-gray-300"}`}
+              style={form.sports.includes(s) ? { backgroundColor: "var(--color-primary,#3b82f6)" } : {}}>
+              {SPORT_LABELS_MAP[s]}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Positions (conditional) */}
@@ -449,7 +474,7 @@ function InviteForm({ user, onClose, onInvited }) {
       <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2.5 flex items-start gap-2">
         <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
         <p className="text-yellow-300 text-xs">
-          The invited staff member will be automatically enrolled into <strong>{user?.school_name || "your school"}</strong> with the selected role when they accept.
+          When they click the invite link, they'll be prompted to create a password and will be automatically enrolled into <strong>{user?.school_name || "your school"}</strong>.
         </p>
       </div>
 
@@ -458,7 +483,7 @@ function InviteForm({ user, onClose, onInvited }) {
       )}
 
       <div className="flex gap-2">
-        <button onClick={handleInvite} disabled={submitting || !form.email.trim()}
+        <button onClick={handleInvite} disabled={submitting || !form.email.trim() || form.sports.length === 0}
           className="px-5 py-2 rounded-xl text-white text-sm font-semibold disabled:opacity-50 transition-all"
           style={{ backgroundColor: "var(--color-primary,#3b82f6)" }}>
           {submitting ? "Sending..." : "Send Invitation"}
