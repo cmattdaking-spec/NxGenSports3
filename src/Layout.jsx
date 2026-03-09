@@ -53,6 +53,7 @@ const navItems = [
   { label: "S&C",          page: "StrengthConditioning", icon: Dumbbell,       roles: null },
   { label: "Recruiting",   page: "Recruiting",           icon: Star,           roles: COORD_ONLY },
   { label: "Analytics",    page: "PerformanceAnalytics", icon: BarChart2,      roles: null },
+  { label: "Reports",      page: "Reports",              icon: TrendingUp,     roles: null },
   { label: "Users",        page: "UserManagement",       icon: UserCog,        roles: ["admin","head_coach","athletic_director"] },
 ];
 
