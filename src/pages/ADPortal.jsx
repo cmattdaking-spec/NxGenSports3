@@ -30,13 +30,13 @@ export default function ADPortal() {
       base44.entities.Player.list(),
       base44.entities.PlayerHealth.list(),
       base44.entities.Opponent.list(),
-      base44.entities.User.list(),
+      base44.entities.User.list().catch(() => []),
     ]).then(([u, p, h, o, s]) => {
       setUser(u);
       setPlayers(p);
       setHealthRecords(h);
       setOpponents(o);
-      setStaff(s.filter(m => m.coaching_role));
+      setStaff((s || []).filter(m => m.coaching_role));
       setLoading(false);
     });
   }, []);
