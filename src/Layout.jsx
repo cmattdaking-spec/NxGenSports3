@@ -138,11 +138,10 @@ export default function Layout({ children, currentPageName }) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className={`flex items-center gap-3 px-4 py-5 border-b border-gray-800 ${collapsed ? "justify-center" : ""}`}>
-        <img
-          src={teamLogo || SPORT_LOGOS[activeSport] || SUITE_LOGO}
-          alt={brandName}
-          className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
-        />
+        {teamLogo
+          ? <img src={teamLogo} alt={brandName} className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+          : <SportLogoSVG sport={activeSport} className="w-9 h-9 flex-shrink-0" />
+        }
         {!collapsed && (
           <div className="flex-1 min-w-0">
             <span className="text-white font-black text-xl tracking-tight">{brandPrefix}<span style={{ color: "var(--color-primary, #3b82f6)" }}>{brandSuffix}</span></span>
