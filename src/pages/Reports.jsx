@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { BarChart2, Activity, GraduationCap, TrendingUp, AlertTriangle } from "lucide-react";
+import { BarChart2, Activity, GraduationCap, TrendingUp, AlertTriangle, Brain } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell
 } from "recharts";
 import LoadingScreen from "../components/LoadingScreen";
+import AIProgramReport from "../components/reports/AIProgramReport";
 
 const TABS = [
-  { id: "performance", label: "Performance Trends", icon: TrendingUp },
-  { id: "health",      label: "Health & Injuries",  icon: Activity },
+  { id: "ai_report",   label: "AI Report",           icon: Brain },
+  { id: "performance", label: "Performance Trends",  icon: TrendingUp },
+  { id: "health",      label: "Health & Injuries",   icon: Activity },
   { id: "academic",    label: "Academic Compliance", icon: GraduationCap },
 ];
 
@@ -18,7 +20,7 @@ const AVAIL_COLORS = { full: "#22c55e", limited: "#f59e0b", out: "#ef4444", day_
 const TooltipStyle = { contentStyle: { backgroundColor: "#1a1a1a", border: "1px solid #333", borderRadius: "8px", color: "#fff", fontSize: 12 } };
 
 export default function Reports() {
-  const [tab, setTab] = useState("performance");
+  const [tab, setTab] = useState("ai_report");
   const [metrics, setMetrics] = useState([]);
   const [healthRecords, setHealthRecords] = useState([]);
   const [players, setPlayers] = useState([]);
@@ -97,6 +99,9 @@ export default function Reports() {
           </button>
         ))}
       </div>
+
+      {/* ── AI Program Report ── */}
+      {tab === "ai_report" && <AIProgramReport />}
 
       {/* ── Performance Trends ── */}
       {tab === "performance" && (
