@@ -4,9 +4,18 @@ import { UserPlus, Pencil, Trash2, X, Check, ChevronDown } from "lucide-react";
 import PendingInvites from "@/components/usermgmt/PendingInvites";
 
 const SPORT_LABELS = {
-  football:"Football", basketball:"Basketball", baseball:"Baseball", softball:"Softball",
-  soccer:"Soccer", volleyball:"Volleyball", boxing:"Boxing", golf:"Golf",
-  tennis:"Tennis", wrestling:"Wrestling", cross_country:"Cross Country", track:"Track", lacrosse:"Lacrosse"
+  boys_football:"Boys Football", girls_football:"Girls Football", girls_flag_football:"Girls Flag Football",
+  boys_basketball:"Boys Basketball", girls_basketball:"Girls Basketball",
+  boys_baseball:"Boys Baseball", girls_softball:"Girls Softball",
+  boys_soccer:"Boys Soccer", girls_soccer:"Girls Soccer",
+  girls_volleyball:"Girls Volleyball",
+  boys_boxing:"Boys Boxing", girls_boxing:"Girls Boxing",
+  boys_golf:"Boys Golf", girls_golf:"Girls Golf",
+  boys_tennis:"Boys Tennis", girls_tennis:"Girls Tennis",
+  boys_wrestling:"Boys Wrestling", girls_wrestling:"Girls Wrestling",
+  boys_cross_country:"Boys Cross Country", girls_cross_country:"Girls Cross Country",
+  boys_track:"Boys Track & Field", girls_track:"Girls Track & Field",
+  boys_lacrosse:"Boys Lacrosse", girls_lacrosse:"Girls Lacrosse",
 };
 const ALL_SPORTS = Object.keys(SPORT_LABELS);
 
