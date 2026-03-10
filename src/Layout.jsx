@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation, Navigate } from "react-router-dom";
+import { Link, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import EnrollmentCheck from "@/components/EnrollmentCheck";
@@ -39,6 +39,7 @@ const SPORT_LOGOS = {
 };
 
 const SPORT_NAMES = {
+  nxgensports:  "NxGenSports",
   football:     "NxDown",
   basketball:   "NxBucket",
   baseball:     "NxPitch",
@@ -55,6 +56,7 @@ const SPORT_NAMES = {
 };
 
 const SPORT_LABELS = {
+  nxgensports:"NxGenSports",
   football:"Football", basketball:"Basketball", baseball:"Baseball", softball:"Softball",
   soccer:"Soccer", volleyball:"Volleyball", boxing:"Boxing", golf:"Golf",
   tennis:"Tennis", wrestling:"Wrestling", cross_country:"Cross Country / Track", track:"Track", lacrosse:"Lacrosse"
@@ -79,6 +81,7 @@ const navItems = [
 ];
 
 export default function Layout({ children, currentPageName }) {
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -103,7 +106,8 @@ export default function Layout({ children, currentPageName }) {
       setUser(u);
       const sports = u?.assigned_sports?.length ? u.assigned_sports : ["football"];
       setAssignedSports(sports);
-      const saved = u?.primary_sport || u?.active_sport || sports[0];
+      const uIsAD = u?.coaching_role === "athletic_director" || u?.role === "admin";
+      const saved = u?.active_sport || (uIsAD ? "nxgensports" : sports[0]);
       setActiveSport(saved);
     }).catch(() => {});
     base44.entities.AppSettings.list().then((list) => {
@@ -128,6 +132,12 @@ export default function Layout({ children, currentPageName }) {
 
   const switchSport = async (sport) => {
     if (user?.primary_sport && !isAD) return; // locked to primary sport
+    if (sport === "nxgensports") {
+      setActiveSport("nxgensports");
+      setShowSportPicker(false);
+      navigate(createPageUrl("NxGenSportsWebsite"));
+      return;
+    }
     setActiveSport(sport);
     setShowSportPicker(false);
     if (user) await base44.auth.updateMe({ active_sport: sport });
@@ -164,7 +174,7 @@ export default function Layout({ children, currentPageName }) {
                 </button>
                 {showSportPicker && (
                   <div className="absolute top-full left-0 mt-1 bg-[#1a1a1a] border border-gray-700 rounded-lg shadow-xl z-50 min-w-36 overflow-hidden">
-                    {(isAD ? Object.keys(SPORT_NAMES) : assignedSports).map(s => (
+                    {(isAD ? ["nxgensports", ...Object.keys(SPORT_NAMES).filter(s => s !== "nxgensports")] : assignedSports).map(s => (
                       <button key={s} onClick={() => switchSport(s)}
                         className={`w-full text-left px-3 py-2 text-xs transition-colors ${activeSport === s ? "text-white" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
                         style={activeSport === s ? { backgroundColor: "var(--color-primary,#3b82f6)22", color: "var(--color-primary,#3b82f6)" } : {}}>
@@ -234,7 +244,7 @@ export default function Layout({ children, currentPageName }) {
   if (location.pathname === "/" || location.pathname === "") {
     const isAthlDir = effectiveRole === "athletic_director" || user?.role === "admin" && user?.coaching_role === "athletic_director";
     if (isAD && !isHeadCoach) {
-      return <Navigate to="/ADPortal" replace />;
+      return <Navigate to={createPageUrl("NxGenSportsWebsite")} replace />;
     }
     return <Navigate to="/Dashboard" replace />;
   }
