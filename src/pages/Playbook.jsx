@@ -106,7 +106,7 @@ export default function Playbook() {
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-white">Play<span style={{ color: "var(--color-primary,#f97316)" }}>book</span></h1>
+          <h1 className="text-2xl font-black text-white">{cfg.termPlaybook.slice(0,4)}<span style={{ color: "var(--color-primary,#f97316)" }}>{cfg.termPlaybook.slice(4)}</span></h1>
           <p className="text-gray-500 text-sm">{plays.length} plays in library</p>
         </div>
         <div className="flex gap-2">
