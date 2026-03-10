@@ -73,7 +73,7 @@ const SPORT_NAMES = {
   boys_golf:          "NxHole",     girls_golf:         "NxHole",
   boys_tennis:        "NxServe",    girls_tennis:       "NxServe",
 
-  lacrosse:           "NxCage",     boys_lacrosse:      "NxCage",     girls_lacrosse:     "NxCage",
+
 };
 
 const SPORT_LABELS = {
@@ -87,7 +87,7 @@ const SPORT_LABELS = {
   boys_golf:          "Boys Golf",          girls_golf:         "Girls Golf",
   boys_tennis:        "Boys Tennis",        girls_tennis:       "Girls Tennis",
 
-  lacrosse:           "Lacrosse",           boys_lacrosse:      "Boys Lacrosse",      girls_lacrosse:     "Girls Lacrosse",
+
 };
 
 // ─── CLEANED UP NAV ─────────────────────────────────────────────────────────

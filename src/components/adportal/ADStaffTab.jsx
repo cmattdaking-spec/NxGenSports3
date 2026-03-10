@@ -13,7 +13,7 @@ const SPORT_LABELS = {
   boys_golf:"Boys Golf", girls_golf:"Girls Golf",
   boys_tennis:"Boys Tennis", girls_tennis:"Girls Tennis",
 
-  lacrosse:"Lacrosse", boys_lacrosse:"Boys Lacrosse", girls_lacrosse:"Girls Lacrosse",
+
 };
 const ALL_SPORTS = Object.keys(SPORT_LABELS);
 
