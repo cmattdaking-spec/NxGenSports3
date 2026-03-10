@@ -161,6 +161,18 @@ function ADPortalContent() {
         </div>
       </div>
 
+      {/* Quick Nav Shortcuts */}
+      <div className="border-b border-gray-800 px-4 md:px-8 bg-[#0d0d0d]">
+        <div className="flex gap-1 overflow-x-auto py-2">
+          {AD_NAV_SHORTCUTS.map(({ label, page, icon: Icon }) => (
+            <Link key={page} to={createPageUrl(page)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-500 hover:text-white hover:bg-white/5 transition-all whitespace-nowrap flex-shrink-0">
+              <Icon className="w-3.5 h-3.5" />{label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* Tabs */}
       <div className="border-b border-gray-800 px-4 md:px-8">
         <div className="flex gap-1 overflow-x-auto scrollbar-hide">
