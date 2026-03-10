@@ -180,17 +180,16 @@ Create a detailed, tactical game plan with specific play calls, situational stra
 
           {/* Play Scripts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Section title="Opening Script" items={result.opening_script} id="scripted"
-              color="text-blue-400" bg="bg-blue-500/5" border="border-blue-500/20" />
-            <Section title="Scripted Plays" items={result.scripted_plays} id="scriptedPlays"
-              color="text-orange-400" bg="bg-orange-500/5" border="border-orange-500/20" />
-            <Section title="Red Zone Plays" items={result.red_zone_plays} id="redzone"
-              color="text-red-400" bg="bg-red-500/5" border="border-red-500/20" />
-            <Section title="3rd Down Plays" items={result.third_down_plays} id="thirddown"
-              color="text-yellow-400" bg="bg-yellow-500/5" border="border-yellow-500/20" />
-            <Section title="2-Minute Drill" items={result.two_minute_plays} id="twomin"
-              color="text-purple-400" bg="bg-purple-500/5" border="border-purple-500/20" />
-            <Section title="Personnel Packages" items={result.personnel_packages} id="personnel"
+            {cfg.gamePlanSections.map((sec, i) => {
+              const colorMap = ["text-blue-400","text-red-400","text-yellow-400","text-purple-400"];
+              const bgMap = ["bg-blue-500/5","bg-red-500/5","bg-yellow-500/5","bg-purple-500/5"];
+              const borderMap = ["border-blue-500/20","border-red-500/20","border-yellow-500/20","border-purple-500/20"];
+              return (
+                <Section key={sec.key} title={sec.label} items={result[sec.key]} id={sec.key}
+                  color={colorMap[i] || "text-orange-400"} bg={bgMap[i] || "bg-orange-500/5"} border={borderMap[i] || "border-orange-500/20"} />
+              );
+            })}
+            <Section title="Personnel / Lineups" items={result.personnel_packages} id="personnel"
               color="text-cyan-400" bg="bg-cyan-500/5" border="border-cyan-500/20" />
           </div>
 
