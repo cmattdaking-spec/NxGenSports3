@@ -266,9 +266,9 @@ export default function GamePlan() {
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Unit *</label>
-                  <select value={form.unit || "offense"} onChange={e => setForm({ ...form, unit: e.target.value })}
+                  <select value={form.unit || cfg.units[0]} onChange={e => setForm({ ...form, unit: e.target.value })}
                     className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm outline-none">
-                    {UNITS.map(u => <option key={u} value={u}>{u.replace("_", " ")}</option>)}
+                    {UNITS.map(u => <option key={u} value={u}>{cfg.unitLabels[u] || u.replace("_", " ")}</option>)}
                   </select>
                 </div>
                 <div>
@@ -289,18 +289,13 @@ export default function GamePlan() {
               </div>
 
               <div>
-                <label className="text-gray-400 text-xs mb-1 block">Key Tendencies</label>
+                <label className="text-gray-400 text-xs mb-1 block">{cfg.gamePlanKeyTendenciesLabel}</label>
                 <textarea rows={2} value={form.key_tendencies || ""} onChange={e => setForm({ ...form, key_tendencies: e.target.value })}
-                  placeholder="Opponent's key tendencies and tendencies to attack..."
+                  placeholder="Opponent's key tendencies and how to attack them..."
                   className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm outline-none resize-none" />
               </div>
 
-              {[
-                { key: "scripted_plays", label: "Scripted Plays" },
-                { key: "red_zone_plays", label: "Red Zone Plays" },
-                { key: "third_down_plays", label: "3rd Down Plays" },
-                { key: "two_minute_plays", label: "2-Minute Drill" },
-              ].map(({ key, label }) => (
+              {cfg.gamePlanSections.map(({ key, label }) => (
                 <div key={key}>
                   <label className="text-gray-400 text-xs mb-1 block">{label} (one per line)</label>
                   <textarea rows={3} value={(form[key] || []).join("\n")} onChange={e => setForm({ ...form, [key]: e.target.value.split("\n").filter(Boolean) })}
