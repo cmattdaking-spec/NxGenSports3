@@ -148,7 +148,7 @@ function UserManagementContent() {
       coaching_role: u.coaching_role || "position_coach",
       assigned_positions: u.assigned_positions || [],
       assigned_phases: u.assigned_phases || [],
-      assigned_sports: u.assigned_sports || ["football"],
+      assigned_sports: u.assigned_sports || user?.assigned_sports || ["boys_football"],
     });
   };
 
