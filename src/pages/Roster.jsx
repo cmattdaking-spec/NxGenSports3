@@ -160,6 +160,7 @@ export default function Roster() {
               onEdit={openEdit}
               onDelete={remove}
               canEdit={canEdit}
+              canDelete={canDelete}
             />
           ))}
         </div>
