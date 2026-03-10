@@ -36,15 +36,12 @@ export default function PlayerHealth() {
   const [tab, setTab] = useState("health");
 
   const load = async () => {
-    const [allRecords, p, s, w] = await Promise.all([
+    const [r, p, s, w] = await Promise.all([
       base44.entities.PlayerHealth.list("-date"),
       base44.entities.Player.filter({ sport: activeSport }),
       base44.entities.PlayerStat.list("-week", 100),
       base44.entities.WorkoutPlan.filter({ sport: activeSport }, "-date", 60)
     ]);
-    // Filter health records to only players in the active sport
-    const sportPlayerIds = new Set(p.map(pl => pl.id));
-    const r = allRecords.filter(rec => sportPlayerIds.has(rec.player_id));
     setRecords(r); setPlayers(p); setStats(s); setWorkouts(w); setLoading(false);
     // Compute S&C load alerts
     const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
