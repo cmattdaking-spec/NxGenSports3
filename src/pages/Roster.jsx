@@ -4,14 +4,15 @@ import { Plus, Search, Users, Filter } from "lucide-react";
 import PlayerCard from "../components/roster/PlayerCard";
 import PlayerForm from "../components/roster/PlayerForm";
 import { useSport } from "@/components/SportContext";
-
-const POSITIONS = ["QB","RB","FB","WR","TE","LT","LG","C","RG","RT","DE","DT","NT","OLB","MLB","ILB","CB","SS","FS","K","P","LS"];
-const UNITS = ["offense","defense","special_teams"];
+import { getSportConfig } from "@/components/SportConfig";
 const YEARS = ["Freshman","Sophomore","Junior","Senior","Grad"];
 const CAN_EDIT = ["admin","head_coach","athletic_director","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 
 export default function Roster() {
   const { activeSport, canEditAll, user: ctxUser, sportFilter } = useSport();
+  const cfg = getSportConfig(activeSport);
+  const POSITIONS = Object.values(cfg.positions).flat().filter((v, i, a) => a.indexOf(v) === i);
+  const UNITS = cfg.units;
   const [players, setPlayers] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -52,7 +53,7 @@ export default function Roster() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ status: "active", unit: "offense", academic_eligible: true, levels: ["Varsity"], secondary_positions: [], sport: activeSport });
+    setForm({ status: "active", unit: cfg.units[0], academic_eligible: true, levels: ["Varsity"], secondary_positions: [], sport: activeSport });
     setShowForm(true);
   };
   const openEdit = (p) => { setEditing(p); setForm({ ...p }); setShowForm(true); };
@@ -114,12 +115,12 @@ export default function Roster() {
           <select value={filterUnit} onChange={e => setFilterUnit(e.target.value)}
             className="bg-[#1e1e1e] border border-gray-700 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[var(--color-primary,#f97316)]">
             <option value="all">All Units</option>
-            {UNITS.map(u => <option key={u} value={u}>{u.replace("_", " ")}</option>)}
+            {UNITS.map(u => <option key={u} value={u}>{cfg.unitLabels[u] || u.replace("_", " ")}</option>)}
           </select>
           <select value={filterPos} onChange={e => setFilterPos(e.target.value)}
             className="bg-[#1e1e1e] border border-gray-700 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[var(--color-primary,#f97316)]">
             <option value="all">All Positions</option>
-            {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+            {POSITIONS.map(p => <option key={p} value={p}>{cfg.positionLabels[p] || p}</option>)}
           </select>
           <select value={filterYear} onChange={e => setFilterYear(e.target.value)}
             className="bg-[#1e1e1e] border border-gray-700 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[var(--color-primary,#f97316)]">
@@ -174,6 +175,7 @@ export default function Roster() {
           editing={editing}
           onSave={save}
           onClose={() => setShowForm(false)}
+          activeSport={activeSport}
         />
       )}
     </div>
