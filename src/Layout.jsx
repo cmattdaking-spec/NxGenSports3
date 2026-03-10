@@ -136,7 +136,7 @@ export default function Layout({ children, currentPageName }) {
   useEffect(() => {
     base44.auth.me().then(u => {
       setUser(u);
-      const sports = u?.assigned_sports?.length ? u.assigned_sports : ["football"];
+      const sports = u?.assigned_sports?.length ? u.assigned_sports : ["boys_football"];
       setAssignedSports(sports);
       const uIsAD = u?.coaching_role === "athletic_director" || u?.role === "admin";
       const saved = uIsAD ? "nxgensports" : (u?.active_sport || sports[0]);

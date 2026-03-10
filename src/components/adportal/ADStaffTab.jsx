@@ -34,7 +34,7 @@ export default function ADStaffTab({ staff, onRefresh }) {
   }, []);
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
-  const [inviteForm, setInviteForm] = useState({ email: "", coaching_role: "position_coach", assigned_sports: ["football"] });
+  const [inviteForm, setInviteForm] = useState({ email: "", coaching_role: "position_coach", assigned_sports: ["boys_football"] });
   const [inviting, setInviting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -73,7 +73,7 @@ export default function ADStaffTab({ staff, onRefresh }) {
     });
     setInviting(false);
     setShowInvite(false);
-    setInviteForm({ email: "", coaching_role: "position_coach", assigned_sports: ["football"] });
+    setInviteForm({ email: "", coaching_role: "position_coach", assigned_sports: ["boys_football"] });
     onRefresh();
   };
 
