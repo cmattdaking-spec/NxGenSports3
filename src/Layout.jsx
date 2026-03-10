@@ -191,7 +191,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-        {filteredNav.map(({ label, page, icon: Icon }) => {
+        {(isAD && activeSport === "nxgensports" ? [] : filteredNav).map(({ label, page, icon: Icon }) => {
           const active = currentPageName === page;
           return (
             <Link key={page} to={createPageUrl(page)} onClick={() => setMobileOpen(false)}
