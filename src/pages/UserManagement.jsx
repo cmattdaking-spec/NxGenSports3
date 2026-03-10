@@ -65,14 +65,8 @@ function UserManagementContent() {
   const [savingReadiness, setSavingReadiness] = useState(false);
 
   const loadUsers = (currentUser) => {
-    base44.entities.User.list().then(list => {
-      const isSuperAdmin = currentUser?.role === "super_admin";
-      if (isSuperAdmin) {
-        setAllUsers(list.filter(m => m.role !== "super_admin"));
-      } else {
-        const myTeam = currentUser?.team_id;
-        setAllUsers(myTeam ? list.filter(m => m.role !== "super_admin" && m.team_id === myTeam) : []);
-      }
+    base44.functions.invoke("getTeamUsers").then(res => {
+      setAllUsers(res.data || []);
       setLoading(false);
     }).catch(() => setLoading(false));
   };
