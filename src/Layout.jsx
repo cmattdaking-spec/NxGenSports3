@@ -72,7 +72,9 @@ const SPORT_NAMES = {
   boys_boxing:        "NxRound",    girls_boxing:       "NxRound",
   boys_golf:          "NxHole",     girls_golf:         "NxHole",
   boys_tennis:        "NxServe",    girls_tennis:       "NxServe",
-
+  wrestling:          "NxMatch",    boys_wrestling:     "NxMatch",    girls_wrestling:    "NxMatch",
+  cross_country:      "NxRace",     boys_cross_country: "NxRace",     girls_cross_country:"NxRace",
+  track:              "NxRace",     boys_track:         "NxRace",     girls_track:        "NxRace",
   lacrosse:           "NxCage",     boys_lacrosse:      "NxCage",     girls_lacrosse:     "NxCage",
 };
 
@@ -86,7 +88,9 @@ const SPORT_LABELS = {
   boys_boxing:        "Boys Boxing",        girls_boxing:       "Girls Boxing",
   boys_golf:          "Boys Golf",          girls_golf:         "Girls Golf",
   boys_tennis:        "Boys Tennis",        girls_tennis:       "Girls Tennis",
-
+  wrestling:          "Wrestling",          boys_wrestling:     "Boys Wrestling",     girls_wrestling:    "Girls Wrestling",
+  cross_country:      "Cross Country",      boys_cross_country: "Boys Cross Country", girls_cross_country:"Girls Cross Country",
+  track:              "Track & Field",      boys_track:         "Boys Track & Field", girls_track:        "Girls Track & Field",
   lacrosse:           "Lacrosse",           boys_lacrosse:      "Boys Lacrosse",      girls_lacrosse:     "Girls Lacrosse",
 };
 
