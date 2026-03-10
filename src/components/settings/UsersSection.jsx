@@ -169,6 +169,9 @@ export default function UsersSection({ currentUser }) {
         </div>
       )}
 
+      {/* Pending invites */}
+      <PendingInvites teamId={myTeam} onRevoked={load} />
+
       {/* User list */}
       {loading ? (
         <div className="flex justify-center py-6">

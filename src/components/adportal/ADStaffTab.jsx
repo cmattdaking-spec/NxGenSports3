@@ -118,6 +118,9 @@ export default function ADStaffTab({ staff, onRefresh }) {
         </div>
       )}
 
+      {/* Pending Invites */}
+      <PendingInvitesSection teamId={teamId} onRevoked={onRefresh} />
+
       {/* Staff List */}
       <div className="bg-[#141414] border border-gray-800 rounded-xl divide-y divide-gray-800">
         {staff.length === 0 && <p className="text-gray-500 text-sm px-5 py-6 text-center">No staff members found.</p>}
