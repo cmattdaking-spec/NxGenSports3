@@ -5,7 +5,9 @@ import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import {
   Users, Activity, Calendar, BarChart2, GraduationCap,
-  Shield, ChevronRight, Globe, Award, TrendingUp
+  Shield, ChevronRight, Globe, Award, TrendingUp,
+  Home, MessageSquare, Clapperboard, BookOpen, Dumbbell,
+  Star, TrendingUp as Reports, UserCog
 } from "lucide-react";
 
 const SPORT_LABELS = {
