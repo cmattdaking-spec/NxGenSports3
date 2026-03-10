@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import { base44 } from "@/api/base44Client";
-import { Globe, Users, Activity, Calendar, Shield, GraduationCap, BarChart2 } from "lucide-react";
+import { Globe, Users, Activity, Calendar, Shield } from "lucide-react";
 import ADStaffTab from "@/components/adportal/ADStaffTab";
 import ADPlayersTab from "@/components/adportal/ADPlayersTab";
 import ADScheduleTab from "@/components/adportal/ADScheduleTab";
@@ -10,9 +10,21 @@ import ADHealthTab from "@/components/adportal/ADHealthTab";
 const NXGEN_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/29e077944_generated_image.png";
 
 const SPORT_LABELS = {
+  boys_football:"Boys Football", girls_football:"Girls Football", girls_flag_football:"Girls Flag Football",
+  boys_basketball:"Boys Basketball", girls_basketball:"Girls Basketball",
+  boys_baseball:"Boys Baseball", girls_softball:"Girls Softball",
+  boys_soccer:"Boys Soccer", girls_soccer:"Girls Soccer",
+  girls_volleyball:"Girls Volleyball",
+  boys_boxing:"Boys Boxing", girls_boxing:"Girls Boxing",
+  boys_golf:"Boys Golf", girls_golf:"Girls Golf",
+  boys_tennis:"Boys Tennis", girls_tennis:"Girls Tennis",
+  boys_wrestling:"Boys Wrestling", girls_wrestling:"Girls Wrestling",
+  boys_cross_country:"Boys Cross Country", girls_cross_country:"Girls Cross Country",
+  boys_track:"Boys Track & Field", girls_track:"Girls Track & Field",
+  boys_lacrosse:"Boys Lacrosse", girls_lacrosse:"Girls Lacrosse",
+  // legacy fallbacks
   football:"Football", basketball:"Basketball", baseball:"Baseball", softball:"Softball",
-  soccer:"Soccer", volleyball:"Volleyball", boxing:"Boxing", golf:"Golf",
-  tennis:"Tennis", wrestling:"Wrestling", cross_country:"Cross Country", track:"Track", lacrosse:"Lacrosse"
+  soccer:"Soccer", volleyball:"Volleyball",
 };
 
 const TABS = [
@@ -67,37 +79,37 @@ function ADPortalContent() {
   );
 
   return (
-    <div className="bg-[#0a0a0a] min-h-full">
+    <div className="bg-[#0a0a0a] min-h-full flex flex-col">
       {/* Header */}
-      <div className="relative overflow-hidden border-b border-gray-800">
+      <div className="relative overflow-hidden border-b border-gray-800 flex-shrink-0">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full opacity-10 blur-3xl bg-cyan-500" />
         </div>
-        <div className="relative px-4 md:px-8 pt-6 pb-5">
-          <div className="flex items-center gap-4 mb-5">
+        <div className="relative px-4 md:px-6 pt-5 pb-4">
+          <div className="flex items-center gap-3 mb-4">
             <div className="relative flex-shrink-0">
               <div className="absolute inset-0 rounded-2xl blur-lg opacity-30 bg-cyan-500" />
-              <img src={NXGEN_LOGO} alt="NxGenSports" className="relative w-12 h-12 rounded-2xl object-cover shadow-2xl" />
+              <img src={NXGEN_LOGO} alt="NxGenSports" className="relative w-10 h-10 rounded-2xl object-cover shadow-2xl" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
+              <h1 className="text-xl md:text-2xl font-black tracking-tight text-white">
                 NxGen<span className="text-cyan-400">Sports</span>
               </h1>
-              <p className="text-gray-400 text-sm">
-                Athletic Director Portal · <span className="text-white font-semibold">{user?.school_name || user?.full_name}</span>
+              <p className="text-gray-400 text-xs">
+                AD Portal · <span className="text-white font-semibold">{user?.school_name || user?.full_name}</span>
               </p>
             </div>
           </div>
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-2">
             {[
-              { label: "Total Athletes", value: players.length, color: "text-cyan-400" },
-              { label: "Active Programs", value: allSports.length, color: "text-blue-400" },
-              { label: "Coaching Staff", value: staff.length, color: "text-purple-400" },
+              { label: "Athletes", value: players.length, color: "text-cyan-400" },
+              { label: "Programs", value: allSports.length, color: "text-blue-400" },
+              { label: "Staff", value: staff.length, color: "text-purple-400" },
               { label: "Health Issues", value: healthIssues, color: healthIssues > 0 ? "text-red-400" : "text-green-400" },
             ].map(({ label, value, color }) => (
-              <div key={label} className="bg-[#141414] border border-gray-800 rounded-xl p-3 md:p-4">
-                <p className={`text-2xl font-black ${color}`}>{value}</p>
+              <div key={label} className="bg-[#141414] border border-gray-800 rounded-xl p-2.5 text-center">
+                <p className={`text-xl font-black ${color}`}>{value}</p>
                 <p className="text-gray-500 text-xs mt-0.5">{label}</p>
               </div>
             ))}
@@ -105,83 +117,85 @@ function ADPortalContent() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-800 px-4 md:px-8 sticky top-0 bg-[#0a0a0a] z-10">
-        <div className="flex gap-1 overflow-x-auto">
+      {/* Body: left nav + content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Nav */}
+        <aside className="w-44 flex-shrink-0 border-r border-gray-800 bg-[#0d0d0d] py-3 flex flex-col gap-1 overflow-y-auto">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => setActiveTab(id)}
-              className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all ${
-                activeTab === id ? "border-cyan-400 text-cyan-400" : "border-transparent text-gray-500 hover:text-gray-300"
+              className={`flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-left transition-all mx-2 rounded-lg ${
+                activeTab === id
+                  ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                  : "text-gray-500 hover:text-gray-200 hover:bg-white/5"
               }`}>
-              <Icon className="w-4 h-4" /> {label}
+              <Icon className="w-4 h-4 flex-shrink-0" /> {label}
             </button>
           ))}
-        </div>
-      </div>
+        </aside>
 
-      <div className="p-4 md:p-6">
-
-        {/* OVERVIEW */}
-        {activeTab === "overview" && (
-          <div className="space-y-4">
-            <h2 className="text-white font-bold text-lg">Programs Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {allSports.map(sport => {
-                const sportPlayers = playersBySport[sport] || [];
-                const eligible = sportPlayers.filter(p => p.academic_eligible !== false).length;
-                const healthIssues = healthRecords.filter(h => {
-                  const p = players.find(pl => pl.id === h.player_id);
-                  return p?.sport === sport && h.availability !== "full";
-                }).length;
-                const upcoming = opponents.filter(o => o.sport === sport && new Date(o.game_date) >= new Date()).length;
-                return (
-                  <div key={sport} className="bg-[#141414] border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-all cursor-pointer"
-                    onClick={() => setActiveTab("players")}>
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-white font-bold">{SPORT_LABELS[sport] || sport}</h3>
-                      <span className="text-xs text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 px-2 py-0.5 rounded-full">
-                        {sportPlayers.length} athletes
-                      </span>
-                    </div>
-                    <div className="space-y-1.5 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Academic Eligible</span>
-                        <span className={eligible === sportPlayers.length ? "text-green-400" : "text-yellow-400"}>{eligible}/{sportPlayers.length}</span>
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          {/* OVERVIEW */}
+          {activeTab === "overview" && (
+            <div className="space-y-4">
+              <h2 className="text-white font-bold text-lg">Programs Overview</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {allSports.map(sport => {
+                  const sportPlayers = playersBySport[sport] || [];
+                  const eligible = sportPlayers.filter(p => p.academic_eligible !== false).length;
+                  const sportHealthIssues = healthRecords.filter(h => {
+                    const p = players.find(pl => pl.id === h.player_id);
+                    return p?.sport === sport && h.availability !== "full";
+                  }).length;
+                  const upcoming = opponents.filter(o => o.sport === sport && new Date(o.game_date) >= new Date()).length;
+                  return (
+                    <div key={sport} className="bg-[#141414] border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-all cursor-pointer"
+                      onClick={() => setActiveTab("players")}>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-white font-bold">{SPORT_LABELS[sport] || sport}</h3>
+                        <span className="text-xs text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 px-2 py-0.5 rounded-full">
+                          {sportPlayers.length} athletes
+                        </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Upcoming Games</span>
-                        <span className="text-gray-300">{upcoming}</span>
-                      </div>
-                      {healthIssues > 0 && (
+                      <div className="space-y-1.5 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Health Issues</span>
-                          <span className="text-red-400">{healthIssues}</span>
+                          <span className="text-gray-500">Academic Eligible</span>
+                          <span className={eligible === sportPlayers.length ? "text-green-400" : "text-yellow-400"}>{eligible}/{sportPlayers.length}</span>
                         </div>
-                      )}
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Upcoming Games</span>
+                          <span className="text-gray-300">{upcoming}</span>
+                        </div>
+                        {sportHealthIssues > 0 && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Health Issues</span>
+                            <span className="text-red-400">{sportHealthIssues}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {activeTab === "staff" && (
-          <ADStaffTab staff={staff} onRefresh={loadData} />
-        )}
+          {activeTab === "staff" && (
+            <ADStaffTab staff={staff} onRefresh={loadData} />
+          )}
 
-        {activeTab === "players" && (
-          <ADPlayersTab players={players} documents={documents} onRefresh={loadData} />
-        )}
+          {activeTab === "players" && (
+            <ADPlayersTab players={players} documents={documents} onRefresh={loadData} />
+          )}
 
-        {activeTab === "schedule" && (
-          <ADScheduleTab opponents={opponents} practicePlans={practicePlans} onRefresh={loadData} />
-        )}
+          {activeTab === "schedule" && (
+            <ADScheduleTab opponents={opponents} practicePlans={practicePlans} onRefresh={loadData} />
+          )}
 
-        {activeTab === "health" && (
-          <ADHealthTab healthRecords={healthRecords} players={players} onRefresh={loadData} />
-        )}
-
+          {activeTab === "health" && (
+            <ADHealthTab healthRecords={healthRecords} players={players} onRefresh={loadData} />
+          )}
+        </main>
       </div>
     </div>
   );
