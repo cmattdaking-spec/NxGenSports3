@@ -17,7 +17,6 @@ const inp = "w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rou
 
 export default function PlayerForm({ form, setForm, editing, onSave, onClose, activeSport }) {
   const cfg = getSportConfig(activeSport);
-  const isBasketball = cfg.sportFamily === "basketball";
 
   // Flatten all positions for this sport
   const POSITIONS = Object.values(cfg.positions).flat().filter((v, i, a) => a.indexOf(v) === i);

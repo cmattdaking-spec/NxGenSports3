@@ -107,13 +107,14 @@ export default function PlayerHealth() {
       return `${p.first_name} ${p.last_name} (${p.position}, ${p.year || "Unknown year"}, Weight: ${p.weight || "?"}lbs) — Status: ${p.status}, Availability: ${health?.availability || "unknown"}, Current Injury: ${health?.injury_type || "none"}, Avg Grade: ${avgGrade}, Avg Snaps: ${avgSnaps}, Prior injuries: ${records.filter(r => r.player_id === p.id && r.injury_type).length}`;
     }).join("\n");
 
+    const sportName = activeSport.replace(/_/g, " ");
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an elite sports medicine and performance AI for NxDown football. Analyze the following player data and generate a comprehensive injury risk assessment and load management report.
+      prompt: `You are an elite sports medicine and performance AI for ${sportName}. Analyze the following player data and generate a comprehensive injury risk assessment and load management report. Consider sport-specific common injuries and demands for ${sportName}.
 
 Players:
 ${playerContext}
 
-Provide a detailed risk analysis for each at-risk player, load management recommendations, and preventative protocols.`,
+Provide a detailed risk analysis for each at-risk player, load management recommendations, and sport-specific preventative protocols.`,
       response_json_schema: {
         type: "object",
         properties: {

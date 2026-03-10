@@ -1,14 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { getSportConfig } from "@/components/SportConfig";
 import { UserPlus, X, Building2, AlertTriangle } from "lucide-react";
 
-const ALL_POSITIONS = ["QB","RB","FB","WR","TE","OL","DL","LB","CB","S","K","P","LS","DB","DE","DT","NT","OLB","MLB","ILB","SS","FS","LT","LG","C","RG","RT"];
-const PHASES = [
-  { value: "offense", label: "Offense" },
-  { value: "defense", label: "Defense" },
-  { value: "special_teams", label: "Special Teams" },
-];
-const STAFF_ROLES = [
+const DEFAULT_STAFF_ROLES = [
   { value: "head_coach", label: "Head Coach" },
   { value: "associate_head_coach", label: "Associate Head Coach" },
   { value: "offensive_coordinator", label: "Offensive Coordinator" },
