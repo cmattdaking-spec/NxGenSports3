@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { useSportConfig } from "@/components/SportConfig";
+import { SportContext } from "@/components/SportContext";
 import { base44 } from "@/api/base44Client";
 import { Plus, Edit, Trash2, X, Zap, ClipboardList, ChevronDown, ChevronUp, Clock, Brain, Sparkles } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";

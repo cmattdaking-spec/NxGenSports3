@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { useSportConfig } from "@/components/SportConfig";
+import { SportContext } from "@/components/SportContext";
 import { base44 } from "@/api/base44Client";
 import {
   Target, Plus, Edit, Trash2, X, ChevronDown, ChevronUp,
