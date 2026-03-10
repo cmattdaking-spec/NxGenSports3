@@ -423,35 +423,34 @@ function ADPortalContent() {
 
         {/* STAFF */}
         {activeTab === "staff" && (
-          <div className="space-y-6">
-            <h2 className="text-white font-bold text-lg">All Coaching Staff</h2>
-            {allSports.map(sport => {
-              const sportStaff = staffBySport[sport] || [];
-              if (sportStaff.length === 0) return null;
-              return (
-                <div key={sport}>
-                  <h3 className="text-gray-400 text-sm font-semibold uppercase tracking-wider mb-2 capitalize">{SPORT_LABELS[sport] || sport}</h3>
-                  <div className="bg-[#141414] border border-gray-800 rounded-xl divide-y divide-gray-800">
-                    {sportStaff.map(s => (
-                      <div key={s.id} className="flex items-center justify-between px-5 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-sm font-bold">
-                            {s.full_name?.[0] || "C"}
-                          </div>
-                          <div>
-                            <p className="text-white text-sm font-medium">{s.full_name}</p>
-                            <p className="text-gray-500 text-xs">{s.email}</p>
-                          </div>
-                        </div>
-                        <span className="text-xs text-gray-400 capitalize bg-gray-800 px-2 py-1 rounded-lg">
-                          {s.coaching_role?.replace(/_/g, " ")}
-                        </span>
-                      </div>
+          <div className="space-y-4">
+            <h2 className="text-white font-bold text-lg">All Staff Members ({staff.length})</h2>
+            <div className="bg-[#141414] border border-gray-800 rounded-xl divide-y divide-gray-800">
+              {staff.length === 0 && (
+                <p className="text-gray-500 text-sm px-5 py-6 text-center">No staff members found.</p>
+              )}
+              {staff.map(s => (
+                <div key={s.id} className="flex items-center justify-between px-5 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-sm font-bold flex-shrink-0">
+                      {s.full_name?.[0] || "C"}
+                    </div>
+                    <div>
+                      <p className="text-white text-sm font-medium">{s.full_name || s.email}</p>
+                      <p className="text-gray-500 text-xs">{s.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                    {(s.assigned_sports || []).map(sp => (
+                      <span key={sp} className="text-xs text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 px-2 py-0.5 rounded-full capitalize">{SPORT_LABELS[sp] || sp}</span>
                     ))}
+                    <span className="text-xs text-gray-400 capitalize bg-gray-800 px-2 py-1 rounded-lg">
+                      {s.coaching_role?.replace(/_/g, " ") || s.role}
+                    </span>
                   </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         )}
 

@@ -107,7 +107,7 @@ export default function Layout({ children, currentPageName }) {
       const sports = u?.assigned_sports?.length ? u.assigned_sports : ["football"];
       setAssignedSports(sports);
       const uIsAD = u?.coaching_role === "athletic_director" || u?.role === "admin";
-      const saved = u?.active_sport || (uIsAD ? "nxgensports" : sports[0]);
+      const saved = uIsAD ? "nxgensports" : (u?.active_sport || sports[0]);
       setActiveSport(saved);
     }).catch(() => {});
     base44.entities.AppSettings.list().then((list) => {
