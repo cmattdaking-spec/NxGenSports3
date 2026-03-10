@@ -44,7 +44,7 @@ export default function ADStaffTab({ staff, onRefresh }) {
   };
 
   const removeUser = async (id) => {
-    await base44.functions.invoke("updateTeamUser", { userId: id, updates: { team_id: null, coaching_role: null } });
+    await base44.functions.invoke("updateTeamUser", { userId: id, data: { team_id: null, coaching_role: null } });
     setConfirmDelete(null);
     onRefresh();
   };
