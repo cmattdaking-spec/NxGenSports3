@@ -150,7 +150,7 @@ export default function Playbook() {
         <select value={filterUnit} onChange={e => setFilterUnit(e.target.value)}
           className="bg-[#141414] border border-gray-800 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none">
           <option value="all">All Units</option>
-          {UNITS.map(u => <option key={u} value={u}>{u.replace("_"," ")}</option>)}
+          {UNITS.map(u => <option key={u} value={u}>{cfg.unitLabels[u] || u.replace("_"," ")}</option>)}
         </select>
         <select value={filterCat} onChange={e => setFilterCat(e.target.value)}
           className="bg-[#141414] border border-gray-800 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none">
