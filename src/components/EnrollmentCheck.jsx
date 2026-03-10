@@ -34,6 +34,11 @@ export default function EnrollmentCheck({ children }) {
         if (invites.length > 0) {
           const invite = invites[0];
 
+          // For school_setup invites, subscribed_sports governs what the school can access
+          const effectiveSports = invite.invite_type === "school_setup"
+            ? (invite.subscribed_sports?.length ? invite.subscribed_sports : invite.assigned_sports || ["football"])
+            : (invite.assigned_sports?.length ? invite.assigned_sports : ["football"]);
+
           // Auto-assign team, role, positions, sports, and school code
           await base44.auth.updateMe({
             team_id: invite.team_id,
@@ -42,7 +47,12 @@ export default function EnrollmentCheck({ children }) {
             coaching_role: invite.coaching_role,
             assigned_positions: invite.assigned_positions || [],
             assigned_phases: invite.assigned_phases || [],
-            assigned_sports: invite.assigned_sports?.length ? invite.assigned_sports : ["football"],
+            assigned_sports: effectiveSports,
+            ...(invite.invite_type === "school_setup" && {
+              mascot: invite.mascot || null,
+              location_city: invite.location_city || null,
+              location_state: invite.location_state || null,
+            }),
           });
 
           // Mark invite as accepted
