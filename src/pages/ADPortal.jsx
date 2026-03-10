@@ -50,7 +50,7 @@ function ADPortalContent() {
     setHealthRecords(h);
     setOpponents(o);
     setPracticePlans(pp);
-    setStaff((s || []).filter(m => m.coaching_role || m.role === "admin"));
+    setStaff((s || []).filter(m => m.team_id === u?.team_id && m.role !== "super_admin"));
     setLoading(false);
   }, []);
 
