@@ -326,14 +326,14 @@ Generate a complete, structured practice plan with specific drills, focus areas,
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Zap className="w-5 h-5" style={{ color: "var(--color-primary,#f97316)" }} />
-            <span className="text-white font-black text-lg">Nx<span style={{ color: "var(--color-primary,#f97316)" }}>Prep</span></span>
+            <span className="text-white font-black text-lg">Nx<span style={{ color: "var(--color-primary,#f97316)" }}>Ready</span></span>
           </div>
         </div>
         <div className="flex gap-1 bg-[#1a1a1a] rounded-lg p-0.5 overflow-x-auto">
           {[
             { id: "playbook", label: "Playbook", icon: BookOpen },
             { id: "gameplan", label: "Game Plan", icon: Target },
-            { id: "practice", label: "Practice", icon: ClipboardList }
+            { id: "practice", label: "Practice Plan", icon: ClipboardList }
           ].map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => setActiveTab(id)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap ${activeTab === id ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
