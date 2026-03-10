@@ -14,9 +14,9 @@ const STATUS_CFG = {
   final: { label: "Final", color: "bg-green-500/20 text-green-400 border-green-500/30" },
 };
 
-const UNITS = ["offense", "defense", "special_teams"];
-
 export default function GamePlan() {
+  const { activeSport } = useContext(SportContext);
+  const cfg = useSportConfig(activeSport);
   const [plans, setPlans] = useState([]);
   const [opponents, setOpponents] = useState([]);
   const [players, setPlayers] = useState([]);
@@ -48,9 +48,11 @@ export default function GamePlan() {
   const EDIT_ROLES = ["head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
   const canEdit = user && (user.role === "admin" || EDIT_ROLES.includes(user.coaching_role) || (user.is_associate_head_coach));
 
+  const UNITS = cfg.units;
+
   const openAdd = () => {
     setEditing(null);
-    setForm({ unit: "offense", status: "draft", scripted_plays: [], red_zone_plays: [], third_down_plays: [], two_minute_plays: [], opening_script: [] });
+    setForm({ unit: cfg.units[0], status: "draft", scripted_plays: [], red_zone_plays: [], third_down_plays: [], two_minute_plays: [], opening_script: [] });
     setShowForm(true);
   };
 
@@ -73,13 +75,9 @@ export default function GamePlan() {
 
   const toggleExpand = (id) => setExpanded(e => ({ ...e, [id]: !e[id] }));
 
-  const playsByUnit = (plan) => [
-    { label: "Opening Script", items: plan.opening_script, color: "text-blue-400" },
-    { label: "Scripted Plays", items: plan.scripted_plays, color: "text-orange-400" },
-    { label: "Red Zone", items: plan.red_zone_plays, color: "text-red-400" },
-    { label: "3rd Down", items: plan.third_down_plays, color: "text-yellow-400" },
-    { label: "2-Minute", items: plan.two_minute_plays, color: "text-purple-400" },
-  ].filter(s => s.items?.length > 0);
+  const playsByUnit = (plan) => cfg.gamePlanSections
+    .map(sec => ({ label: sec.label, items: plan[sec.key], color: sec.color }))
+    .filter(s => s.items?.length > 0);
 
   if (loading) return <LoadingScreen />;
 
