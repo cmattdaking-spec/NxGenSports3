@@ -74,12 +74,12 @@ export default function PlayerForm({ form, setForm, editing, onSave, onClose, ac
                 <I label="Position" required>
                   <select value={form.position || ""} onChange={e => setForm({...form, position: e.target.value})} className={inp}>
                     <option value="">Select...</option>
-                    {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                    {POSITIONS.map(p => <option key={p} value={p}>{posLabel(p)}</option>)}
                   </select>
                 </I>
                 <I label="Unit" required>
-                  <select value={form.unit || ""} onChange={e => setForm({...form, unit: e.target.value})} className={inp}>
-                    {UNITS.map(u => <option key={u} value={u}>{u.replace("_"," ")}</option>)}
+                  <select value={form.unit || UNITS[0]} onChange={e => setForm({...form, unit: e.target.value})} className={inp}>
+                    {UNITS.map(u => <option key={u} value={u}>{cfg.unitLabels[u] || u.replace("_"," ")}</option>)}
                   </select>
                 </I>
                 <I label="Height"><input value={form.height || ""} onChange={e => setForm({...form, height: e.target.value})} placeholder='6&apos;2"' className={inp} /></I>
@@ -112,7 +112,7 @@ export default function PlayerForm({ form, setForm, editing, onSave, onClose, ac
                     <button key={pos} type="button" onClick={() => toggleArr("secondary_positions", pos)}
                       className={`text-xs px-2 py-1 rounded-lg border transition-all ${(form.secondary_positions||[]).includes(pos) ? "text-white" : "bg-[#1a1a1a] border-gray-700 text-gray-400"}`}
                       style={(form.secondary_positions||[]).includes(pos) ? { backgroundColor: "var(--color-primary,#f97316)", borderColor: "var(--color-primary,#f97316)" } : {}}>
-                      {pos}
+                      {posLabel(pos)}
                     </button>
                   ))}
                 </div>
@@ -142,16 +142,29 @@ export default function PlayerForm({ form, setForm, editing, onSave, onClose, ac
           {/* Athletic Metrics */}
           {tab === "athletic" && (
             <div className="grid grid-cols-2 gap-3">
-              <I label="40-Yard Dash (sec)"><input type="number" step="0.01" value={form.forty_time || ""} onChange={e => setForm({...form, forty_time: +e.target.value})} placeholder="4.50" className={inp} /></I>
-              <I label="Bench Press Reps (225lbs)"><input type="number" value={form.bench_reps || ""} onChange={e => setForm({...form, bench_reps: +e.target.value})} className={inp} /></I>
-              <I label="Vertical Jump (in)"><input type="number" step="0.5" value={form.vertical_jump || ""} onChange={e => setForm({...form, vertical_jump: +e.target.value})} placeholder="30" className={inp} /></I>
-              <I label="Broad Jump (in)"><input type="number" step="0.5" value={form.broad_jump || ""} onChange={e => setForm({...form, broad_jump: +e.target.value})} className={inp} /></I>
-              <I label="3-Cone Drill (sec)"><input type="number" step="0.01" value={form.three_cone || ""} onChange={e => setForm({...form, three_cone: +e.target.value})} placeholder="6.90" className={inp} /></I>
-              <I label="20-Yd Shuttle (sec)"><input type="number" step="0.01" value={form.shuttle_time || ""} onChange={e => setForm({...form, shuttle_time: +e.target.value})} placeholder="4.20" className={inp} /></I>
-              <I label="Speed Rating (0-100)"><input type="number" min="0" max="100" value={form.speed || ""} onChange={e => setForm({...form, speed: +e.target.value})} className={inp} /></I>
-              <I label="Strength Rating (0-100)"><input type="number" min="0" max="100" value={form.strength || ""} onChange={e => setForm({...form, strength: +e.target.value})} className={inp} /></I>
-              <I label="Agility Rating (0-100)"><input type="number" min="0" max="100" value={form.agility || ""} onChange={e => setForm({...form, agility: +e.target.value})} className={inp} /></I>
-              <I label="Football IQ (0-100)"><input type="number" min="0" max="100" value={form.football_iq || ""} onChange={e => setForm({...form, football_iq: +e.target.value})} className={inp} /></I>
+              {isBasketball ? (<>
+                <I label="Height"><input value={form.height || ""} onChange={e => setForm({...form, height: e.target.value})} placeholder='6\'4"' className={inp} /></I>
+                <I label="Weight (lbs)"><input type="number" value={form.weight || ""} onChange={e => setForm({...form, weight: +e.target.value})} className={inp} /></I>
+                <I label="Wingspan (in)"><input type="number" step="0.5" value={form.broad_jump || ""} onChange={e => setForm({...form, broad_jump: +e.target.value})} placeholder="79" className={inp} /></I>
+                <I label="Vertical Jump (in)"><input type="number" step="0.5" value={form.vertical_jump || ""} onChange={e => setForm({...form, vertical_jump: +e.target.value})} placeholder="34" className={inp} /></I>
+                <I label="Lane Agility (sec)"><input type="number" step="0.01" value={form.three_cone || ""} onChange={e => setForm({...form, three_cone: +e.target.value})} placeholder="11.0" className={inp} /></I>
+                <I label="3/4 Court Sprint (sec)"><input type="number" step="0.01" value={form.forty_time || ""} onChange={e => setForm({...form, forty_time: +e.target.value})} placeholder="3.5" className={inp} /></I>
+                <I label="Speed Rating (0-100)"><input type="number" min="0" max="100" value={form.speed || ""} onChange={e => setForm({...form, speed: +e.target.value})} className={inp} /></I>
+                <I label="Strength Rating (0-100)"><input type="number" min="0" max="100" value={form.strength || ""} onChange={e => setForm({...form, strength: +e.target.value})} className={inp} /></I>
+                <I label="Agility Rating (0-100)"><input type="number" min="0" max="100" value={form.agility || ""} onChange={e => setForm({...form, agility: +e.target.value})} className={inp} /></I>
+                <I label="Basketball IQ (0-100)"><input type="number" min="0" max="100" value={form.football_iq || ""} onChange={e => setForm({...form, football_iq: +e.target.value})} className={inp} /></I>
+              </>) : (<>
+                <I label="40-Yard Dash (sec)"><input type="number" step="0.01" value={form.forty_time || ""} onChange={e => setForm({...form, forty_time: +e.target.value})} placeholder="4.50" className={inp} /></I>
+                <I label="Bench Press Reps (225lbs)"><input type="number" value={form.bench_reps || ""} onChange={e => setForm({...form, bench_reps: +e.target.value})} className={inp} /></I>
+                <I label="Vertical Jump (in)"><input type="number" step="0.5" value={form.vertical_jump || ""} onChange={e => setForm({...form, vertical_jump: +e.target.value})} placeholder="30" className={inp} /></I>
+                <I label="Broad Jump (in)"><input type="number" step="0.5" value={form.broad_jump || ""} onChange={e => setForm({...form, broad_jump: +e.target.value})} className={inp} /></I>
+                <I label="3-Cone Drill (sec)"><input type="number" step="0.01" value={form.three_cone || ""} onChange={e => setForm({...form, three_cone: +e.target.value})} placeholder="6.90" className={inp} /></I>
+                <I label="20-Yd Shuttle (sec)"><input type="number" step="0.01" value={form.shuttle_time || ""} onChange={e => setForm({...form, shuttle_time: +e.target.value})} placeholder="4.20" className={inp} /></I>
+                <I label="Speed Rating (0-100)"><input type="number" min="0" max="100" value={form.speed || ""} onChange={e => setForm({...form, speed: +e.target.value})} className={inp} /></I>
+                <I label="Strength Rating (0-100)"><input type="number" min="0" max="100" value={form.strength || ""} onChange={e => setForm({...form, strength: +e.target.value})} className={inp} /></I>
+                <I label="Agility Rating (0-100)"><input type="number" min="0" max="100" value={form.agility || ""} onChange={e => setForm({...form, agility: +e.target.value})} className={inp} /></I>
+                <I label="Football IQ (0-100)"><input type="number" min="0" max="100" value={form.football_iq || ""} onChange={e => setForm({...form, football_iq: +e.target.value})} className={inp} /></I>
+              </>)}
             </div>
           )}
 
