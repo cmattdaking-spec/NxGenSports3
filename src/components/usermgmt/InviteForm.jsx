@@ -56,7 +56,8 @@ export default function InviteForm({ user, onClose, onInvited }) {
         invite_type: inviteType,
         poc_name: form.full_name.trim(),
       });
-      await base44.users.inviteUser(form.email.trim(), "user");
+      const platformRole = ["head_coach", "athletic_director"].includes(form.coaching_role) ? "admin" : "user";
+      await base44.users.inviteUser(form.email.trim(), platformRole);
       setMsg({ text: `Invitation sent to ${form.email}`, type: "success" });
       onInvited?.();
       setTimeout(() => { setMsg({ text: "", type: "" }); onClose(); }, 2500);
