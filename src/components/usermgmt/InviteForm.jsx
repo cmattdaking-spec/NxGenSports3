@@ -42,22 +42,19 @@ export default function InviteForm({ user, onClose, onInvited }) {
     setSubmitting(true);
     setMsg({ text: "", type: "" });
     try {
-      await base44.entities.Invite.create({
+      const response = await base44.functions.invoke("sendInvite", {
         email: form.email.trim(),
         team_id: user?.team_id,
         school_name: user?.school_name,
         school_code: user?.school_code,
-        coaching_role: inviteType === "player" ? "player" : form.coaching_role,
+        coaching_role: form.coaching_role,
         assigned_positions: form.positions,
         assigned_phases: form.phases,
         assigned_sports: form.sports,
-        status: "pending",
-        invited_by: user?.email,
         invite_type: inviteType,
         poc_name: form.full_name.trim(),
       });
-      const platformRole = ["head_coach", "athletic_director"].includes(form.coaching_role) ? "admin" : "user";
-      await base44.users.inviteUser(form.email.trim(), platformRole);
+      if (response.data?.error) throw new Error(response.data.error);
       setMsg({ text: `Invitation sent to ${form.email}`, type: "success" });
       onInvited?.();
       setTimeout(() => { setMsg({ text: "", type: "" }); onClose(); }, 2500);
