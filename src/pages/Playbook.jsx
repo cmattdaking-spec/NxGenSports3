@@ -64,7 +64,7 @@ export default function Playbook() {
     return match && matchUnit && matchCat;
   });
 
-  const openAdd = () => { setEditing(null); setForm({ unit: "offense", category: "run", is_private: false }); setShowForm(true); };
+  const openAdd = () => { setEditing(null); setForm({ unit: cfg.units[0], category: cfg.playCategories[0], is_private: false }); setShowForm(true); };
   const openEdit = (p) => { setEditing(p); setForm({...p}); setShowForm(true); };
 
   const save = async () => {
@@ -279,14 +279,14 @@ export default function Playbook() {
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Unit *</label>
-                  <select value={form.unit || "offense"} onChange={e => setForm({...form, unit: e.target.value})}
+                  <select value={form.unit || UNITS[0]} onChange={e => setForm({...form, unit: e.target.value})}
                     className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500">
-                    {UNITS.map(u => <option key={u} value={u}>{u.replace("_"," ")}</option>)}
+                    {UNITS.map(u => <option key={u} value={u}>{cfg.unitLabels[u] || u.replace("_"," ")}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Category *</label>
-                  <select value={form.category || "run"} onChange={e => setForm({...form, category: e.target.value})}
+                  <select value={form.category || CATEGORIES[0]} onChange={e => setForm({...form, category: e.target.value})}
                     className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500">
                     {CATEGORIES.map(c => <option key={c} value={c}>{c.replace("_"," ")}</option>)}
                   </select>
