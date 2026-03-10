@@ -52,8 +52,8 @@ export default function PlayerHealth() {
   };
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); load(); }, [activeSport]);
 
-  const canEdit = user?.role !== "athletic_director";
-  const canSeeLoadAlerts = user && LOAD_ALERT_ROLES.includes(user.role);
+  const canEdit = user && user.coaching_role !== "athletic_director" && user.role !== "athletic_director";
+  const canSeeLoadAlerts = user && (LOAD_ALERT_ROLES.includes(user.coaching_role) || user.role === "admin");
 
   // Granular permission gate — trainers + HC/AD always get access; others need explicit grant
   const ALWAYS_MEDICAL = ["head_coach","associate_head_coach","athletic_director","trainer","strength_conditioning_coordinator"];

@@ -43,7 +43,8 @@ export default function GamePlan() {
 
   useEffect(() => { load(); }, []);
 
-  const canEdit = user && ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","position_coach"].includes(user.role);
+  const EDIT_ROLES = ["head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
+  const canEdit = user && (user.role === "admin" || EDIT_ROLES.includes(user.coaching_role) || (user.is_associate_head_coach));
 
   const openAdd = () => {
     setEditing(null);

@@ -8,7 +8,7 @@ import { useSport } from "@/components/SportContext";
 const POSITIONS = ["QB","RB","FB","WR","TE","LT","LG","C","RG","RT","DE","DT","NT","OLB","MLB","ILB","CB","SS","FS","K","P","LS"];
 const UNITS = ["offense","defense","special_teams"];
 const YEARS = ["Freshman","Sophomore","Junior","Senior","Grad"];
-const CAN_EDIT = ["admin","head_coach","athletic_director"];
+const CAN_EDIT = ["admin","head_coach","athletic_director","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 
 export default function Roster() {
   const { activeSport, canEditAll, user: ctxUser, sportFilter } = useSport();
@@ -33,7 +33,10 @@ export default function Roster() {
   }, [activeSport]);
 
   const myRole = user?.coaching_role || user?.role;
-  const canEdit = canEditAll || CAN_EDIT.includes(myRole) || CAN_EDIT.includes(user?.role);
+  const isHeadCoach = user?.coaching_role === "head_coach" || user?.role === "admin";
+  const canEdit = isHeadCoach || canEditAll || CAN_EDIT.includes(myRole) || CAN_EDIT.includes(user?.role);
+  // Only head coach and admin can delete players
+  const canDelete = isHeadCoach || user?.role === "admin";
 
   const filtered = players.filter(p => {
     const name = `${p.first_name} ${p.last_name}`.toLowerCase();

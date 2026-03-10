@@ -37,8 +37,9 @@ export default function DepthChart() {
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); load(); }, []);
 
   // AD and Trainer can only view depth chart, not edit
-  const canEdit = user && !["athletic_director","trainer"].includes(user.role);
-  const canSeeLoadAlerts = user && LOAD_ALERT_ROLES.includes(user.role);
+  const DEPTH_EDIT_ROLES = ["head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
+  const canEdit = user && (user.role === "admin" || DEPTH_EDIT_ROLES.includes(user.coaching_role) || user.is_associate_head_coach);
+  const canSeeLoadAlerts = user && (LOAD_ALERT_ROLES.includes(user.coaching_role) || user.role === "admin");
 
   // Players who can play a position (primary or secondary)
   const getPositionPlayers = (pos) => {
