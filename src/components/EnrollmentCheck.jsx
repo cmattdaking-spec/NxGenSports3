@@ -18,8 +18,10 @@ export default function EnrollmentCheck({ children }) {
           return;
         }
 
-        // Check if user already has team assigned
+        // If user already has a team, still clean up any lingering pending invites
         if (user.team_id) {
+          const staleInvites = await base44.entities.Invite.filter({ email: user.email, status: "pending" }, "-created_date");
+          await Promise.all(staleInvites.map(inv => base44.entities.Invite.update(inv.id, { status: "accepted" })));
           setChecked(true);
           return;
         }
