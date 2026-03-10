@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
+import { getSportConfig } from "@/components/SportConfig";
 
-const POSITIONS = ["QB","RB","FB","WR","TE","LT","LG","C","RG","RT","DE","DT","NT","OLB","MLB","ILB","CB","SS","FS","K","P","LS"];
-const UNITS = ["offense","defense","special_teams"];
 const YEARS = ["Freshman","Sophomore","Junior","Senior","Grad"];
 const STATUSES = ["active","injured","suspended","inactive"];
 const LEVELS = ["Varsity","JV","Freshman"];
@@ -16,7 +15,15 @@ const I = ({ label, required, children }) => (
 
 const inp = "w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[var(--color-primary,#f97316)]";
 
-export default function PlayerForm({ form, setForm, editing, onSave, onClose }) {
+export default function PlayerForm({ form, setForm, editing, onSave, onClose, activeSport }) {
+  const cfg = getSportConfig(activeSport);
+  const isBasketball = cfg.sportFamily === "basketball";
+
+  // Flatten all positions for this sport
+  const POSITIONS = Object.values(cfg.positions).flat().filter((v, i, a) => a.indexOf(v) === i);
+  const UNITS = cfg.units;
+  const posLabel = (p) => cfg.positionLabels[p] || p;
+
   const toggleArr = (key, val) => {
     const curr = form[key] || [];
     setForm({ ...form, [key]: curr.includes(val) ? curr.filter(x => x !== val) : [...curr, val] });
