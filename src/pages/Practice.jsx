@@ -154,7 +154,7 @@ Generate a complete, structured practice plan with specific drills, focus areas,
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-white">{cfg.brand === "NxBucket" ? "Practice" : "Practice"} <span style={{ color: "var(--color-primary,#f97316)" }}>Plans</span></h1>
+          <h1 className="text-2xl font-black text-white">{cfg.brand || "Practice"} <span style={{ color: "var(--color-primary,#f97316)" }}>Plans</span></h1>
           <p className="text-gray-500 text-sm">{plans.length} plans</p>
         </div>
         <div className="flex gap-2">

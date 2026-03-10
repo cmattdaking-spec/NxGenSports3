@@ -291,28 +291,7 @@ export default function Playbook() {
                     {CATEGORIES.map(c => <option key={c} value={c}>{c.replace("_"," ")}</option>)}
                   </select>
                 </div>
-                {cfg.sportFamily === "football" && (<>
-                <div>
-                  <label className="text-gray-400 text-xs mb-1 block">Formation</label>
-                  <input value={form.formation || ""} onChange={e => setForm({...form, formation: e.target.value})} placeholder="e.g. Shotgun 11 Personnel"
-                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500" />
-                </div>
-                <div>
-                  <label className="text-gray-400 text-xs mb-1 block">Down & Distance</label>
-                  <input value={form.down_distance || ""} onChange={e => setForm({...form, down_distance: e.target.value})} placeholder="e.g. 3rd & Short"
-                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500" />
-                </div>
-                <div>
-                  <label className="text-gray-400 text-xs mb-1 block">Field Zone</label>
-                  <input value={form.field_zone || ""} onChange={e => setForm({...form, field_zone: e.target.value})} placeholder="e.g. Red Zone"
-                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500" />
-                </div>
-                <div>
-                  <label className="text-gray-400 text-xs mb-1 block">Personnel</label>
-                  <input value={form.personnel || ""} onChange={e => setForm({...form, personnel: e.target.value})} placeholder="e.g. 11 Personnel"
-                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500" />
-                </div>
-               </>)}
+
               </div>
               <div>
                 <label className="text-gray-400 text-xs mb-1 block">Description</label>
