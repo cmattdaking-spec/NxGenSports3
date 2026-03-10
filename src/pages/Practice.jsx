@@ -7,10 +7,11 @@ import LoadingScreen from "../components/LoadingScreen";
 
 const STATUS_COLOR = { draft: "bg-yellow-500/20 text-yellow-400", active: "bg-blue-500/20 text-blue-400", completed: "bg-green-500/20 text-green-400" };
 
-// AD and Trainer cannot create/edit practice plans
 const PRACTICE_EDIT_ROLES = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 
 export default function Practice() {
+  const { activeSport } = useContext(SportContext);
+  const cfg = useSportConfig(activeSport);
   const [plans, setPlans] = useState([]);
   const [players, setPlayers] = useState([]);
   const [healthRecords, setHealthRecords] = useState([]);
@@ -39,7 +40,7 @@ export default function Practice() {
   };
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); load(); }, []);
 
-  const canEdit = user && PRACTICE_EDIT_ROLES.includes(user.role);
+  const canEdit = user && (user.role === "admin" || PRACTICE_EDIT_ROLES.includes(user.coaching_role) || PRACTICE_EDIT_ROLES.includes(user.role));
 
   const openAdd = () => {
     setEditing(null);
@@ -66,8 +67,9 @@ export default function Practice() {
     setAiLoading(true); setAiTarget(plan.id);
     const injuredPlayers = players.filter(p => p.status === "injured").map(p => `${p.first_name} ${p.last_name}`).join(", ");
     const limitedPlayers = healthRecords.filter(h => h.availability === "limited").map(h => h.player_name).join(", ");
+    const opCtx = injuredPlayers ? `Injured/Out: ${injuredPlayers}\nLimited: ${limitedPlayers || "None"}` : "";
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a football coaching AI for NxDown. Generate a detailed practice plan.\n\nPractice Focus: ${plan.focus || "General"}\nTotal Duration: ${plan.duration_minutes || 120} minutes\nDate: ${plan.date}\n\n${injuredPlayers ? `Injured/Out: ${injuredPlayers}` : ""}\n${limitedPlayers ? `Limited: ${limitedPlayers}` : ""}\n\nCreate a period-by-period schedule with warm-up, individual, group, team periods, and cool-down. Include specific drill names, coaching points, and health accommodations. Be specific and practical.`,
+      prompt: cfg.aiPracticeContext(plan.focus, opCtx) + `\n\nTotal Duration: ${plan.duration_minutes || 120} minutes\nDate: ${plan.date}\n\nCreate a period-by-period schedule with specific drill names, coaching points, and health accommodations.`,
     });
     await base44.entities.PracticePlan.update(plan.id, { ai_suggestions: res });
     load(); setAiLoading(false); setAiTarget(null);
@@ -82,7 +84,7 @@ export default function Practice() {
     const upcomingOpponents = opponents.filter(o => new Date(o.game_date) >= new Date()).slice(0, 3);
 
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an elite football coaching AI for NxDown. Generate a complete, tailored practice session.
+      prompt: `You are an elite ${cfg.aiPersona} for ${cfg.brand}. Generate a complete, tailored practice session.
 
 Team Status:
 - Total Players: ${players.length}
