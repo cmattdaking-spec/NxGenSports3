@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import AuthGuard from "@/components/AuthGuard";
 import SuperAdminView from "@/components/usermgmt/SuperAdminView";
 import InviteForm from "@/components/usermgmt/InviteForm";
+import PendingInvites from "@/components/usermgmt/PendingInvites";
 import {
   Users, Shield, Mail, Edit2, Check, X, UserPlus, Lock, Star,
   Search, Trash2, RefreshCw, Building2, Brain, ChevronDown, ChevronUp
