@@ -135,7 +135,7 @@ export default function Layout({ children, currentPageName }) {
     if (sport === "nxgensports") {
       setActiveSport("nxgensports");
       setShowSportPicker(false);
-      navigate(createPageUrl("NxGenSportsWebsite"));
+      navigate(createPageUrl("ADPortal"));
       return;
     }
     setActiveSport(sport);
@@ -244,7 +244,7 @@ export default function Layout({ children, currentPageName }) {
   if (location.pathname === "/" || location.pathname === "") {
     const isAthlDir = effectiveRole === "athletic_director" || user?.role === "admin" && user?.coaching_role === "athletic_director";
     if (isAD && !isHeadCoach) {
-      return <Navigate to={createPageUrl("NxGenSportsWebsite")} replace />;
+      return <Navigate to={createPageUrl("ADPortal")} replace />;
     }
     return <Navigate to="/Dashboard" replace />;
   }

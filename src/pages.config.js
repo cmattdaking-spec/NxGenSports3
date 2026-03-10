@@ -56,7 +56,6 @@ import GamePlan from './pages/GamePlan';
 import GameSchedule from './pages/GameSchedule';
 import InGameAssistant from './pages/InGameAssistant';
 import Messages from './pages/Messages';
-import NxGenSportsWebsite from './pages/NxGenSportsWebsite';
 import NxLab from './pages/NxLab';
 import NxPrep from './pages/NxPrep';
 import PerformanceAnalytics from './pages/PerformanceAnalytics';
@@ -85,7 +84,6 @@ export const PAGES = {
     "GameSchedule": GameSchedule,
     "InGameAssistant": InGameAssistant,
     "Messages": Messages,
-    "NxGenSportsWebsite": NxGenSportsWebsite,
     "NxLab": NxLab,
     "NxPrep": NxPrep,
     "PerformanceAnalytics": PerformanceAnalytics,
