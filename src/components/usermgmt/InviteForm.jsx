@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { getSportConfig } from "@/components/SportConfig";
 import { UserPlus, X, Building2, AlertTriangle } from "lucide-react";
