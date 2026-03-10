@@ -7,11 +7,12 @@ import NxPlayAI from "@/components/playbook/NxPlayAI";
 import { useSportConfig } from "@/components/SportConfig";
 import { SportContext } from "@/components/SportContext";
 
-// Roles that can create/edit plays
 const CAN_CREATE = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 const CAN_USE_AI = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 
 export default function Playbook() {
+  const { activeSport } = useContext(SportContext);
+  const cfg = useSportConfig(activeSport);
   const [plays, setPlays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -39,9 +40,12 @@ export default function Playbook() {
     load();
   }, []);
 
-  const role = user?.role || "viewer";
-  const canCreate = CAN_CREATE.includes(role);
-  const canUseAI = CAN_USE_AI.includes(role);
+  const role = user?.coaching_role || user?.role || "viewer";
+  const canCreate = CAN_CREATE.includes(role) || user?.role === "admin";
+  const canUseAI = CAN_USE_AI.includes(role) || user?.role === "admin";
+  const CATEGORIES = cfg.playCategories;
+  const UNITS = cfg.units;
+  const catColor = cfg.playCategoryColors;
 
   // Position coaches can only edit plays they created; coordinators/HC can edit all
   const canEditPlay = (p) => {
@@ -87,7 +91,7 @@ export default function Playbook() {
     setAiSuggestions("");
     const existing = plays.map(p => `${p.name} (${p.category}, ${p.unit})`).join(", ");
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a football offensive/defensive coordinator AI. Based on a high school/college football team, suggest 5 highly effective plays that would complement their existing playbook.\n\nExisting plays: ${existing || "None yet"}\n\nProvide play suggestions with:\n- Play name\n- Formation\n- Category (run/pass/screen/play_action/blitz/coverage/zone/man)\n- Brief description\n- Best down & distance situation\n\nFormat clearly and be specific.`,
+      prompt: cfg.aiPlaybookContext(existing),
     });
     setAiSuggestions(res);
     setAiLoading(false);
