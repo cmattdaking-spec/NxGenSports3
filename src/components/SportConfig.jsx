@@ -177,7 +177,7 @@ Our Roster: ${players?.length || 0} available players`,
 };
 
 const BASKETBALL_SPORTS = new Set([
-  "basketball","boys_basketball","girls_basketball"
+  "boys_basketball","girls_basketball"
 ]);
 
 export function getSportConfig(sport) {
