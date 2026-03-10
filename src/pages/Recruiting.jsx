@@ -44,7 +44,7 @@ export default function Recruiting() {
   const [saving, setSaving] = useState(false);
   const [newAward, setNewAward] = useState("");
 
-  const canEdit = user && ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","position_coach"].includes(user.role);
+  const canEdit = user && (user.role === "admin" || ["head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach","trainer"].includes(user.coaching_role));
 
   useEffect(() => {
     Promise.all([

@@ -91,7 +91,7 @@ export default function DepthChart() {
   const getAISuggestions = async () => {
     setAiLoading(true);
     setAiSuggestion("");
-    const unitPlayers = players.filter(p => p.unit === unit || p.secondary_positions?.some(sp => UNIT_POSITIONS[unit]?.includes(sp)));
+    const unitPlayers = players.filter(p => p.unit === unit || p.secondary_positions?.some(sp => cfg.positions[unit]?.includes(sp)));
     const playerData = unitPlayers.map(p => {
       const loadScore = getPlayerLoadScore(p.id);
       const health = getPlayerHealth(p.id);

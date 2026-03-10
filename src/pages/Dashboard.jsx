@@ -11,9 +11,19 @@ import {
 } from "lucide-react";
 
 const SPORT_NAMES = {
-  football:"NxDown", basketball:"NxBucket", baseball:"NxPitch", softball:"NxPitch",
-  soccer:"NxGoal", volleyball:"NxSet", boxing:"NxRound", golf:"NxHole",
-  tennis:"NxServe", wrestling:"NxMatch", cross_country:"NxRace", track:"NxRace", lacrosse:"NxCage"
+  nxgensports: "NxGenSports",
+  football: "NxDown", girls_flag_football: "NxDown",
+  boys_basketball: "NxBucket", girls_basketball: "NxBucket",
+  boys_baseball: "NxPitch", girls_softball: "NxPitch",
+  boys_soccer: "NxGoal", girls_soccer: "NxGoal",
+  girls_volleyball: "NxSet",
+  boys_boxing: "NxRound", girls_boxing: "NxRound",
+  boys_golf: "NxHole", girls_golf: "NxHole",
+  boys_tennis: "NxServe", girls_tennis: "NxServe",
+  boys_wrestling: "NxMatch", girls_wrestling: "NxMatch",
+  boys_cross_country: "NxRace", girls_cross_country: "NxRace",
+  boys_track: "NxRace", girls_track: "NxRace",
+  boys_lacrosse: "NxCage", girls_lacrosse: "NxCage"
 };
 
 export default function Dashboard() {

@@ -4,6 +4,8 @@ import { Plus, Edit, Trash2, X, Zap, Brain, Dumbbell, ChevronDown, ChevronUp, Al
 import LoadingScreen from "../components/LoadingScreen";
 import { useSport } from "@/components/SportContext";
 
+import { getSportConfig } from "@/components/SportConfig";
+
 const TYPES = ["strength","conditioning","speed","agility","recovery","full_body","position_specific"];
 const INTENSITIES = ["low","moderate","high","max"];
 const LEVELS = ["All","Varsity","JV","Freshman"];
@@ -25,13 +27,13 @@ const TYPE_COLOR = {
   position_specific: "bg-cyan-500/20 text-cyan-400"
 };
 
-const POSITIONS = ["QB","RB","FB","WR","TE","LT","LG","C","RG","RT","DE","DT","NT","OLB","MLB","ILB","CB","SS","FS","K","P","LS"];
-
 // HC and Trainer only see load alerts
 const LOAD_ALERT_ROLES = ["head_coach","admin","trainer","strength_conditioning_coordinator"];
 
 export default function StrengthConditioning() {
   const { activeSport } = useSport();
+  const cfg = getSportConfig(activeSport);
+  const POSITIONS = Object.values(cfg.positions).flat().filter((v, i, a) => a.indexOf(v) === i);
   const [plans, setPlans] = useState([]);
   const [players, setPlayers] = useState([]);
   const [healthRecords, setHealthRecords] = useState([]);
@@ -85,7 +87,7 @@ export default function StrengthConditioning() {
 
   // Compute load alerts once we have data
   useEffect(() => {
-    if (!user || !LOAD_ALERT_ROLES.includes(user.role)) return;
+    if (!user || !LOAD_ALERT_ROLES.includes(user.coaching_role) && user.role !== "admin") return;
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const recentHighLoad = plans.filter(p => {
@@ -256,7 +258,7 @@ Avg Grade: ${avgGrade}, Recent Injuries: ${injuries}, Status: ${player.status}`,
     return true;
   });
 
-  const canSeeLoadAlerts = user && LOAD_ALERT_ROLES.includes(user.role);
+  const canSeeLoadAlerts = user && (LOAD_ALERT_ROLES.includes(user.coaching_role) || user.role === "admin");
 
   if (loading) return <LoadingScreen />;
 
