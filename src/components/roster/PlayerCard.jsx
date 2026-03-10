@@ -26,7 +26,9 @@ function RatingBar({ label, value }) {
   );
 }
 
-export default function PlayerCard({ player: p, expanded, onToggle, onEdit, onDelete, canEdit }) {
+export default function PlayerCard({ player: p, expanded, onToggle, onEdit, onDelete, canEdit, canDelete }) {
+  // If canDelete not explicitly passed, fall back to canEdit for backward compat
+  const showDelete = canDelete !== undefined ? canDelete : canEdit;
   const displayRole = p.coaching_role || p.role;
   const hasAcademic = p.gpa || p.sat_score || p.act_score;
   const hasAthletic = p.forty_time || p.bench_reps || p.vertical_jump || p.broad_jump || p.three_cone || p.shuttle_time;
@@ -70,7 +72,7 @@ export default function PlayerCard({ player: p, expanded, onToggle, onEdit, onDe
           ) : null}
           {p.gpa ? <span className="hidden md:block text-xs bg-green-500/15 text-green-400 px-1.5 py-0.5 rounded">GPA {p.gpa.toFixed(2)}</span> : null}
           {canEdit && <button onClick={() => onEdit(p)} className="text-gray-500 hover:text-blue-400 p-1 transition-colors"><Edit className="w-3.5 h-3.5" /></button>}
-          {canEdit && <button onClick={() => onDelete(p.id)} className="text-gray-500 hover:text-red-400 p-1 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>}
+          {showDelete && <button onClick={() => onDelete(p.id)} className="text-gray-500 hover:text-red-400 p-1 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>}
           <button onClick={onToggle} className="text-gray-500 hover:text-white p-1 transition-colors">
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
