@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { base44 } from "@/api/base44Client";
 import { Brain, Loader2, Target, Shield, Zap, ChevronDown, ChevronUp, Save, Sparkles } from "lucide-react";
+import { useSportConfig } from "@/components/SportConfig";
+import { SportContext } from "@/components/SportContext";
 
 export default function NxPlanAI({ opponent, players, plays, existingPlan, onSave }) {
+  const { activeSport } = useContext(SportContext);
+  const cfg = useSportConfig(activeSport);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const [unit, setUnit] = useState("offense");
+  const [unit, setUnit] = useState(cfg.units[0]);
   const [focus, setFocus] = useState("");
   const [expanded, setExpanded] = useState({ scripted: true, redzone: false, thirddown: false, twomin: false });
 
@@ -22,7 +26,7 @@ export default function NxPlanAI({ opponent, players, plays, existingPlan, onSav
       .map(p => `${p.first_name} ${p.last_name} (${p.position}, ${p.year || "?"}, status: ${p.status})`)
       .join("; ");
 
-    const prompt = `You are NxDown's elite AI game planning coordinator. Generate a comprehensive ${unit} game plan.
+    const prompt = `You are ${cfg.brand}'s elite AI game planning coordinator (${cfg.aiPersona}). Generate a comprehensive ${unit} game plan.
 
 Opponent: ${opponent?.name || "Unknown"}
 Game Date: ${opponent?.game_date || "TBD"}
@@ -123,11 +127,11 @@ Create a detailed, tactical game plan with specific play calls, situational stra
           <div>
             <label className="text-gray-400 text-xs mb-1 block">Unit</label>
             <div className="flex gap-2">
-              {["offense", "defense", "special_teams"].map(u => (
+              {cfg.units.map(u => (
                 <button key={u} onClick={() => setUnit(u)}
                   className={`flex-1 py-2 rounded-lg text-xs font-semibold capitalize transition-all ${unit === u ? "text-white" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}
                   style={unit === u ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
-                  {u.replace("_", " ")}
+                  {cfg.unitLabels[u] || u.replace("_", " ")}
                 </button>
               ))}
             </div>
