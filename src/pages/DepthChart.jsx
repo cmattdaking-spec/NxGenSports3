@@ -166,19 +166,20 @@ export default function DepthChart() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {positions.map(pos => {
           const chart = getChart(pos);
+          const [s0,s1,s2,s3] = cfg.depthSlots;
           const slots = [
-            { label: "1st", name: chart?.starter_name, id: chart?.starter_id },
-            { label: "2nd", name: chart?.backup1_name, id: chart?.backup1_id },
-            { label: "3rd", name: chart?.backup2_name, id: chart?.backup2_id },
-            { label: "4th", name: chart?.backup3_name, id: chart?.backup3_id },
+            { label: s0, name: chart?.starter_name, id: chart?.starter_id },
+            { label: s1, name: chart?.backup1_name, id: chart?.backup1_id },
+            { label: s2, name: chart?.backup2_name, id: chart?.backup2_id },
+            { label: s3, name: chart?.backup3_name, id: chart?.backup3_id },
           ];
           return (
             <div key={pos} className="bg-[#141414] border border-gray-800 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <span className="font-black text-lg font-mono" style={{ color: "var(--color-primary,#f97316)" }}>{getLabel(pos)}</span>
-                  {getLabel(pos) !== pos && <span className="text-gray-700 text-xs ml-1.5 font-mono">({pos})</span>}
-                  <p className="text-gray-600 text-xs leading-none mt-0.5">{POSITION_DEFS.find(d => d.code === pos)?.desc || ""}</p>
+                  <span className="font-black text-lg font-mono" style={{ color: "var(--color-primary,#f97316)" }}>{cfg.positionLabels[pos] || getLabel(pos)}</span>
+                  {(cfg.positionLabels[pos] || getLabel(pos)) !== pos && <span className="text-gray-700 text-xs ml-1.5 font-mono">({pos})</span>}
+                  <p className="text-gray-600 text-xs leading-none mt-0.5">{cfg.positionDesc[pos] || POSITION_DEFS.find(d => d.code === pos)?.desc || ""}</p>
                 </div>
                 {canEdit && (
                   <button onClick={() => openEdit(pos)} className="text-gray-500 transition-colors"
@@ -224,15 +225,15 @@ export default function DepthChart() {
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="bg-[#141414] border border-gray-700 rounded-xl w-full max-w-md">
             <div className="flex items-center justify-between p-5 border-b border-gray-800">
-              <h2 className="text-white font-bold">{getLabel(editing)} Depth Chart <span className="text-gray-600 text-sm font-normal">({editing})</span></h2>
+              <h2 className="text-white font-bold">{cfg.positionLabels[editing] || getLabel(editing)} {cfg.termDepthChart} <span className="text-gray-600 text-sm font-normal">({editing})</span></h2>
               <button onClick={() => setEditing(null)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
             <div className="p-5 space-y-3">
               {[
-                { label: "Starter (1st)", nameKey: "starter_name", idKey: "starter_id" },
-                { label: "2nd String", nameKey: "backup1_name", idKey: "backup1_id" },
-                { label: "3rd String", nameKey: "backup2_name", idKey: "backup2_id" },
-                { label: "4th String", nameKey: "backup3_name", idKey: "backup3_id" },
+                { label: cfg.depthSlots[0], nameKey: "starter_name", idKey: "starter_id" },
+                { label: cfg.depthSlots[1], nameKey: "backup1_name", idKey: "backup1_id" },
+                { label: cfg.depthSlots[2], nameKey: "backup2_name", idKey: "backup2_id" },
+                { label: cfg.depthSlots[3], nameKey: "backup3_name", idKey: "backup3_id" },
               ].map(({ label, nameKey, idKey }) => (
                 <div key={nameKey}>
                   <label className="text-gray-400 text-xs mb-1 block">{label}</label>
