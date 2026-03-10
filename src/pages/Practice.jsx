@@ -84,7 +84,7 @@ export default function Practice() {
     const upcomingOpponents = opponents.filter(o => new Date(o.game_date) >= new Date()).slice(0, 3);
 
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an elite ${cfg.aiPersona} for ${cfg.brand}. Generate a complete, tailored practice session.
+    prompt: `You are an elite ${cfg.aiPersona}. Generate a complete, tailored practice session.
 
 Team Status:
 - Total Players: ${players.length}
@@ -295,7 +295,7 @@ Generate a complete, structured practice plan with specific drills, focus areas,
                     <div className="col-span-2">
                       <label className="text-gray-400 text-xs mb-1 block">Additional Focus / Theme</label>
                       <input value={genForm.focus} onChange={e => setGenForm(f => ({ ...f, focus: e.target.value }))}
-                        placeholder={cfg.practiceFocusPlaceholder}
+                        placeholder={cfg.practiceFocusPlaceholder || "e.g. Focus area for today's practice..."}
                         className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none" />
                     </div>
                   </div>

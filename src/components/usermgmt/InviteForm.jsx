@@ -30,13 +30,19 @@ const SPORT_LABELS = {
 
 export default function InviteForm({ user, onClose, onInvited }) {
   const [inviteType, setInviteType] = useState("staff");
+  const defaultSport = user?.assigned_sports?.[0] || "football";
+  const sportCfg = useMemo(() => getSportConfig(defaultSport), [defaultSport]);
+  const STAFF_ROLES = sportCfg.staffRoles || DEFAULT_STAFF_ROLES;
+  const ALL_POSITIONS = Object.values(sportCfg.positions).flat().filter((v, i, a) => a.indexOf(v) === i);
+  const PHASES = sportCfg.units.map(u => ({ value: u, label: sportCfg.unitLabels[u] || u.replace(/_/g, " ") }));
+
   const [form, setForm] = useState({
     email: "",
     full_name: "",
-    coaching_role: "position_coach",
+    coaching_role: STAFF_ROLES[0]?.value || "head_coach",
     positions: [],
     phases: [],
-    sports: user?.assigned_sports?.length ? [...user.assigned_sports] : ["boys_football"],
+    sports: user?.assigned_sports?.length ? [...user.assigned_sports] : [defaultSport],
   });
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState({ text: "", type: "" });
