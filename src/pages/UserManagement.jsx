@@ -139,25 +139,29 @@ function UserManagementContent() {
     });
   };
 
+  const updateUser = async (userId, data) => {
+    await base44.functions.invoke("updateTeamUser", { userId, data });
+  };
+
   const saveEdit = async (userId) => {
-    await base44.entities.User.update(userId, editForm);
+    await updateUser(userId, editForm);
     setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, ...editForm } : u));
     setEditingId(null);
   };
 
   const removeFromTeam = async (userId) => {
     if (!window.confirm("Remove this user from your team? They will lose access to your team's data.")) return;
-    await base44.entities.User.update(userId, { team_id: null, school_name: null, coaching_role: null });
+    await updateUser(userId, { team_id: null, school_name: null, coaching_role: null });
     setAllUsers(prev => prev.filter(u => u.id !== userId));
   };
 
   const toggleAC = async (targetUser) => {
     setAcDesignating(true);
     if (currentAC && currentAC.id !== targetUser.id) {
-      await base44.entities.User.update(currentAC.id, { is_associate_head_coach: false });
+      await updateUser(currentAC.id, { is_associate_head_coach: false });
     }
     const newVal = !targetUser.is_associate_head_coach;
-    await base44.entities.User.update(targetUser.id, { is_associate_head_coach: newVal });
+    await updateUser(targetUser.id, { is_associate_head_coach: newVal });
     setAllUsers(prev => prev.map(u => {
       if (u.id === currentAC?.id && u.id !== targetUser.id) return { ...u, is_associate_head_coach: false };
       if (u.id === targetUser.id) return { ...u, is_associate_head_coach: newVal };
