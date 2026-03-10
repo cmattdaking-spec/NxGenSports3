@@ -37,7 +37,7 @@ export default function ADStaffTab({ staff, onRefresh }) {
 
   const saveEdit = async (id) => {
     setSaving(true);
-    await base44.functions.invoke("updateTeamUser", { userId: id, updates: editData });
+    await base44.functions.invoke("updateTeamUser", { userId: id, data: editData });
     setSaving(false);
     setEditingId(null);
     onRefresh();
