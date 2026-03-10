@@ -143,7 +143,7 @@ export default function PlayerForm({ form, setForm, editing, onSave, onClose, ac
           {tab === "athletic" && (
             <div className="grid grid-cols-2 gap-3">
               {isBasketball ? (<>
-                <I label="Height"><input value={form.height || ""} onChange={e => setForm({...form, height: e.target.value})} placeholder='6\'4"' className={inp} /></I>
+                <I label="Height"><input value={form.height || ""} onChange={e => setForm({...form, height: e.target.value})} placeholder={`6'4"`} className={inp} /></I>
                 <I label="Weight (lbs)"><input type="number" value={form.weight || ""} onChange={e => setForm({...form, weight: +e.target.value})} className={inp} /></I>
                 <I label="Wingspan (in)"><input type="number" step="0.5" value={form.broad_jump || ""} onChange={e => setForm({...form, broad_jump: +e.target.value})} placeholder="79" className={inp} /></I>
                 <I label="Vertical Jump (in)"><input type="number" step="0.5" value={form.vertical_jump || ""} onChange={e => setForm({...form, vertical_jump: +e.target.value})} placeholder="34" className={inp} /></I>
