@@ -42,7 +42,7 @@ function ADPortalContent() {
       base44.entities.PlayerHealth.list(),
       base44.entities.Opponent.list(),
       base44.entities.PracticePlan.list(),
-      base44.entities.User.list().catch(() => []),
+      base44.functions.invoke("getTeamUsers").then(r => r.data).catch(() => []),
     ]);
     setUser(u);
     setPlayers(p);
@@ -50,7 +50,7 @@ function ADPortalContent() {
     setHealthRecords(h);
     setOpponents(o);
     setPracticePlans(pp);
-    setStaff((s || []).filter(m => m.team_id === u?.team_id && m.role !== "super_admin"));
+    setStaff(s || []);
     setLoading(false);
   }, []);
 
