@@ -3,6 +3,21 @@ import AuthGuard from "@/components/AuthGuard";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
+
+const AD_NAV_SHORTCUTS = [
+  { label: "Dashboard",    page: "Dashboard",            icon: Home },
+  { label: "Schedule",     page: "GameSchedule",         icon: Calendar },
+  { label: "Roster",       page: "Roster",               icon: Users },
+  { label: "Health",       page: "PlayerHealth",         icon: Activity },
+  { label: "NxMessages",   page: "Messages",             icon: MessageSquare },
+  { label: "NxLab",        page: "FilmRoom",             icon: Clapperboard },
+  { label: "NxReady",      page: "NxPrep",               icon: BookOpen },
+  { label: "S&C",          page: "StrengthConditioning", icon: Dumbbell },
+  { label: "Recruiting",   page: "Recruiting",           icon: Star },
+  { label: "Analytics",    page: "PerformanceAnalytics", icon: BarChart2 },
+  { label: "Reports",      page: "Reports",              icon: TrendingUp },
+  { label: "Users",        page: "UserManagement",       icon: UserCog },
+];
 import {
   Users, Activity, Calendar, BarChart2, GraduationCap,
   Shield, ChevronRight, Globe, Award, TrendingUp,
