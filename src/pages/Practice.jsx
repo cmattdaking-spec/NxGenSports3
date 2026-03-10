@@ -154,7 +154,7 @@ Generate a complete, structured practice plan with specific drills, focus areas,
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-white">Practice <span style={{ color: "var(--color-primary,#f97316)" }}>Plans</span></h1>
+          <h1 className="text-2xl font-black text-white">{cfg.brand === "NxBucket" ? "Practice" : "Practice"} <span style={{ color: "var(--color-primary,#f97316)" }}>Plans</span></h1>
           <p className="text-gray-500 text-sm">{plans.length} plans</p>
         </div>
         <div className="flex gap-2">
@@ -295,7 +295,7 @@ Generate a complete, structured practice plan with specific drills, focus areas,
                     <div className="col-span-2">
                       <label className="text-gray-400 text-xs mb-1 block">Additional Focus / Theme</label>
                       <input value={genForm.focus} onChange={e => setGenForm(f => ({ ...f, focus: e.target.value }))}
-                        placeholder="e.g. Red Zone, Pass Rush, 3rd Down Conversion..."
+                        placeholder={cfg.practiceFocusPlaceholder}
                         className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none" />
                     </div>
                   </div>
