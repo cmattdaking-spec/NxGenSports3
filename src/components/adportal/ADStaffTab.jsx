@@ -17,7 +17,12 @@ const COACHING_ROLES = [
 ];
 
 export default function ADStaffTab({ staff, onRefresh }) {
+  const [teamId, setTeamId] = useState(null);
   const [showInvite, setShowInvite] = useState(false);
+
+  useEffect(() => {
+    base44.auth.me().then(u => setTeamId(u?.team_id)).catch(() => {});
+  }, []);
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
   const [inviteForm, setInviteForm] = useState({ email: "", coaching_role: "position_coach", assigned_sports: ["football"] });
@@ -119,7 +124,7 @@ export default function ADStaffTab({ staff, onRefresh }) {
       )}
 
       {/* Pending Invites */}
-      <PendingInvitesSection teamId={teamId} onRevoked={onRefresh} />
+      <PendingInvites teamId={teamId} onRevoked={onRefresh} />
 
       {/* Staff List */}
       <div className="bg-[#141414] border border-gray-800 rounded-xl divide-y divide-gray-800">
