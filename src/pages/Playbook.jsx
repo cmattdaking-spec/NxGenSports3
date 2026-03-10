@@ -107,7 +107,7 @@ export default function Playbook() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black text-white">{cfg.termPlaybook.slice(0,4)}<span style={{ color: "var(--color-primary,#f97316)" }}>{cfg.termPlaybook.slice(4)}</span></h1>
-          <p className="text-gray-500 text-sm">{plays.length} plays in library</p>
+          <p className="text-gray-500 text-sm">{plays.length} {cfg.termPlay.toLowerCase()}s in library</p>
         </div>
         <div className="flex gap-2">
           {canUseAI && (
@@ -132,10 +132,10 @@ export default function Playbook() {
             </button>
           )}
           {canCreate && (
-            <button onClick={openAdd}
-              className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
-              <Plus className="w-4 h-4" /> Add Play
-            </button>
+           <button onClick={openAdd}
+             className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+             <Plus className="w-4 h-4" /> Add {cfg.termPlay}
+           </button>
           )}
         </div>
       </div>
@@ -291,6 +291,7 @@ export default function Playbook() {
                     {CATEGORIES.map(c => <option key={c} value={c}>{c.replace("_"," ")}</option>)}
                   </select>
                 </div>
+                {cfg.sportFamily === "football" && (<>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Formation</label>
                   <input value={form.formation || ""} onChange={e => setForm({...form, formation: e.target.value})} placeholder="e.g. Shotgun 11 Personnel"
@@ -311,6 +312,7 @@ export default function Playbook() {
                   <input value={form.personnel || ""} onChange={e => setForm({...form, personnel: e.target.value})} placeholder="e.g. 11 Personnel"
                     className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500" />
                 </div>
+               </>)}
               </div>
               <div>
                 <label className="text-gray-400 text-xs mb-1 block">Description</label>

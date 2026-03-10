@@ -14,7 +14,7 @@ const DEFAULT_STAFF_ROLES = [
   { value: "trainer", label: "Trainer" },
 ];
 const SPORT_LABELS = {
-  boys_football:"Boys Football", girls_football:"Girls Football", girls_flag_football:"Girls Flag Football",
+  football:"Football", girls_flag_football:"Girls Flag Football",
   boys_basketball:"Boys Basketball", girls_basketball:"Girls Basketball",
   boys_baseball:"Boys Baseball", girls_softball:"Girls Softball",
   boys_soccer:"Boys Soccer", girls_soccer:"Girls Soccer",
