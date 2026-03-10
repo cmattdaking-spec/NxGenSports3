@@ -8,6 +8,8 @@ import { SportContext } from "@/components/SportContext";
 const LOAD_ALERT_ROLES = ["head_coach","admin","trainer","strength_conditioning_coordinator"];
 
 export default function DepthChart() {
+  const { activeSport } = useContext(SportContext);
+  const cfg = useSportConfig(activeSport);
   const [unit, setUnit] = useState("offense");
   const [players, setPlayers] = useState([]);
   const [depthCharts, setDepthCharts] = useState([]);
@@ -68,7 +70,7 @@ export default function DepthChart() {
     return healthRecords.find(h => h.player_id === playerId);
   };
 
-  const positions = UNIT_POSITIONS[unit] || [];
+  const positions = cfg.positions[unit] || [];
 
   const getChart = (pos) => depthCharts.find(d => d.position === pos && d.unit === unit);
 
@@ -101,17 +103,7 @@ export default function DepthChart() {
     const langCtx = getLanguageContext();
     const posLabels = positions.map(p => `${getLabel(p)} (${p})`).join(", ");
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a football coaching assistant for NxDown. ${langCtx}
-
-Based on the following ${unit} players, suggest an optimal depth chart.
-IMPORTANT: Factor in player READINESS (S&C load and health status). Players marked "High Load/Fatigued" or "Limited" should be considered for lower depth chart spots. Players who are "OUT" should not be starters.
-Players may play multiple positions — assign them optimally.
-
-Players:
-${playerData}
-
-Provide depth chart recommendations for ${unit} positions: ${posLabels}
-Note any S&C-related readiness concerns. Use team position labels throughout.`,
+      prompt: cfg.aiDepthChartContext(unit, playerData, posLabels),
     });
     setAiSuggestion(res);
     setAiLoading(false);
