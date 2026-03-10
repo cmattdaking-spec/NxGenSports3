@@ -462,8 +462,12 @@ Generate a complete, structured practice plan with specific drills, focus areas,
                         </div>
                         <button onClick={() => removePeriod(i)} className="text-gray-600 hover:text-red-400"><X className="w-3.5 h-3.5" /></button>
                       </div>
+                      <select value={period.unit || cfg.practicePeriodUnits[0]} onChange={e => updatePeriod(i, "unit", e.target.value)}
+                           className="w-full bg-[#111] border border-gray-700 text-white px-2 py-1.5 rounded text-xs focus:outline-none focus:border-orange-500">
+                           {cfg.practicePeriodUnits.map(u => <option key={u} value={u}>{u.replace(/_/g," ")}</option>)}
+                         </select>
                       <input value={period.drill || ""} onChange={e => updatePeriod(i, "drill", e.target.value)} placeholder="Drill / Activity"
-                        className="w-full bg-[#111] border border-gray-700 text-white px-2 py-1.5 rounded text-xs focus:outline-none focus:border-orange-500" />
+                           className="w-full bg-[#111] border border-gray-700 text-white px-2 py-1.5 rounded text-xs focus:outline-none focus:border-orange-500" />
                     </div>
                   ))}
                 </div>

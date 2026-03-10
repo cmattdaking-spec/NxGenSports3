@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useSport } from "@/components/SportContext";
+import { getSportConfig } from "@/components/SportConfig";
 import { BarChart2, Activity, GraduationCap, TrendingUp, AlertTriangle, Brain } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -20,6 +22,8 @@ const AVAIL_COLORS = { full: "#22c55e", limited: "#f59e0b", out: "#ef4444", day_
 const TooltipStyle = { contentStyle: { backgroundColor: "#1a1a1a", border: "1px solid #333", borderRadius: "8px", color: "#fff", fontSize: 12 } };
 
 export default function Reports() {
+  const { activeSport } = useSport();
+  const sportCfg = getSportConfig(activeSport);
   const [tab, setTab] = useState("ai_report");
   const [metrics, setMetrics] = useState([]);
   const [healthRecords, setHealthRecords] = useState([]);
@@ -31,7 +35,7 @@ export default function Reports() {
     Promise.all([
       base44.entities.PerformanceMetric.list("-game_date", 200),
       base44.entities.PlayerHealth.list("-date", 200),
-      base44.entities.Player.list(),
+      base44.entities.Player.filter({ sport: activeSport }),
     ]).then(([met, health, pls]) => {
       setMetrics(met); setHealthRecords(health); setPlayers(pls); setLoading(false);
     }).catch(() => setLoading(false));
@@ -84,7 +88,7 @@ export default function Reports() {
           <BarChart2 className="w-5 h-5" style={{ color: "var(--color-primary,#f97316)" }} />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-white">Reports & <span style={{ color: "var(--color-primary,#f97316)" }}>Analytics</span></h1>
+          <h1 className="text-2xl font-black text-white capitalize">{activeSport.replace(/_/g," ")} <span style={{ color: "var(--color-primary,#f97316)" }}>Reports</span></h1>
           <p className="text-gray-500 text-sm">Performance trends, health summaries, compliance tracking</p>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSport } from "@/components/SportContext";
+import { getSportConfig } from "@/components/SportConfig";
 import { base44 } from "@/api/base44Client";
 import { Plus, Edit, Trash2, X, Activity, AlertTriangle, CheckCircle, Clock, Brain, ShieldAlert, Flame } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
@@ -19,6 +20,7 @@ const RISK_COLOR = { Low: "text-green-400 bg-green-500/20 border-green-500/30", 
 
 export default function PlayerHealth() {
   const { activeSport } = useSport();
+  const sportCfg = getSportConfig(activeSport);
   const [records, setRecords] = useState([]);
   const [players, setPlayers] = useState([]);
   const [stats, setStats] = useState([]);
@@ -466,8 +468,11 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Injury Type</label>
-                  <input value={form.injury_type || ""} onChange={e => setForm({...form, injury_type: e.target.value})} placeholder="e.g. Hamstring Strain"
-                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+                  <select value={form.injury_type || ""} onChange={e => setForm({...form, injury_type: e.target.value})}
+                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500">
+                    <option value="">Select or type below...</option>
+                    {sportCfg.injuryTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Body Location</label>
