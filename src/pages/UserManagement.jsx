@@ -239,6 +239,9 @@ function UserManagementContent() {
         <InviteForm user={user} onClose={() => setShowInvite(false)} onInvited={() => loadUsers(user)} />
       )}
 
+      {/* Pending Invites */}
+      <PendingInvites teamId={user?.team_id} onRevoked={() => loadUsers(user)} />
+
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-2">
         <div className="relative flex-1">
