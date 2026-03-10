@@ -120,7 +120,7 @@ export default function DepthChart() {
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-white">Depth <span style={{ color: "var(--color-primary,#f97316)" }}>Chart</span></h1>
+          <h1 className="text-2xl font-black text-white">{cfg.termDepthChart.split(" ")[0]} <span style={{ color: "var(--color-primary,#f97316)" }}>{cfg.termDepthChart.split(" ").slice(1).join(" ")}</span></h1>
           <p className="text-gray-500 text-sm">Manage your starters & backups · Multi-position support</p>
         </div>
         <button onClick={getAISuggestions} disabled={aiLoading}
@@ -133,11 +133,11 @@ export default function DepthChart() {
 
       {/* Unit + Level Tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
-        {["offense","defense","special_teams"].map(u => (
+        {cfg.units.map(u => (
           <button key={u} onClick={() => setUnit(u)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${unit === u ? "text-white" : "bg-[#141414] border border-gray-800 text-gray-400 hover:text-white"}`}
             style={unit === u ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
-            {u.replace("_"," ").replace(/\b\w/g, l => l.toUpperCase())}
+            {cfg.unitLabels[u] || u.replace("_"," ").replace(/\b\w/g, l => l.toUpperCase())}
           </button>
         ))}
         <div className="w-px bg-gray-800 mx-1 hidden md:block" />
