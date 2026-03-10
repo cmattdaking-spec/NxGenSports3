@@ -39,6 +39,9 @@ export default function EnrollmentCheck({ children }) {
             ? (invite.subscribed_sports?.length ? invite.subscribed_sports : invite.assigned_sports || ["football"])
             : (invite.assigned_sports?.length ? invite.assigned_sports : ["football"]);
 
+          const adminRoles = ["head_coach", "athletic_director", "associate_head_coach", "offensive_coordinator", "defensive_coordinator", "special_teams_coordinator", "strength_conditioning_coordinator"];
+          const platformRole = adminRoles.includes(invite.coaching_role) ? "admin" : "user";
+
           // Auto-assign team, role, positions, sports, and school code
           await base44.auth.updateMe({
             team_id: invite.team_id,
@@ -48,6 +51,7 @@ export default function EnrollmentCheck({ children }) {
             assigned_positions: invite.assigned_positions || [],
             assigned_phases: invite.assigned_phases || [],
             assigned_sports: effectiveSports,
+            role: platformRole,
             ...(invite.invite_type === "school_setup" && {
               mascot: invite.mascot || null,
               location_city: invite.location_city || null,
@@ -56,9 +60,7 @@ export default function EnrollmentCheck({ children }) {
           });
 
           // Mark invite as accepted
-          await base44.entities.Invite.update(invite.id, {
-            status: "accepted"
-          });
+          await base44.entities.Invite.update(invite.id, { status: "accepted" });
         }
       } catch (err) {
         console.error("Enrollment check failed:", err);
