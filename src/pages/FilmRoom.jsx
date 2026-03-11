@@ -26,6 +26,8 @@ export default function FilmRoom() {
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   const [showAnnotation, setShowAnnotation] = useState(false);
   const [commentTag, setCommentTag] = useState(null);
+  const [showHighlight, setShowHighlight] = useState(false);
+  const [players, setPlayers] = useState([]);
   const [user, setUser] = useState(null);
   const [presence, setPresence] = useState({});
   const playerRef = useRef(null);
