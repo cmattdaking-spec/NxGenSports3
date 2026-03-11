@@ -167,15 +167,23 @@ export default function GameSchedule() {
                     <div className={`text-sm font-semibold ${isToday ? 'text-[var(--color-primary,#f97316)]' : 'text-gray-400'}`}>
                       {day}
                     </div>
-                    {gamesOnDay.length > 0 && (
+                    {(gamesOnDay.length > 0 || practicesOnDay.length > 0) && (
                       <div className="mt-1 space-y-1 flex-1">
                         {gamesOnDay.map(game => (
-                          <div key={game.id} 
+                          <div key={game.id}
                             onClick={() => setExpanded(expanded === game.id ? null : game.id)}
                             className="text-xs p-1 rounded cursor-pointer transition-all"
                             style={{ backgroundColor: "var(--color-primary,#f97316)22", color: "var(--color-primary,#f97316)" }}>
                             <div className="font-semibold truncate">vs {game.name}</div>
                             <div className="text-[10px] opacity-75">{game.location}</div>
+                          </div>
+                        ))}
+                        {practicesOnDay.map(practice => (
+                          <div key={practice.id}
+                            className="text-xs p-1 rounded"
+                            style={{ backgroundColor: "#22c55e18", color: "#4ade80" }}>
+                            <div className="font-semibold truncate">📋 {practice.title}</div>
+                            {practice.focus && <div className="text-[10px] opacity-75 truncate">{practice.focus}</div>}
                           </div>
                         ))}
                       </div>
