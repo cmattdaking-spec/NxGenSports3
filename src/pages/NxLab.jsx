@@ -289,6 +289,7 @@ export default function NxLab() {
              { id: "playbook", label: sportCfg.termPlaybook, icon: BookOpen },
              { id: "gameplan", label: "Game Plan", icon: Target },
              { id: "practice", label: "Practice", icon: ClipboardList },
+             ...(isRaceSport ? [{ id: "raceday", label: "Event Guide", icon: Flag }] : []),
            ].map(({ id, label, icon: Icon }) => (
              <button key={id} onClick={() => setActiveTab(id)}
                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap ${activeTab === id ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
