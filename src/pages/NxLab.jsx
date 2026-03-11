@@ -101,7 +101,7 @@ function ScoutingTab({ activeSport }) {
       setDeepAnalysisTarget(opp.id);
       setDeepAnalysisLoading(true);
       const res = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an elite football analytics AI. Provide a comprehensive strategic breakdown for facing ${opp.name}. Record: ${opp.record || "Unknown"}, Game: ${opp.game_date} (${opp.location}), Offensive Tendency: ${opp.offensive_tendency || "Not provided"}, Defensive Tendency: ${opp.defensive_tendency || "Not provided"}, Key Players: ${opp.key_players || "Not provided"}.`,
+        prompt: `You are an ${sportCfg.aiPersona} analytics expert. Provide a comprehensive strategic breakdown for facing ${opp.name}. Record: ${opp.record || "Unknown"}, Game: ${opp.game_date} (${opp.location}), Offensive Tendency: ${opp.offensive_tendency || "Not provided"}, Defensive Tendency: ${opp.defensive_tendency || "Not provided"}, Key Players: ${opp.key_players || "Not provided"}.`,
         add_context_from_internet: true,
         response_json_schema: {
           type: "object",
