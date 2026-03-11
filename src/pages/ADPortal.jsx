@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import { base44 } from "@/api/base44Client";
-import { Globe, Users, Activity, Calendar, Shield } from "lucide-react";
+import { Globe, Users, Activity, Calendar, Shield, MessageSquare, Star, Film, BarChart2, TrendingUp } from "lucide-react";
 import ADStaffTab from "@/components/adportal/ADStaffTab";
 import ADPlayersTab from "@/components/adportal/ADPlayersTab";
 import ADScheduleTab from "@/components/adportal/ADScheduleTab";
 import ADHealthTab from "@/components/adportal/ADHealthTab";
+import ADHighlightsTab from "@/components/adportal/ADHighlightsTab";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 const NXGEN_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/29e077944_generated_image.png";
 
@@ -25,11 +28,16 @@ const SPORT_LABELS = {
 };
 
 const TABS = [
-  { id: "overview",  label: "Overview",  icon: Globe },
-  { id: "staff",     label: "Staff",     icon: Shield },
-  { id: "players",   label: "Players",   icon: Users },
-  { id: "schedule",  label: "Schedule",  icon: Calendar },
-  { id: "health",    label: "Health",    icon: Activity },
+  { id: "overview",    label: "Overview",       icon: Globe },
+  { id: "staff",       label: "Staff Mgmt",     icon: Shield },
+  { id: "players",     label: "Player Mgmt",    icon: Users },
+  { id: "schedule",    label: "Schedule",        icon: Calendar },
+  { id: "health",      label: "Health",          icon: Activity },
+  { id: "messages",    label: "NxMessage",       icon: MessageSquare },
+  { id: "recruiting",  label: "Recruiting",      icon: Star },
+  { id: "highlights",  label: "Highlights",      icon: Film },
+  { id: "analytics",   label: "Analytics",       icon: BarChart2 },
+  { id: "reports",     label: "Reports",         icon: TrendingUp },
 ];
 
 function ADPortalContent() {
@@ -191,6 +199,60 @@ function ADPortalContent() {
 
           {activeTab === "health" && (
             <ADHealthTab healthRecords={healthRecords} players={players} onRefresh={loadData} />
+          )}
+
+          {activeTab === "messages" && (
+            <div className="space-y-4">
+              <h2 className="text-white font-bold text-lg flex items-center gap-2"><MessageSquare className="w-5 h-5 text-cyan-400" /> NxMessage</h2>
+              <p className="text-gray-400 text-sm">Communicate across all your programs and staff.</p>
+              <Link to={createPageUrl("Messages")} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-white text-sm font-semibold bg-cyan-500 hover:bg-cyan-400 transition-all">
+                <MessageSquare className="w-4 h-4" /> Open NxMessage
+              </Link>
+            </div>
+          )}
+
+          {activeTab === "recruiting" && (
+            <div className="space-y-4">
+              <h2 className="text-white font-bold text-lg flex items-center gap-2"><Star className="w-5 h-5 text-cyan-400" /> Recruiting — All Programs</h2>
+              <p className="text-gray-400 text-sm">View and manage recruit profiles across all sports in your organization.</p>
+              <Link to={createPageUrl("Recruiting")} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-white text-sm font-semibold bg-cyan-500 hover:bg-cyan-400 transition-all">
+                <Star className="w-4 h-4" /> Open Recruiting
+              </Link>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                {[...new Set(players.map(p => p.sport))].map(sport => {
+                  const count = players.filter(p => p.sport === sport).length;
+                  return (
+                    <div key={sport} className="bg-[#141414] border border-gray-800 rounded-xl p-4">
+                      <p className="text-white font-semibold text-sm">{SPORT_LABELS[sport] || sport}</p>
+                      <p className="text-cyan-400 text-2xl font-black mt-1">{count}</p>
+                      <p className="text-gray-500 text-xs">Athletes on roster</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "highlights" && <ADHighlightsTab />}
+
+          {activeTab === "analytics" && (
+            <div className="space-y-4">
+              <h2 className="text-white font-bold text-lg flex items-center gap-2"><BarChart2 className="w-5 h-5 text-cyan-400" /> Analytics</h2>
+              <p className="text-gray-400 text-sm">Dive into performance data across all your sports programs.</p>
+              <Link to={createPageUrl("PerformanceAnalytics")} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-white text-sm font-semibold bg-cyan-500 hover:bg-cyan-400 transition-all">
+                <BarChart2 className="w-4 h-4" /> Open Analytics
+              </Link>
+            </div>
+          )}
+
+          {activeTab === "reports" && (
+            <div className="space-y-4">
+              <h2 className="text-white font-bold text-lg flex items-center gap-2"><TrendingUp className="w-5 h-5 text-cyan-400" /> Reports</h2>
+              <p className="text-gray-400 text-sm">Program-wide reports, eligibility, and performance summaries.</p>
+              <Link to={createPageUrl("Reports")} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-white text-sm font-semibold bg-cyan-500 hover:bg-cyan-400 transition-all">
+                <TrendingUp className="w-4 h-4" /> Open Reports
+              </Link>
+            </div>
           )}
         </main>
       </div>
