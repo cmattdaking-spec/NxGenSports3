@@ -30,16 +30,18 @@ export default function GameSchedule() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [u, op, pl, gp] = await Promise.all([
+        const [u, op, pl, gp, pp] = await Promise.all([
         base44.auth.me().catch(() => null),
         base44.entities.Opponent.filter({ sport: activeSport }, "game_date"),
         base44.entities.Player.filter({ sport: activeSport }),
-        base44.entities.GamePlan.filter({ sport: activeSport })
+        base44.entities.GamePlan.filter({ sport: activeSport }),
+        base44.entities.PracticePlan.list("date"),
         ]);
         setUser(u);
         setOpponents(op);
         setPlayers(pl);
         setGamePlans(gp);
+        setPracticePlans(pp);
         // team preview stats (unused visually but kept for future use)
       } catch (err) {
         console.error("Error loading game schedule data:", err);
@@ -82,6 +84,16 @@ export default function GameSchedule() {
       return gameDate.getFullYear() === date.getFullYear() && 
              gameDate.getMonth() === date.getMonth() && 
              gameDate.getDate() === date.getDate();
+    });
+  };
+
+  const getPracticesForDate = (date) => {
+    return practicePlans.filter(p => {
+      if (!p.date) return false;
+      const d = new Date(p.date);
+      return d.getFullYear() === date.getFullYear() && 
+             d.getMonth() === date.getMonth() && 
+             d.getDate() === date.getDate();
     });
   };
 
