@@ -337,6 +337,15 @@ export default function FilmRoom() {
       {commentTag && (
         <TagComments tag={commentTag} sessionId={activeSession?.id} user={user} onClose={() => setCommentTag(null)} />
       )}
+
+      {showHighlight && (
+        <NxHighlight
+          session={activeSession}
+          tags={tags}
+          players={players}
+          onClose={() => setShowHighlight(false)}
+        />
+      )}
     </div>
   );
 }
