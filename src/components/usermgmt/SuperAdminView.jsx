@@ -165,6 +165,9 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
     setEditForm({
       school_name: school.school_name || "",
       mascot: school.mascot || "",
+      logo_url: school.logo_url || "",
+      primary_color: school.primary_color || "#f97316",
+      secondary_color: school.secondary_color || "",
       location_city: school.location_city || "",
       location_state: school.location_state || "",
       subscribed_sports: school.subscribed_sports || [],
