@@ -257,7 +257,7 @@ export default function Settings() {
           >
             {saving ? "Saving..." : saved ? "✓ Saved!" : "Save Color Scheme"}
           </button>
-      </div>}
+      </div>)}
 
       {/* Push Notifications */}
       <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5">
