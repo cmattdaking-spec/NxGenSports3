@@ -157,6 +157,7 @@ export default function GameSchedule() {
           {days.map((day, idx) => {
             const gameDate = day ? new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day) : null;
             const gamesOnDay = day ? getGamesForDate(gameDate) : [];
+            const practicesOnDay = day ? getPracticesForDate(gameDate) : [];
             const isToday = day && new Date().toDateString() === gameDate.toDateString();
             
             return (
