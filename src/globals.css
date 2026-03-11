@@ -14,6 +14,8 @@ body {
   /* Mobile: prevent text resize on orientation change */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Prevent overscroll/bounce on iOS */
+  overscroll-behavior: none;
 }
 
 /* Safe area insets for iPhone notch / home indicator */
@@ -71,5 +73,26 @@ html, body {
 
 /* Touch targets — min 44px for Apple HIG compliance */
 button, a, [role="button"] {
-  min-height: 36px;
+  min-height: 44px;
+}
+
+/* Disable text selection on interactive UI elements */
+button, a, nav, [role="button"], [role="navigation"] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Smooth page transitions */
+.page-transition {
+  animation: slideInFromRight 0.25s ease-out;
+}
+
+@keyframes slideInFromRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Bottom nav safe area */
+.bottom-nav-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 64px);
 }

@@ -56,6 +56,7 @@ import GamePlan from './pages/GamePlan';
 import GameSchedule from './pages/GameSchedule';
 import InGameAssistant from './pages/InGameAssistant';
 import Messages from './pages/Messages';
+import NxAnnouncement from './pages/NxAnnouncement';
 import NxLab from './pages/NxLab';
 import PerformanceAnalytics from './pages/PerformanceAnalytics';
 import Playbook from './pages/Playbook';
@@ -70,7 +71,6 @@ import Scouting from './pages/Scouting';
 import Settings from './pages/Settings';
 import StrengthConditioning from './pages/StrengthConditioning';
 import UserManagement from './pages/UserManagement';
-import NxAnnouncement from './pages/NxAnnouncement';
 import __Layout from './Layout.jsx';
 
 
@@ -84,6 +84,7 @@ export const PAGES = {
     "GameSchedule": GameSchedule,
     "InGameAssistant": InGameAssistant,
     "Messages": Messages,
+    "NxAnnouncement": NxAnnouncement,
     "NxLab": NxLab,
     "PerformanceAnalytics": PerformanceAnalytics,
     "Playbook": Playbook,
@@ -98,7 +99,6 @@ export const PAGES = {
     "Settings": Settings,
     "StrengthConditioning": StrengthConditioning,
     "UserManagement": UserManagement,
-    "NxAnnouncement": NxAnnouncement,
 }
 
 export const pagesConfig = {
