@@ -183,8 +183,8 @@ export default function Settings() {
         </div>
       )}
 
-      {/* Color Scheme */}
-      <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5">
+      {/* Color Scheme — only HC and AD */}
+      {canChangeColors && <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5">
         <h2 className="text-white font-bold mb-1 flex items-center gap-2">
           <Palette className="w-4 h-4 text-[var(--color-primary,#3b82f6)]" /> School Colors
         </h2>
