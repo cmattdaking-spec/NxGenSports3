@@ -215,6 +215,7 @@ export default function Layout({ children, currentPageName }) {
   const canEditAll = isAD || isHeadCoach;
   const brandName = SPORT_NAMES[activeSport] || "NxDown";
   const [brandPrefix, brandSuffix] = brandName.startsWith("Nx") ? ["Nx", brandName.slice(2)] : [brandName, ""];
+  useMobileMeta(brandName);
 
   const switchSport = async (sport) => {
     if (user?.primary_sport && !isAD) return; // locked to primary sport
