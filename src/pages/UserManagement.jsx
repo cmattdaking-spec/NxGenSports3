@@ -82,7 +82,8 @@ function UserManagementContent() {
 
   const coachRole = user?.coaching_role;
   const isSuperAdmin = user?.role === "super_admin";
-  const isAD = coachRole === "athletic_director" || user?.role === "admin";
+  // AD = explicitly assigned as athletic_director coaching role (not just platform admin)
+  const isAD = coachRole === "athletic_director";
   const isHeadCoach = coachRole === "head_coach";
   // Only Head Coach and Athletic Director can invite/remove
   const canManageStaff = isSuperAdmin || isAD || isHeadCoach;
