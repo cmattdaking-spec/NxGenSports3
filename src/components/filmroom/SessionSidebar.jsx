@@ -1,14 +1,35 @@
-import { Plus, Film, Trash2, ChevronRight } from "lucide-react";
+import { Plus, Film, Trash2, Link as LinkIcon, Upload, X } from "lucide-react";
 import { useState } from "react";
+import { base44 } from "@/api/base44Client";
 
 export default function SessionSidebar({ sessions, activeId, onSelect, onCreate, onDelete }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", video_url: "", opponent: "", game_date: "", unit: "all" });
+  const [uploadMode, setUploadMode] = useState("url"); // "url" | "file"
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadProgress("Uploading...");
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setForm(f => ({ ...f, video_url: file_url }));
+      setUploadProgress("✓ Uploaded");
+    } catch {
+      setUploadProgress("Upload failed");
+    }
+    setUploading(false);
+  };
 
   const handleCreate = () => {
     if (!form.title || !form.video_url) return;
     onCreate(form);
     setForm({ title: "", video_url: "", opponent: "", game_date: "", unit: "all" });
+    setUploadMode("url");
+    setUploadProgress("");
     setShowForm(false);
   };
 
@@ -19,7 +40,7 @@ export default function SessionSidebar({ sessions, activeId, onSelect, onCreate,
         <button onClick={() => setShowForm(f => !f)}
           className="w-7 h-7 rounded-lg flex items-center justify-center text-white"
           style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
-          <Plus className="w-4 h-4" />
+          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
         </button>
       </div>
 
@@ -28,11 +49,45 @@ export default function SessionSidebar({ sessions, activeId, onSelect, onCreate,
           <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
             placeholder="Session title *"
             className="w-full bg-[#111] border border-gray-700 text-white px-2 py-1.5 rounded text-xs" />
-          <input value={form.video_url} onChange={e => setForm({ ...form, video_url: e.target.value })}
-            placeholder="Video URL (YouTube, Vimeo, .mp4) *"
-            className="w-full bg-[#111] border border-gray-700 text-white px-2 py-1.5 rounded text-xs" />
+
+          {/* Video Source Toggle */}
+          <div className="flex gap-1">
+            <button onClick={() => setUploadMode("url")}
+              className={`flex-1 flex items-center justify-center gap-1 py-1 rounded text-xs transition-all ${uploadMode === "url" ? "text-white" : "bg-gray-800 text-gray-500"}`}
+              style={uploadMode === "url" ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
+              <LinkIcon className="w-3 h-3" /> URL
+            </button>
+            <button onClick={() => setUploadMode("file")}
+              className={`flex-1 flex items-center justify-center gap-1 py-1 rounded text-xs transition-all ${uploadMode === "file" ? "text-white" : "bg-gray-800 text-gray-500"}`}
+              style={uploadMode === "file" ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
+              <Upload className="w-3 h-3" /> Upload
+            </button>
+          </div>
+
+          {uploadMode === "url" ? (
+            <input value={form.video_url} onChange={e => setForm({ ...form, video_url: e.target.value })}
+              placeholder="YouTube, Vimeo, or .mp4 URL *"
+              className="w-full bg-[#111] border border-gray-700 text-white px-2 py-1.5 rounded text-xs" />
+          ) : (
+            <div>
+              <label className="w-full flex flex-col items-center justify-center gap-1 bg-[#111] border border-dashed border-gray-600 rounded py-3 cursor-pointer hover:border-gray-400 transition-all">
+                <Upload className="w-4 h-4 text-gray-500" />
+                <span className="text-xs text-gray-500">Click to upload video</span>
+                <input type="file" accept="video/*" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+              </label>
+              {uploadProgress && (
+                <p className={`text-xs mt-1 ${uploadProgress.startsWith("✓") ? "text-green-400" : uploading ? "text-gray-400" : "text-red-400"}`}>
+                  {uploadProgress}
+                </p>
+              )}
+              {form.video_url && uploadProgress.startsWith("✓") && (
+                <p className="text-xs text-gray-600 truncate mt-0.5">{form.video_url.split("/").pop()}</p>
+              )}
+            </div>
+          )}
+
           <input value={form.opponent} onChange={e => setForm({ ...form, opponent: e.target.value })}
-            placeholder="Opponent"
+            placeholder="Opponent (optional)"
             className="w-full bg-[#111] border border-gray-700 text-white px-2 py-1.5 rounded text-xs" />
           <input type="date" value={form.game_date} onChange={e => setForm({ ...form, game_date: e.target.value })}
             className="w-full bg-[#111] border border-gray-700 text-white px-2 py-1.5 rounded text-xs" />
@@ -44,9 +99,10 @@ export default function SessionSidebar({ sessions, activeId, onSelect, onCreate,
             <option value="special_teams">Special Teams</option>
           </select>
           <div className="flex gap-2">
-            <button onClick={() => setShowForm(false)} className="flex-1 bg-gray-800 text-gray-400 py-1.5 rounded text-xs">Cancel</button>
-            <button onClick={handleCreate}
-              className="flex-1 text-white py-1.5 rounded text-xs font-semibold"
+            <button onClick={() => { setShowForm(false); setUploadProgress(""); setUploadMode("url"); }}
+              className="flex-1 bg-gray-800 text-gray-400 py-1.5 rounded text-xs">Cancel</button>
+            <button onClick={handleCreate} disabled={!form.title || !form.video_url || uploading}
+              className="flex-1 text-white py-1.5 rounded text-xs font-semibold disabled:opacity-40"
               style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
               Create
             </button>
@@ -59,6 +115,7 @@ export default function SessionSidebar({ sessions, activeId, onSelect, onCreate,
           <div className="text-center py-10">
             <Film className="w-8 h-8 text-gray-700 mx-auto mb-2" />
             <p className="text-gray-600 text-xs">No sessions yet</p>
+            <p className="text-gray-700 text-xs mt-1">Tap + to add a session</p>
           </div>
         )}
         {sessions.map(s => (
@@ -69,6 +126,7 @@ export default function SessionSidebar({ sessions, activeId, onSelect, onCreate,
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium truncate">{s.title}</p>
               {s.opponent && <p className="text-gray-600 text-xs truncate">vs {s.opponent}</p>}
+              {s.game_date && <p className="text-gray-700 text-xs">{s.game_date}</p>}
             </div>
             <div className="flex items-center gap-1">
               {s.tag_count > 0 && (

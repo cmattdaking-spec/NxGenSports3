@@ -18,6 +18,7 @@ export default function GameSchedule() {
   const [opponents, setOpponents] = useState([]);
   const [players, setPlayers] = useState([]);
   const [gamePlans, setGamePlans] = useState([]);
+  const [practicePlans, setPracticePlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [expanded, setExpanded] = useState(null);
