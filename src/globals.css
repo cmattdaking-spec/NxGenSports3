@@ -16,14 +16,22 @@ body {
   text-size-adjust: 100%;
   /* Prevent overscroll/bounce on iOS */
   overscroll-behavior: none;
+  /* Ensure full bleed under iOS status bar */
+  background-attachment: fixed;
 }
 
-/* Safe area insets for iPhone notch / home indicator */
+/* Safe area insets for iPhone notch / Dynamic Island / home indicator */
+/* NOTE: These ONLY work when viewport-fit=cover is set in index.html */
 .safe-area-top {
   padding-top: env(safe-area-inset-top, 0px);
 }
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Ensure full-height layout accounts for safe areas on iOS */
+#root {
+  min-height: 100dvh; /* dvh = dynamic viewport height, respects iOS browser chrome */
 }
 
 .nxdown-gradient {
