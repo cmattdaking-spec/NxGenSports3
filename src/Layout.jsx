@@ -157,7 +157,7 @@ export default function Layout({ children, currentPageName }) {
       setUser(u);
       const sports = u?.assigned_sports?.length ? u.assigned_sports : ["boys_football"];
       setAssignedSports(sports);
-      const uIsAD = u?.coaching_role === "athletic_director" || u?.role === "admin";
+      const uIsAD = u?.coaching_role === "athletic_director" || (u?.role === "admin" && u?.coaching_role === "athletic_director");
       const saved = uIsAD ? "nxgensports" : (u?.active_sport || sports[0]);
       setActiveSport(saved);
     }).catch(() => {});
@@ -174,7 +174,7 @@ export default function Layout({ children, currentPageName }) {
 
   const coachingRole = user?.coaching_role || "position_coach";
   const effectiveRole = user?.is_associate_head_coach ? "associate_head_coach" : coachingRole;
-  const isAD = effectiveRole === "athletic_director" || user?.role === "admin";
+  const isAD = effectiveRole === "athletic_director" || (user?.role === "admin" && user?.coaching_role === "athletic_director");
   const isHeadCoach = coachingRole === "head_coach";
   const isSuperAdmin = user?.role === "super_admin";
   const canEditAll = isAD || isHeadCoach;

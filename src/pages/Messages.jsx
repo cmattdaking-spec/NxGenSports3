@@ -57,12 +57,12 @@ export default function Messages() {
   const isCoachOrAdmin = myType === "coach" || myType === "admin" || user?.role === "admin";
 
   useEffect(() => {
-    Promise.all([base44.auth.me(), base44.entities.User.list()])
-      .then(([u, users]) => {
-        setUser(u);
-        setAllUsers(users);
-        loadConversations(u);
-      }).catch(() => setLoading(false));
+    base44.auth.me().then(async (u) => {
+      setUser(u);
+      const res = await base44.functions.invoke('getTeamUsers', {});
+      setAllUsers(res.data || []);
+      loadConversations(u);
+    }).catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {

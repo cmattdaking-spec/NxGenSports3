@@ -6,11 +6,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const allowedRoles = ['admin', 'super_admin', 'head_coach', 'athletic_director'];
-    const effectiveRole = user.coaching_role || user.role;
-    if (!allowedRoles.includes(user.role) && !allowedRoles.includes(effectiveRole)) {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    // Any authenticated user can fetch their team members for messaging
 
     // Super admin sees all users (minus other super admins)
     if (user.role === 'super_admin') {
