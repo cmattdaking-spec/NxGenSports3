@@ -70,10 +70,21 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
 
   const loadSchools = () => {
     setSchoolsLoading(true);
+    setSchoolsError("");
     base44.entities.School.list("-created_date").then(list => {
       setSchools(list);
       setSchoolsLoading(false);
-    }).catch(() => setSchoolsLoading(false));
+    }).catch(err => {
+      setSchoolsError(err.message || "Failed to load schools.");
+      setSchoolsLoading(false);
+    });
+  };
+
+  const saveAccentColor = async () => {
+    setSavingColor(true);
+    await base44.auth.updateMe({ accent_color: accentColor });
+    document.documentElement.style.setProperty("--color-primary", accentColor);
+    setSavingColor(false);
   };
 
   useEffect(() => { loadSchools(); }, []);
