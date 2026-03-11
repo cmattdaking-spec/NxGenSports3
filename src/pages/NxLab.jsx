@@ -267,8 +267,6 @@ export default function NxLab() {
 
   const seekToTag = (tag) => playerRef.current?.seekTo(tag.timestamp_seconds);
   const successRate = tags.length ? Math.round((tags.filter(t => t.result === "success").length / tags.length) * 100) : 0;
-  const runCount = tags.filter(t => t.play_type === "run").length;
-  const passCount = tags.filter(t => t.play_type === "pass").length;
   const flaggedCount = tags.filter(t => t.flagged).length;
   const activeViewers = Object.entries(presence).filter(([, v]) => Date.now() - v.lastSeen < 30000).map(([email, v]) => ({ email, name: v.name }));
 
