@@ -251,7 +251,11 @@ export default function Layout({ children, currentPageName }) {
       {/* Logo */}
       <div className={`flex items-center gap-3 px-4 py-5 border-b border-gray-800 ${collapsed ? "justify-center" : ""}`}>
         <img
-          src={teamLogo || SPORT_LOGOS[activeSport] || SUITE_LOGO}
+          src={
+            (isPlayer || isParent || user?.team_id)
+              ? (teamLogo || SUITE_LOGO)
+              : (SPORT_LOGOS[activeSport] || SUITE_LOGO)
+          }
           alt={brandName}
           className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
         />
