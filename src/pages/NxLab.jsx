@@ -19,7 +19,8 @@ import GamePlanTab from "../components/nxlab/GamePlanTab";
 import PracticeTab from "../components/nxlab/PracticeTab";
 
 // ─── SCOUTING SUB-COMPONENT ──────────────────────────────────────────────────
-function ScoutingTab() {
+function ScoutingTab({ activeSport }) {
+  const sportCfg = getSportConfig(activeSport);
   const [opponents, setOpponents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
