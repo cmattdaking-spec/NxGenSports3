@@ -408,7 +408,6 @@ export default function Layout({ children, currentPageName }) {
             }
           }}
           onScroll={e => { scrollPositions.current[currentPageName] = e.currentTarget.scrollTop; }}
-          key={`main-scroll`}
           id="main-scroll-container"
         >
           {pageLoading && (
