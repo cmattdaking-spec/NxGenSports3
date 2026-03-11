@@ -111,13 +111,18 @@ function UserManagementContent() {
     : (user?.assigned_sports || []);
 
   // Filter users visible to this coach
-  // Head coach only sees staff in their sport
+  // Head coach only sees staff assigned to the same sport(s) — no cross-sport visibility
   let visibleUsers = allUsers;
   if (isHeadCoach && !isAD) {
-    const mySports = user?.assigned_sports || [];
+    const mySports = new Set(user?.assigned_sports || []);
     visibleUsers = allUsers.filter(u =>
       u.id === user?.id ||
-      (u.assigned_sports || []).some(s => mySports.includes(s))
+      (
+        (u.assigned_sports || []).some(s => mySports.has(s)) &&
+        // Exclude other teams' head coaches / ADs
+        u.coaching_role !== "athletic_director" &&
+        !(u.coaching_role === "head_coach" && u.id !== user?.id && !(u.assigned_sports || []).some(s => mySports.has(s)))
+      )
     );
   }
 
