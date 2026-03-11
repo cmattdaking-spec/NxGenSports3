@@ -58,6 +58,12 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
   const [schoolsError, setSchoolsError] = useState("");
   const [showAddSchool, setShowAddSchool] = useState(false);
   const [accentColor, setAccentColor] = useState(user?.accent_color || "#f97316");
+  useEffect(() => {
+    if (user?.accent_color) {
+      setAccentColor(user.accent_color);
+      document.documentElement.style.setProperty("--color-primary", user.accent_color);
+    }
+  }, [user?.accent_color]);
   const [savingColor, setSavingColor] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
