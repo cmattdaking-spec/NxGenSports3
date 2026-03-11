@@ -456,6 +456,23 @@ function SchoolForm({ form, setForm, onToggleSport, onSubmit, onCancel, submitti
             <input value={form.team_id || ""} onChange={e => setForm(p => ({ ...p, team_id: e.target.value.toLowerCase().replace(/\s+/g, "_") }))}
               placeholder="e.g. westview_hs" className="field-input font-mono" />
           </Field>
+          <Field label="Logo URL">
+            <input value={form.logo_url || ""} onChange={f("logo_url")} placeholder="https://... (team logo image URL)" className="field-input" />
+          </Field>
+          <Field label="Primary Color">
+            <div className="flex items-center gap-2">
+              <input type="color" value={form.primary_color || "#f97316"} onChange={f("primary_color")}
+                className="w-10 h-10 rounded-lg border border-gray-700 bg-transparent cursor-pointer" />
+              <input value={form.primary_color || ""} onChange={f("primary_color")} placeholder="#f97316" className="field-input flex-1" />
+            </div>
+          </Field>
+          <Field label="Secondary Color">
+            <div className="flex items-center gap-2">
+              <input type="color" value={form.secondary_color || "#ffffff"} onChange={f("secondary_color")}
+                className="w-10 h-10 rounded-lg border border-gray-700 bg-transparent cursor-pointer" />
+              <input value={form.secondary_color || ""} onChange={f("secondary_color")} placeholder="#ffffff (optional)" className="field-input flex-1" />
+            </div>
+          </Field>
           <Field label="Subscription Term">
             <select value={form.subscription_term} onChange={f("subscription_term")} className="field-input">
               {SUBSCRIPTION_TERMS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
