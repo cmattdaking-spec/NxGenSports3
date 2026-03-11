@@ -45,6 +45,22 @@ const SPORT_TAG_CONFIG = {
     placeholders: { formation:"Rotation 1, 6-2 system..." },
     downOptions: [{ v:"1",l:"Set 1" },{ v:"2",l:"Set 2" },{ v:"3",l:"Set 3" },{ v:"4",l:"Set 4" },{ v:"5",l:"Set 5" }],
   },
+  cross_country: {
+    playTypes: ["race_strategy","pacing","pack_running","hill_tactics","kick_finish","weather_adjustment","other"],
+    personnel: [],
+    fields: ["down","formation","yards"],
+    labels: { down:"Kilometer", formation:"Race Tactic", yards:"Place / Finish" },
+    placeholders: { formation:"Pack running, surge...", yards:"1st, 5th..." },
+    downOptions: [{ v:"1",l:"1K" },{ v:"2",l:"2K" },{ v:"3",l:"3K" },{ v:"4",l:"4K" },{ v:"5",l:"5K" }],
+  },
+  track: {
+    playTypes: ["race_strategy","relay_exchange","block_start","pacing","field_event_approach","taper","other"],
+    personnel: [],
+    fields: ["down","formation","yards"],
+    labels: { down:"Lap", formation:"Event", yards:"Place / Time" },
+    placeholders: { formation:"100m, Long Jump, 4×400...", yards:"PR, 1st..." },
+    downOptions: [{ v:"1",l:"Lap 1" },{ v:"2",l:"Lap 2" },{ v:"3",l:"Lap 3" },{ v:"4",l:"Lap 4" },{ v:"5",l:"Final Lap" }],
+  },
 };
 
 function getTagConfig(sportFamily) {

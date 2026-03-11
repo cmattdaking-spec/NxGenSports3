@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import { useSport } from "@/components/SportContext";
+import { getSportConfig } from "@/components/SportConfig";
 import {
   Users, BookOpen, Target, Activity, TrendingUp,
   ClipboardList, Crosshair, Zap, AlertTriangle,
@@ -28,6 +29,7 @@ const SPORT_NAMES = {
 
 export default function Dashboard() {
   const { activeSport } = useSport();
+  const cfg = getSportConfig(activeSport);
   const [players, setPlayers] = useState([]);
   const [healthRecords, setHealthRecords] = useState([]);
   const [plays, setPlays] = useState([]);
@@ -100,7 +102,7 @@ export default function Dashboard() {
 
   const stats = [
     { label: "Players", value: players.length, icon: Users, page: "Roster", color: "from-blue-600 to-blue-700" },
-    { label: "Total Plays", value: plays.length, icon: BookOpen, page: "Playbook", color: "from-orange-500 to-orange-600" },
+    { label: `Total ${cfg.termPlay}s`, value: plays.length, icon: BookOpen, page: "Playbook", color: "from-orange-500 to-orange-600" },
     { label: "Game Plans", value: gamePlans.length, icon: Target, page: "GamePlan", color: "from-purple-600 to-purple-700" },
     { label: "Health Issues", value: injured.length + limited.length, icon: Activity, page: "PlayerHealth", color: "from-red-600 to-red-700" },
   ];
@@ -257,7 +259,7 @@ export default function Dashboard() {
                 <p className="text-2xl font-black text-white">vs. {nextGame.name}</p>
                 <p className="text-sm mt-1" style={{ color: "var(--color-primary,#f97316)" }}>{nextGame.game_date} · {nextGame.location}</p>
                 {nextGame.offensive_tendency && (
-                  <p className="text-gray-400 text-xs mt-2 line-clamp-2">Off: {nextGame.offensive_tendency}</p>
+                  <p className="text-gray-400 text-xs mt-2 line-clamp-2"><span className="text-gray-500">{cfg.gamePlanKeyTendenciesLabel.split(" ")[0]}:</span> {nextGame.offensive_tendency}</p>
                 )}
                 {nextGame.weaknesses && (
                   <p className="text-green-400 text-xs mt-1 line-clamp-1">⚡ {nextGame.weaknesses}</p>

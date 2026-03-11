@@ -944,7 +944,7 @@ Generate: weight class matchup notes, bonus point opportunities, forfeit/bump st
       mental_prep:"bg-purple-500/20 text-purple-400",
     },
 
-    depthSlots: ["#1","#2","#3","#4","#5","#6","#7"],
+    depthSlots: ["#1","#2","#3","#4"],
 
     gamePlanSections: [
       { key:"scripted_plays",   label:"Race Plan",       color:"text-blue-400" },
