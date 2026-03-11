@@ -167,8 +167,6 @@ function ScoutingTab() {
 // ─── MAIN NxLab PAGE ─────────────────────────────────────────────────────────
 export default function NxLab() {
   const [activeTab, setActiveTab] = useState("film");
-  const [user, setUser] = useState(null);
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
 
   // Film Room state
   const [sessions, setSessions] = useState([]);
