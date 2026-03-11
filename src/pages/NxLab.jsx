@@ -319,6 +319,11 @@ export default function NxLab() {
       {activeTab === "practice" && (
         <div className="flex-1 overflow-y-auto"><PracticeTab user={user} /></div>
       )}
+
+      {/* RACE DAY GUIDE TAB */}
+      {activeTab === "raceday" && (
+        <div className="flex-1 overflow-y-auto"><RaceDayGuide user={user} /></div>
+      )}
       
 
       {/* FILM TAB */}
