@@ -301,7 +301,7 @@ export default function NxLab() {
 
       {/* SCOUTING TAB */}
       {activeTab === "scouting" && (
-        <div className="flex-1 overflow-y-auto"><ScoutingTab /></div>
+        <div className="flex-1 overflow-y-auto"><ScoutingTab activeSport={activeSport} /></div>
       )}
 
       {/* PLAYBOOK TAB */}
