@@ -117,9 +117,9 @@ function UserManagementContent() {
     const mySports = new Set(user?.assigned_sports || []);
     visibleUsers = allUsers.filter(u =>
       u.id === user?.id ||
+      u.is_associate_head_coach ||
       (
         (u.assigned_sports || []).some(s => mySports.has(s)) &&
-        // Exclude other teams' head coaches / ADs
         u.coaching_role !== "athletic_director" &&
         !(u.coaching_role === "head_coach" && u.id !== user?.id && !(u.assigned_sports || []).some(s => mySports.has(s)))
       )
