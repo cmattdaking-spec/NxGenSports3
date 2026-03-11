@@ -282,9 +282,20 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
               {/* School row */}
               <div className="px-5 py-4 flex items-center gap-4">
                 <button onClick={() => setExpandedId(isExpanded ? null : school.id)} className="flex items-center gap-3 flex-1 text-left min-w-0">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--color-primary,#f97316)22" }}>
-                    <Building2 className="w-5 h-5" style={{ color: "var(--color-primary,#f97316)" }} />
+                  {/* Logo or color swatch */}
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden border border-gray-700"
+                    style={{ backgroundColor: school.primary_color ? school.primary_color + "33" : "#f9731622" }}>
+                    {school.logo_url
+                      ? <img src={school.logo_url} alt={school.school_name} className="w-full h-full object-cover rounded-xl" />
+                      : <Building2 className="w-5 h-5" style={{ color: school.primary_color || "#f97316" }} />}
                   </div>
+                  {/* Color swatches */}
+                  {(school.primary_color || school.secondary_color) && (
+                    <div className="flex gap-1 flex-shrink-0">
+                      {school.primary_color && <div className="w-3 h-10 rounded-full" style={{ backgroundColor: school.primary_color }} title={school.primary_color} />}
+                      {school.secondary_color && <div className="w-3 h-10 rounded-full" style={{ backgroundColor: school.secondary_color }} title={school.secondary_color} />}
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-white font-semibold text-sm">{school.school_name}</p>
