@@ -419,7 +419,9 @@ export default function Layout({ children, currentPageName }) {
               </div>
             </div>
           )}
-          {children}
+          <div key={currentPageName} className="page-transition min-h-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>
