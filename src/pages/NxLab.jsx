@@ -79,7 +79,7 @@ function ScoutingTab({ activeSport }) {
       setAiLoading(true);
       setAiTarget(opp.id);
       const res = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a football scouting AI. Generate a concise scouting report for: ${opp.name} (${opp.record || "?"} record, ${opp.location} game on ${opp.game_date}).\nOffensive Tendency: ${opp.offensive_tendency || "Unknown"}\nDefensive Tendency: ${opp.defensive_tendency || "Unknown"}\nKey Players: ${opp.key_players || "Unknown"}\nStrengths: ${opp.strengths || "Unknown"}\nWeaknesses: ${opp.weaknesses || "Unknown"}\n\nProvide: 1) Offensive analysis 2) Defensive analysis 3) Key matchups 4) Top 3 game plan recommendations.`,
+        prompt: `You are an ${sportCfg.aiPersona} scouting AI. Generate a concise scouting report for: ${opp.name} (${opp.record || "?"} record, ${opp.location} game on ${opp.game_date}).\nOffensive Tendency: ${opp.offensive_tendency || "Unknown"}\nDefensive Tendency: ${opp.defensive_tendency || "Unknown"}\nKey Players: ${opp.key_players || "Unknown"}\nStrengths: ${opp.strengths || "Unknown"}\nWeaknesses: ${opp.weaknesses || "Unknown"}\n\nProvide: 1) Offensive analysis 2) Defensive analysis 3) Key matchups 4) Top 3 game plan recommendations.`,
         add_context_from_internet: true
       });
       await base44.entities.Opponent.update(opp.id, { ai_scout_report: res });
