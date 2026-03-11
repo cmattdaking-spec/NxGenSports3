@@ -17,6 +17,7 @@ import OpponentForm from "../components/scouting/OpponentForm";
 import PlaybookTab from "../components/nxlab/PlaybookTab";
 import GamePlanTab from "../components/nxlab/GamePlanTab";
 import PracticeTab from "../components/nxlab/PracticeTab";
+import RaceDayGuide from "../components/nxlab/RaceDayGuide";
 
 // ─── SCOUTING SUB-COMPONENT ──────────────────────────────────────────────────
 function ScoutingTab({ activeSport }) {
