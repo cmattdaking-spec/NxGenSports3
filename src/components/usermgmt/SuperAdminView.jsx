@@ -77,8 +77,8 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
   const loadSchools = () => {
     setSchoolsLoading(true);
     setSchoolsError("");
-    base44.entities.School.list("-created_date").then(list => {
-      setSchools(list);
+    base44.functions.invoke("listAllSchools").then(res => {
+      setSchools(res.data?.schools || []);
       setSchoolsLoading(false);
     }).catch(err => {
       setSchoolsError(err.message || "Failed to load schools.");
