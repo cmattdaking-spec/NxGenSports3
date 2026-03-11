@@ -240,6 +240,7 @@ export default function Layout({ children, currentPageName }) {
     : isPlayer ? playerNavItems
     : isParent ? parentNavItems
     : navItems.filter((item) => {
+        if (item.hideSports?.includes(activeSport)) return false;
         if (!item.roles) return true;
         if (item.roles.includes(user?.role)) return true;
         if (!item.roles.includes(effectiveRole)) return false;
