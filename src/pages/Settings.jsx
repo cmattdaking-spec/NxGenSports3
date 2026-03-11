@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings as SettingsIcon, LogOut, Palette, Check, User, Shield, Bell, Lock, Eye, EyeOff, Upload, Building2 } from "lucide-react";
+import { Settings as SettingsIcon, LogOut, Palette, Check, User, Shield, Bell, Lock, Eye, EyeOff, Upload, Building2, Trash2 } from "lucide-react";
 import TeamLanguagePanel from "../components/settings/TeamLanguagePanel";
 import SystemDesigner from "../components/settings/SystemDesigner";
 
@@ -34,6 +34,8 @@ export default function Settings() {
   const [pwError, setPwError] = useState("");
   const [pwSuccess, setPwSuccess] = useState(false);
   const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const coachingRole = user?.coaching_role || user?.role;
   const canChangeColors = ["head_coach", "athletic_director", "admin"].includes(coachingRole);
@@ -119,6 +121,11 @@ export default function Settings() {
 
   const handleLogout = () => {
     base44.auth.logout();
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE") return;
+    await base44.auth.logout();
   };
 
   return (
@@ -333,17 +340,58 @@ export default function Settings() {
         </div>
       )}
 
-      {/* Logout */}
+      {/* Logout + Delete Account */}
       <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5">
         <h2 className="text-white font-bold mb-4">Account</h2>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 w-full p-3 rounded-xl border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 transition-all text-red-400"
-        >
-          <LogOut className="w-4 h-4" />
-          <span className="text-sm font-medium">Sign Out</span>
-        </button>
+        <div className="space-y-3">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 w-full p-3 rounded-xl border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 transition-all text-red-400"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="text-sm font-medium">Sign Out</span>
+          </button>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="flex items-center gap-3 w-full p-3 rounded-xl border border-red-700/40 bg-red-900/10 hover:bg-red-900/20 transition-all text-red-500"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span className="text-sm font-medium">Delete Account</span>
+          </button>
+        </div>
       </div>
+
+      {/* Delete Account Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-end md:items-center justify-center p-4">
+          <div className="bg-[#1a1a1a] border border-red-800/50 rounded-2xl p-6 w-full max-w-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-400" />
+              </div>
+              <h3 className="text-white font-bold text-lg">Delete Account</h3>
+            </div>
+            <p className="text-gray-400 text-sm mb-4">This action is permanent and cannot be undone. All your data will be lost.</p>
+            <p className="text-gray-500 text-xs mb-2">Type <span className="text-red-400 font-mono font-bold">DELETE</span> to confirm:</p>
+            <input
+              value={deleteConfirmText}
+              onChange={e => setDeleteConfirmText(e.target.value)}
+              className="w-full bg-[#111] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm mb-4 focus:outline-none focus:border-red-500"
+              placeholder="DELETE"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
+                className="flex-1 py-2.5 rounded-xl border border-gray-700 text-gray-300 text-sm font-medium">
+                Cancel
+              </button>
+              <button onClick={handleDeleteAccount} disabled={deleteConfirmText !== "DELETE"}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 disabled:bg-red-600/30 text-white text-sm font-bold transition-all">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
