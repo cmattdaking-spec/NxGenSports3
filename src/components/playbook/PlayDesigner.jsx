@@ -47,6 +47,29 @@ const TOOLS = [
 const ROUTE_COLORS = ["#ff6b00","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#ffffff","#facc15"];
 const LINE_WIDTHS = [1.5, 2.5, 4, 6];
 
+const BASEBALL_PLAYER_TYPES = [
+  { code: "P",  color: "#f59e0b", type: "pitcher",     shape: "circle",  unit: "defense" },
+  { code: "C",  color: "#64748b", type: "catcher",     shape: "square",  unit: "defense" },
+  { code: "1B", color: "#3b82f6", type: "firstbase",   shape: "circle",  unit: "defense" },
+  { code: "2B", color: "#6366f1", type: "secondbase",  shape: "circle",  unit: "defense" },
+  { code: "3B", color: "#8b5cf6", type: "thirdbase",   shape: "circle",  unit: "defense" },
+  { code: "SS", color: "#06b6d4", type: "shortstop",   shape: "circle",  unit: "defense" },
+  { code: "LF", color: "#10b981", type: "leftfield",   shape: "circle",  unit: "defense" },
+  { code: "CF", color: "#22c55e", type: "centerfield", shape: "circle",  unit: "defense" },
+  { code: "RF", color: "#84cc16", type: "rightfield",  shape: "circle",  unit: "defense" },
+  { code: "B",  color: "#ef4444", type: "batter",      shape: "circle",  unit: "offense" },
+  { code: "R",  color: "#f97316", type: "runner",      shape: "circle",  unit: "offense" },
+];
+
+const GENERIC_PLAYER_TYPES = [
+  { code: "O",  color: "#3b82f6", type: "offense1", shape: "circle",  unit: "offense" },
+  { code: "O",  color: "#6366f1", type: "offense2", shape: "circle",  unit: "offense" },
+  { code: "O",  color: "#8b5cf6", type: "offense3", shape: "circle",  unit: "offense" },
+  { code: "X",  color: "#ef4444", type: "defense1", shape: "circle",  unit: "defense" },
+  { code: "X",  color: "#f97316", type: "defense2", shape: "circle",  unit: "defense" },
+  { code: "⚽", color: "#22c55e", type: "ball",     shape: "diamond", unit: "all"     },
+];
+
 const W = 800, H = 520;
 // Field layout: endzone top, playing field, endzone bottom
 const EZ_H = 52;   // endzone height in canvas px
@@ -188,6 +211,146 @@ function drawField(ctx, format) {
   ctx.fillText("LOS", 4, LOS_Y - 4);
 }
 
+// ── Sport field type helper ────────────────────────────────────────────────────
+function getFieldType(sport) {
+  if (!sport) return 'football';
+  const s = sport.toLowerCase();
+  if (s.includes('baseball') || s.includes('softball')) return 'baseball';
+  if (s.includes('football')) return 'football';
+  return 'generic';
+}
+
+// ── Baseball diamond constants ──────────────────────────────────────────────
+const BB_HOME    = { x: 400, y: 450 };
+const BB_FIRST   = { x: 540, y: 315 };
+const BB_SECOND  = { x: 400, y: 180 };
+const BB_THIRD   = { x: 260, y: 315 };
+const BB_PITCHER = { x: 400, y: 298 };
+
+function drawBaseballField(ctx) {
+  // Outfield grass
+  ctx.fillStyle = "#1a5c1a";
+  ctx.fillRect(0, 0, W, H);
+
+  const rfAngle = Math.atan2(BB_FIRST.y - BB_HOME.y, BB_FIRST.x - BB_HOME.x);
+  const lfAngle = Math.atan2(BB_THIRD.y - BB_HOME.y, BB_THIRD.x - BB_HOME.x);
+
+  // Outfield wedge
+  ctx.beginPath();
+  ctx.moveTo(BB_HOME.x, BB_HOME.y);
+  ctx.arc(BB_HOME.x, BB_HOME.y, 370, rfAngle - 0.02, lfAngle + 0.02, true);
+  ctx.closePath();
+  ctx.fillStyle = "#1e681e";
+  ctx.fill();
+
+  // Infield dirt circle
+  ctx.beginPath();
+  ctx.arc(400, 330, 155, 0, Math.PI * 2);
+  ctx.fillStyle = "#8B6914";
+  ctx.fill();
+
+  // Infield grass square
+  ctx.beginPath();
+  ctx.moveTo(BB_HOME.x, BB_HOME.y);
+  ctx.lineTo(BB_FIRST.x, BB_FIRST.y);
+  ctx.lineTo(BB_SECOND.x, BB_SECOND.y);
+  ctx.lineTo(BB_THIRD.x, BB_THIRD.y);
+  ctx.closePath();
+  ctx.fillStyle = "#1e681e";
+  ctx.fill();
+
+  // Outfield fence
+  ctx.beginPath();
+  ctx.arc(BB_HOME.x, BB_HOME.y, 355, rfAngle, lfAngle, true);
+  ctx.strokeStyle = "rgba(255,255,255,0.5)";
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Foul lines
+  ctx.strokeStyle = "rgba(255,255,255,0.7)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(BB_HOME.x, BB_HOME.y);
+  ctx.lineTo(BB_HOME.x + Math.cos(rfAngle) * 420, BB_HOME.y + Math.sin(rfAngle) * 420);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(BB_HOME.x, BB_HOME.y);
+  ctx.lineTo(BB_HOME.x + Math.cos(lfAngle) * 420, BB_HOME.y + Math.sin(lfAngle) * 420);
+  ctx.stroke();
+
+  // Base paths diamond
+  ctx.beginPath();
+  ctx.moveTo(BB_HOME.x, BB_HOME.y);
+  ctx.lineTo(BB_FIRST.x, BB_FIRST.y);
+  ctx.lineTo(BB_SECOND.x, BB_SECOND.y);
+  ctx.lineTo(BB_THIRD.x, BB_THIRD.y);
+  ctx.closePath();
+  ctx.strokeStyle = "rgba(255,255,255,0.8)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Pitcher's mound
+  ctx.beginPath();
+  ctx.arc(BB_PITCHER.x, BB_PITCHER.y, 14, 0, Math.PI * 2);
+  ctx.fillStyle = "#a07830";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.3)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Bases (rotated squares)
+  const bs = 12;
+  [BB_FIRST, BB_SECOND, BB_THIRD].forEach(b => {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = "white";
+    ctx.fillRect(-bs / 2, -bs / 2, bs, bs);
+    ctx.restore();
+  });
+
+  // Home plate
+  ctx.fillStyle = "white";
+  ctx.beginPath();
+  ctx.moveTo(BB_HOME.x, BB_HOME.y - 10);
+  ctx.lineTo(BB_HOME.x + 10, BB_HOME.y - 5);
+  ctx.lineTo(BB_HOME.x + 10, BB_HOME.y + 5);
+  ctx.lineTo(BB_HOME.x, BB_HOME.y + 10);
+  ctx.lineTo(BB_HOME.x - 10, BB_HOME.y + 5);
+  ctx.lineTo(BB_HOME.x - 10, BB_HOME.y - 5);
+  ctx.closePath();
+  ctx.fill();
+
+  // Labels
+  ctx.font = "bold 10px Arial";
+  ctx.fillStyle = "rgba(255,255,255,0.55)";
+  ctx.textAlign = "center";
+  ctx.fillText("2B", BB_SECOND.x, BB_SECOND.y - 20);
+  ctx.fillText("1B", BB_FIRST.x + 22, BB_FIRST.y);
+  ctx.fillText("3B", BB_THIRD.x - 22, BB_THIRD.y);
+  ctx.fillText("HP", BB_HOME.x, BB_HOME.y + 22);
+}
+
+function drawGenericCourt(ctx) {
+  ctx.fillStyle = "#1a3a5c";
+  ctx.fillRect(0, 0, W, H);
+  const mg = 40;
+  ctx.strokeStyle = "rgba(255,255,255,0.8)";
+  ctx.lineWidth = 2.5;
+  ctx.strokeRect(mg, mg, W - mg * 2, H - mg * 2);
+  ctx.beginPath(); ctx.moveTo(mg, H / 2); ctx.lineTo(W - mg, H / 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(W / 2, H / 2, 55, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath(); ctx.arc(W / 2, H / 2, 4, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255,255,255,0.8)"; ctx.fill();
+}
+
+function drawSportField(ctx, format, fieldType) {
+  if (fieldType === 'baseball') drawBaseballField(ctx);
+  else if (fieldType === 'generic') drawGenericCourt(ctx);
+  else drawField(ctx, format);
+}
+
 function renderElement(ctx, el, selectedId) {
   ctx.save();
   const c = el.color || "#ff6b00";
@@ -298,7 +461,7 @@ function renderElement(ctx, el, selectedId) {
 }
 
 // Animate play: draw routes sequentially
-function animatePlay(canvas, elements, format, onDone) {
+function animatePlay(canvas, elements, format, fieldType, onDone) {
   const routes = elements.filter(e => ["freehand","arrow","line"].includes(e.type));
   const players = elements.filter(e => e.type === "player");
   const others = elements.filter(e => !["freehand","arrow","line","player"].includes(e.type));
@@ -311,7 +474,7 @@ function animatePlay(canvas, elements, format, onDone) {
   const step = () => {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, W, H);
-    drawField(ctx, format);
+    drawSportField(ctx, format, fieldType);
     others.forEach(e => renderElement(ctx, e, null));
     players.forEach(e => renderElement(ctx, e, null));
 
@@ -351,13 +514,16 @@ function animatePlay(canvas, elements, format, onDone) {
   return () => cancelAnimationFrame(raf);
 }
 
-export default function PlayDesigner({ onClose, onSave, initialData, playName }) {
+export default function PlayDesigner({ onClose, onSave, initialData, playName, activeSport = "football" }) {
   const canvasRef = useRef(null);
   const [tool, setTool] = useState("place");
   const { getLabel } = useTeamLanguage();
+  const fieldType = getFieldType(activeSport);
 
   // Build player types with team labels applied
-  const PLAYER_TYPES = BASE_PLAYER_TYPES.map(pt => ({
+  const PLAYER_TYPES = fieldType === 'baseball' ? BASEBALL_PLAYER_TYPES
+    : fieldType === 'generic' ? GENERIC_PLAYER_TYPES
+    : BASE_PLAYER_TYPES.map(pt => ({
     ...pt,
     label: pt.type === "defense" ? getLabel("DE") || "X"
          : pt.type === "mlb"     ? getLabel("MLB")
@@ -386,10 +552,10 @@ export default function PlayDesigner({ onClose, onSave, initialData, playName })
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, W, H);
-    drawField(ctx, format);
+    drawSportField(ctx, format, fieldType);
     els.forEach(el => renderElement(ctx, el, selId));
     if (cur) renderElement(ctx, cur, null);
-  }, [elements, currentEl, selectedId, format]);
+  }, [elements, currentEl, selectedId, format, fieldType]);
 
   useEffect(() => { redraw(); }, [redraw]);
 
@@ -506,7 +672,7 @@ export default function PlayDesigner({ onClose, onSave, initialData, playName })
       return;
     }
     setAnimating(true);
-    cancelAnim.current = animatePlay(canvasRef.current, elements, format, () => setAnimating(false));
+    cancelAnim.current = animatePlay(canvasRef.current, elements, format, fieldType, () => setAnimating(false));
   };
 
   const handleSave = () => {
@@ -546,7 +712,8 @@ export default function PlayDesigner({ onClose, onSave, initialData, playName })
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Game Format */}
+            {/* Game Format — football only */}
+            {fieldType === 'football' && (
             <Select value={format} onValueChange={setFormat}>
               <SelectTrigger className="bg-[#1e1e1e] border-gray-700 text-gray-300 text-xs h-8 w-28">
                 <SelectValue />
@@ -555,6 +722,7 @@ export default function PlayDesigner({ onClose, onSave, initialData, playName })
                 {GAME_FORMATS.map(f => <SelectItem key={f.id} value={f.id}>{f.label}</SelectItem>)}
               </SelectContent>
             </Select>
+            )}
 
             <button onClick={runAnimation} title={animating ? "Stop" : "Animate Play"}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${animating ? "bg-red-500/20 text-red-400 border border-red-500/40" : "bg-green-500/20 text-green-400 border border-green-500/40 hover:bg-green-500/30"}`}>
@@ -686,10 +854,13 @@ export default function PlayDesigner({ onClose, onSave, initialData, playName })
 
             {/* Footer legend */}
             <div className="px-3 py-1.5 border-t border-gray-800 flex flex-wrap gap-x-4 gap-y-1 text-gray-600 text-xs flex-shrink-0">
-              <span>🟦 O = Offense</span>
-              <span>🟥 X = Defense</span>
-              <span>🟩 ⚽ = Ball</span>
-              <span>⬛ C = Center</span>
+              {fieldType === 'baseball' ? (
+                <><span>🟡 P = Pitcher</span><span>🔴 B = Batter</span><span>🟠 R = Runner</span><span>⬛ C = Catcher</span></>
+              ) : fieldType === 'generic' ? (
+                <><span>🟦 O = Offense</span><span>🟥 X = Defense</span></>
+              ) : (
+                <><span>🟦 O = Offense</span><span>🟥 X = Defense</span><span>🟩 ⚽ = Ball</span><span>⬛ C = Center</span></>
+              )}
               <span className="ml-auto text-gray-700">Click player to select · Delete to remove</span>
             </div>
           </div>
