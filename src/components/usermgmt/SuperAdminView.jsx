@@ -301,7 +301,7 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
           </div>
         ) : filteredSchools.length === 0 ? (
           <div className="text-center py-12 text-gray-600">
-            <Building2 className="w-10 h-10 mx-auto mb-2 opacity-20" />
+            <img src={SUITE_LOGO} alt="NxGenSports" className="w-10 h-10 mx-auto mb-2 opacity-20 rounded-lg" />
             <p className="text-sm">{teamSearch ? "No schools match your search." : "No schools yet. Add one above."}</p>
           </div>
         ) : filteredSchools.map(school => {
