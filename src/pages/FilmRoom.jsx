@@ -240,6 +240,12 @@ export default function FilmRoom() {
                 <span className="hidden sm:inline">{aiLoading ? "Analyzing..." : "Breakdown"}</span>
               </button>
 
+              <button onClick={() => setShowHighlight(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-yellow-400 border border-yellow-400/30 bg-yellow-400/10 hover:bg-yellow-400/20 transition-all">
+                <Star className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">NxHighlight</span>
+              </button>
+
               <button onClick={() => setShowTagForm(f => !f)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
                 style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
