@@ -284,7 +284,7 @@ export default function NxLab() {
            {[
              { id: "film", label: "Film Room", icon: Film },
              { id: "scouting", label: "Scouting", icon: Crosshair },
-             { id: "playbook", label: "Playbook", icon: BookOpen },
+             { id: "playbook", label: sportCfg.termPlaybook, icon: BookOpen },
              { id: "gameplan", label: "Game Plan", icon: Target },
              { id: "practice", label: "Practice", icon: ClipboardList },
            ].map(({ id, label, icon: Icon }) => (

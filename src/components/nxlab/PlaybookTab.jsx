@@ -177,6 +177,7 @@ export default function PlaybookTab({ user }) {
           onClose={() => { setShowDesigner(false); setDesignerPlay(null); }}
           initialData={designerPlay ? { elements: designerPlay._designerElements || [] } : undefined}
           playName={designerPlay?.name}
+          activeSport={activeSport}
           onSave={async ({ dataUrl, elements, format }) => {
             if (designerPlay?.id) await base44.entities.Play.update(designerPlay.id, { diagram_data: dataUrl, diagram_format: format });
             else await base44.entities.Play.create({ name: designerPlay?.name || "Untitled", unit: designerPlay?.unit || cfg.units[0], category: designerPlay?.category || cfg.playCategories[0], diagram_data: dataUrl, diagram_format: format, sport: activeSport });
