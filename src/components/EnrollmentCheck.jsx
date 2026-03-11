@@ -18,20 +18,25 @@ export default function EnrollmentCheck({ children }) {
           return;
         }
 
-        // If user already has a team, still clean up any lingering pending invites
-        if (user.team_id) {
-          const staleInvites = await base44.entities.Invite.filter({ email: user.email, status: "pending" }, "-created_date");
-          await Promise.all(staleInvites.map(inv => base44.entities.Invite.update(inv.id, { status: "accepted" })));
-          setChecked(true);
-          return;
-        }
-
         // Look for pending invite matching this email
         const invites = await base44.entities.Invite.filter(
           { email: user.email, status: "pending" },
           "-created_date",
           1
         );
+
+        // If user already has a team AND no pending invite for a different team, skip enrollment
+        if (user.team_id && invites.length === 0) {
+          setChecked(true);
+          return;
+        }
+
+        // If user already has a team AND the pending invite is for the SAME team, just mark accepted
+        if (user.team_id && invites.length > 0 && invites[0].team_id === user.team_id) {
+          await base44.entities.Invite.update(invites[0].id, { status: "accepted" });
+          setChecked(true);
+          return;
+        }
 
         if (invites.length > 0) {
           const invite = invites[0];
