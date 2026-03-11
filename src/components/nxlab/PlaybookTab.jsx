@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useSport } from "@/components/SportContext";
 import { getSportConfig } from "@/components/SportConfig";
 import { Plus, Search, Edit, Trash2, X, Zap, BookOpen, Eye, Pen, Brain, Lock } from "lucide-react";
+import usePullToRefresh, { PullIndicator } from "@/components/hooks/usePullToRefresh";
 import PlayDesigner from "@/components/playbook/PlayDesigner";
 import PlayDiagramViewer from "@/components/playbook/PlayDiagramViewer";
 import NxPlayAI from "@/components/playbook/NxPlayAI";
@@ -33,6 +34,8 @@ export default function PlaybookTab({ user }) {
   ]).then(([p, o]) => { setPlays(p); setOpponents(o); });
 
   useEffect(() => { load(); }, [activeSport]);
+
+  const { refreshing, pullDelta, handlers: pullHandlers } = usePullToRefresh(load);
 
   const role = user?.coaching_role || user?.role || "viewer";
   const canCreate = CAN_CREATE.includes(role) || user?.role === "admin";
@@ -82,7 +85,8 @@ export default function PlaybookTab({ user }) {
   const inp = "w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[var(--color-primary,#f97316)]";
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="p-4 md:p-6" {...pullHandlers}>
+      <PullIndicator delta={pullDelta} refreshing={refreshing} />
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-black text-white">{cfg.termPlaybook.slice(0,2)}<span style={{ color: "var(--color-primary,#f97316)" }}>{cfg.termPlaybook.slice(2)}</span></h1>
