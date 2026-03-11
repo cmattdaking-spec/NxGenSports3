@@ -318,9 +318,7 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
                   {/* Logo or color swatch */}
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden border border-gray-700"
                     style={{ backgroundColor: school.primary_color ? school.primary_color + "33" : "#f9731622" }}>
-                    {school.logo_url
-                      ? <img src={school.logo_url} alt={school.school_name} className="w-full h-full object-cover rounded-xl" />
-                      : <Building2 className="w-5 h-5" style={{ color: school.primary_color || "#f97316" }} />}
+                    <img src={SUITE_LOGO} alt="NxGenSports" className="w-full h-full object-cover rounded-xl" />
                   </div>
                   {/* Color swatches */}
                   {(school.primary_color || school.secondary_color) && (
