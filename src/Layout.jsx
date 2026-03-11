@@ -381,7 +381,8 @@ export default function Layout({ children, currentPageName }) {
           </nav>
         )}
 
-        <main className="flex-1 overflow-y-auto relative safe-area-bottom md:pb-0 bottom-nav-safe md:bottom-nav-safe-reset">
+        <main className="flex-1 overflow-y-auto relative safe-area-bottom" style={{ paddingBottom: undefined }}
+          ref={el => { if (el) { if (window.innerWidth < 768) el.style.paddingBottom = 'calc(env(safe-area-inset-bottom, 0px) + 64px)'; else el.style.paddingBottom = ''; } }}>
           {pageLoading && (
             <div className="absolute inset-0 bg-[#0a0a0a] z-50 flex items-center justify-center">
               <div className="relative flex items-center justify-center">
