@@ -260,7 +260,7 @@ export default function NxLab() {
   const getAIBreakdown = async () => {
     if (!tags.length) return; setAiLoading(true); setShowAI(true); setAiBreakdown("");
     const summary = tags.map(t => ({ time: t.timestamp_label, play: t.play_type, formation: t.formation, down: t.down, distance: t.distance, yards: t.yards, result: t.result, flagged: t.flagged, notes: t.notes }));
-    const res = await base44.integrations.Core.InvokeLLM({ prompt: `Football film analyst. Analyze tagged plays from "${activeSession?.title}". ${JSON.stringify(summary)} Provide: 1) TENDENCY BREAKDOWN 2) SUCCESS RATE ANALYSIS 3) FLAGGED PLAYS 4) KEY COACHING POINTS 5) EXPLOITABLE PATTERNS.` });
+    const res = await base44.integrations.Core.InvokeLLM({ prompt: `You are an ${sportCfg.aiPersona}. Analyze these tagged film clips from "${activeSession?.title}". ${JSON.stringify(summary)} Provide: 1) TENDENCY BREAKDOWN 2) SUCCESS RATE ANALYSIS 3) FLAGGED PLAYS 4) KEY COACHING POINTS 5) EXPLOITABLE PATTERNS.` });
     setAiBreakdown(res); setAiLoading(false);
   };
 
