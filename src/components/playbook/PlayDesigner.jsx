@@ -547,16 +547,14 @@ export default function PlayDesigner({ onClose, onSave, initialData, playName })
 
           <div className="flex items-center gap-2">
             {/* Game Format */}
-            <div className="relative">
-              <select
-                value={format}
-                onChange={e => setFormat(e.target.value)}
-                className="bg-[#1e1e1e] border border-gray-700 text-gray-300 text-xs px-2 py-1.5 rounded-lg outline-none appearance-none pr-6 cursor-pointer hover:border-orange-500 transition-colors"
-              >
-                {GAME_FORMATS.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
-              </select>
-              <ChevronDown className="w-3 h-3 text-gray-500 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+            <Select value={format} onValueChange={setFormat}>
+              <SelectTrigger className="bg-[#1e1e1e] border-gray-700 text-gray-300 text-xs h-8 w-28">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {GAME_FORMATS.map(f => <SelectItem key={f.id} value={f.id}>{f.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
 
             <button onClick={runAnimation} title={animating ? "Stop" : "Animate Play"}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${animating ? "bg-red-500/20 text-red-400 border border-red-500/40" : "bg-green-500/20 text-green-400 border border-green-500/40 hover:bg-green-500/30"}`}>
