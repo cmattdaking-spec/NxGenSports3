@@ -194,8 +194,14 @@ export default function Layout({ children, currentPageName }) {
     if (user) await base44.auth.updateMe({ active_sport: sport });
   };
 
+  const userType = user?.user_type || "coach";
+  const isPlayer = userType === "player";
+  const isParent = userType === "parent" || user?.parent_role;
+
   const filteredNav = user?.role === "super_admin"
     ? [{ label: "Teams", page: "UserManagement", icon: UserCog, roles: null }]
+    : isPlayer ? playerNavItems
+    : isParent ? parentNavItems
     : navItems.filter((item) => {
         if (!item.roles) return true;
         if (item.roles.includes(user?.role)) return true;
