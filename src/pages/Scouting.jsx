@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Plus, Edit, Trash2, X, Zap, Crosshair, ExternalLink, ChevronDown, ChevronUp, Brain, Shield, Swords, Users, Target } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
 import PlayLinker from "../components/scouting/PlayLinker";
+import usePullToRefresh, { PullIndicator } from "@/components/hooks/usePullToRefresh";
 
 export default function Scouting() {
   const [opponents, setOpponents] = useState([]);
@@ -20,14 +21,30 @@ export default function Scouting() {
   const load = () => base44.entities.Opponent.list("-game_date").then(d => { setOpponents(d); setLoading(false); });
   useEffect(() => { load(); }, []);
 
+  const { refreshing, pullDelta, handlers: pullHandlers } = usePullToRefresh(
+    () => base44.entities.Opponent.list("-game_date").then(d => setOpponents(d))
+  );
+
   const openAdd = () => { setEditing(null); setForm({ location: "home" }); setShowForm(true); };
   const openEdit = (o) => { setEditing(o); setForm({...o}); setShowForm(true); };
   const save = async () => {
-    if (editing) await base44.entities.Opponent.update(editing.id, form);
-    else await base44.entities.Opponent.create(form);
-    setShowForm(false); load();
+    setShowForm(false);
+    if (editing) {
+      setOpponents(prev => prev.map(o => o.id === editing.id ? { ...o, ...form } : o));
+      await base44.entities.Opponent.update(editing.id, form);
+    } else {
+      const tempId = `temp_${Date.now()}`;
+      setOpponents(prev => [{ ...form, id: tempId }, ...prev]);
+      const created = await base44.entities.Opponent.create(form);
+      setOpponents(prev => prev.map(o => o.id === tempId ? created : o));
+    }
   };
-  const remove = async (id) => { if (confirm("Delete opponent?")) { await base44.entities.Opponent.delete(id); load(); } };
+  const remove = async (id) => {
+    if (confirm("Delete opponent?")) {
+      setOpponents(prev => prev.filter(o => o.id !== id));
+      await base44.entities.Opponent.delete(id);
+    }
+  };
 
   const getScoutReport = async (opp) => {
     setAiLoading(true); setAiTarget(opp.id);
@@ -189,7 +206,8 @@ Generate a detailed JSON report with strategic insights.`,
   if (loading) return <LoadingScreen />;
 
   return (
-    <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
+    <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6" {...pullHandlers}>
+      <PullIndicator delta={pullDelta} refreshing={refreshing} />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black text-white">Opponent <span style={{ color: "var(--color-primary,#f97316)" }}>Scouting</span></h1>

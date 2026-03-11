@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Calendar, ChevronLeft, ChevronRight, Target } from "lucide-react";
+import usePullToRefresh, { PullIndicator } from "@/components/hooks/usePullToRefresh";
 import { useSport } from "@/components/SportContext";
 import LoadingScreen from "../components/LoadingScreen";
 import { createPageUrl } from "@/utils";
@@ -48,6 +49,14 @@ export default function GameSchedule() {
     loadData();
   }, [activeSport]);
 
+  const { refreshing, pullDelta, handlers: pullHandlers } = usePullToRefresh(async () => {
+    const [op, gp] = await Promise.all([
+      base44.entities.Opponent.filter({ sport: activeSport }, "game_date"),
+      base44.entities.GamePlan.filter({ sport: activeSport })
+    ]);
+    setOpponents(op); setGamePlans(gp);
+  });
+
   const today = new Date();
   today.setHours(0,0,0,0);
 
@@ -93,7 +102,8 @@ export default function GameSchedule() {
   for (let i = 1; i <= daysInMonth; i++) days.push(i);
 
   return (
-    <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
+    <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6" {...pullHandlers}>
+      <PullIndicator delta={pullDelta} refreshing={refreshing} />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black text-white capitalize">{activeSport.replace(/_/g," ")} <span style={{ color: "var(--color-primary,#f97316)" }}>Schedule</span></h1>

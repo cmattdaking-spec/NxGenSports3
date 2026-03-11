@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Users, Filter } from "lucide-react";
+import usePullToRefresh, { PullIndicator } from "@/components/hooks/usePullToRefresh";
 import PlayerCard from "../components/roster/PlayerCard";
 import PlayerForm from "../components/roster/PlayerForm";
 import { useSport } from "@/components/SportContext";
@@ -26,27 +27,11 @@ export default function Roster() {
   const [form, setForm] = useState({});
   const [expanded, setExpanded] = useState(null);
 
-  const [refreshing, setRefreshing] = useState(false);
-  const [pullStart, setPullStart] = useState(0);
-  const [pullDelta, setPullDelta] = useState(0);
-
   const load = () => base44.entities.Player.filter({ sport: activeSport }).then(d => { setPlayers(d); setLoading(false); });
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await base44.entities.Player.filter({ sport: activeSport }).then(d => setPlayers(d));
-    setRefreshing(false);
-  };
-
-  const onTouchStart = (e) => setPullStart(e.touches[0].clientY);
-  const onTouchMove = (e) => {
-    const delta = e.touches[0].clientY - pullStart;
-    if (delta > 0 && window.scrollY === 0) setPullDelta(Math.min(delta, 80));
-  };
-  const onTouchEnd = () => {
-    if (pullDelta > 60) handleRefresh();
-    setPullDelta(0);
-  };
+  const { refreshing, pullDelta, handlers: pullHandlers } = usePullToRefresh(
+    () => base44.entities.Player.filter({ sport: activeSport }).then(d => setPlayers(d))
+  );
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -104,15 +89,8 @@ export default function Roster() {
   const ineligible = players.filter(p => p.academic_eligible === false).length;
 
   return (
-    <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6 page-transition"
-      onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
-      {/* Pull to refresh indicator */}
-      {(refreshing || pullDelta > 20) && (
-        <div className="flex justify-center py-2 -mt-2 mb-2">
-          <div className={`w-5 h-5 border-2 border-gray-600 border-t-[var(--color-primary,#f97316)] rounded-full ${refreshing ? "animate-spin" : ""}`}
-            style={{ transform: refreshing ? "" : `rotate(${pullDelta * 4}deg)` }} />
-        </div>
-      )}
+    <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6" {...pullHandlers}>
+      <PullIndicator delta={pullDelta} refreshing={refreshing} />
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-3">
