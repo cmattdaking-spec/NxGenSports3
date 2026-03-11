@@ -206,7 +206,7 @@ Generate a 5-day workout week plan with specific exercises, sets, reps, and coac
     const avgGrade = pStats.length ? (pStats.reduce((s,r) => s + (r.grade||0),0)/pStats.length).toFixed(1) : "N/A";
     const injuries = latestHealth.filter(h => h.injury_type).map(h => h.injury_type).join(", ") || "None";
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an elite player development AI for NxDown football. Generate a comprehensive development plan for:
+      prompt: `You are an elite ${cfg.aiPersona} player development AI. Generate a comprehensive development plan for:
 Name: ${player.first_name} ${player.last_name}, Position: ${player.position}, Year: ${player.year || "?"}, Weight: ${player.weight || "?"}lbs
 Rating: ${player.overall_rating || "N/A"}/100, Speed: ${player.speed || "N/A"}, Strength: ${player.strength || "N/A"}, Agility: ${player.agility || "N/A"}
 Avg Grade: ${avgGrade}, Recent Injuries: ${injuries}, Status: ${player.status}`,
@@ -235,7 +235,7 @@ Avg Grade: ${avgGrade}, Recent Injuries: ${injuries}, Status: ${player.status}`,
       return `${p.first_name} ${p.last_name}: ${p.position} (${p.year}), Rating: ${p.overall_rating||"N/A"}, Avg Grade: ${avgGrade}, Status: ${p.status}`;
     }).join("\n");
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are an elite talent scout AI for NxDown football. Analyze the roster and identify top prospects and development needs.\n\nPlayers:\n${playerData}`,
+      prompt: `You are an elite talent scout AI for ${activeSport.replace(/_/g," ")}. Analyze the roster and identify top prospects and development needs.\n\nPlayers:\n${playerData}`,
       response_json_schema: {
         type: "object",
         properties: {

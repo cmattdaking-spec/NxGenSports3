@@ -163,7 +163,7 @@ export default function Dashboard() {
                   )}
                 </p>
                 <p className="text-gray-600 text-xs mt-0.5 capitalize">
-                  {user?.role?.replace(/_/g, " ") || "Football Intelligence Platform"}
+                  {user?.role?.replace(/_/g, " ") || `${activeSport.replace(/_/g," ")} Intelligence Platform`}
                   {user?.is_associate_head_coach && <span className="text-cyan-400 ml-1.5 font-semibold">(Associate HC)</span>}
                 </p>
               </div>
