@@ -398,7 +398,7 @@ function renderElement(ctx, el, selectedId) {
 
     ctx.shadowBlur = 0;
     ctx.fillStyle = "#fff";
-    ctx.font = `bold ${el.label.length > 2 ? "9" : "11"}px monospace`;
+    ctx.font = `bold ${(el.label || "").length > 2 ? "9" : "11"}px monospace`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(el.label, el.x, el.y);
