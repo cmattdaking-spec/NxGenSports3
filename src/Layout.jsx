@@ -135,6 +135,7 @@ export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const scrollPositions = useRef({});
   const [user, setUser] = useState(null);
   const [teamLogo, setTeamLogo] = useState(null);
   const [pageLoading, setPageLoading] = useState(false);
@@ -151,6 +152,15 @@ export default function Layout({ children, currentPageName }) {
       return () => clearTimeout(t);
     }
   }, [currentPageName]);
+
+  // System dark mode detection
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = (e) => document.documentElement.classList.toggle("dark", e.matches);
+    apply(mq);
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -363,26 +373,44 @@ export default function Layout({ children, currentPageName }) {
           <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-gray-800 z-50 flex items-stretch"
             style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
             {[
-              { label: "Home", page: isAD ? "ADPortal" : "Dashboard", icon: Home },
-              { label: "NxLab", page: "NxLab", icon: Clapperboard },
-              { label: "Messages", page: "Messages", icon: MessageSquare },
-              { label: "Settings", page: "Settings", icon: Settings },
+            { label: "Home", page: isAD ? "ADPortal" : "Dashboard", icon: Home },
+            { label: "NxLab", page: "NxLab", icon: Clapperboard },
+            { label: "Messages", page: "Messages", icon: MessageSquare },
+            { label: "Settings", page: "Settings", icon: Settings },
             ].map(({ label, page, icon: Icon }) => {
-              const active = currentPageName === page;
-              return (
-                <Link key={page} to={createPageUrl(page)}
-                  className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-all"
-                  style={active ? { color: "var(--color-primary,#3b82f6)" } : { color: "#6b7280" }}>
-                  <Icon className="w-5 h-5" />
-                  <span className="text-[10px] font-medium">{label}</span>
-                </Link>
-              );
+            const active = currentPageName === page;
+            return (
+              <Link key={page} to={createPageUrl(page)}
+                onClick={() => {
+                  // Save scroll before leaving, restore after navigating
+                  const container = document.getElementById("main-scroll-container");
+                  if (container) scrollPositions.current[currentPageName] = container.scrollTop;
+                  requestAnimationFrame(() => {
+                    const next = document.getElementById("main-scroll-container");
+                    if (next) next.scrollTop = scrollPositions.current[page] || 0;
+                  });
+                }}
+                className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-all"
+                style={active ? { color: "var(--color-primary,#3b82f6)" } : { color: "#6b7280" }}>
+                <Icon className="w-5 h-5" />
+                <span className="text-[10px] font-medium">{label}</span>
+              </Link>
+            );
             })}
           </nav>
         )}
 
         <main className="flex-1 overflow-y-auto relative safe-area-bottom" style={{ paddingBottom: undefined }}
-          ref={el => { if (el) { if (window.innerWidth < 768) el.style.paddingBottom = 'calc(env(safe-area-inset-bottom, 0px) + 64px)'; else el.style.paddingBottom = ''; } }}>
+          ref={el => {
+            if (el) {
+              if (window.innerWidth < 768) el.style.paddingBottom = 'calc(env(safe-area-inset-bottom, 0px) + 64px)';
+              else el.style.paddingBottom = '';
+            }
+          }}
+          onScroll={e => { scrollPositions.current[currentPageName] = e.currentTarget.scrollTop; }}
+          key={`main-scroll`}
+          id="main-scroll-container"
+        >
           {pageLoading && (
             <div className="absolute inset-0 bg-[#0a0a0a] z-50 flex items-center justify-center">
               <div className="relative flex items-center justify-center">
