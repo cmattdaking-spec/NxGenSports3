@@ -52,6 +52,7 @@ const EMPTY_FORM = {
 export default function SuperAdminView({ allUsers, loading: usersLoading, onRefresh }) {
   const [schools, setSchools] = useState([]);
   const [schoolsLoading, setSchoolsLoading] = useState(true);
+  // Schools load independently — don't block on allUsers (getTeamUsers can timeout)
   const [showAddSchool, setShowAddSchool] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
