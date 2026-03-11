@@ -131,6 +131,31 @@ const parentNavItems = [
   { label: "Announcements",  page: "NxAnnouncement",       icon: MessageSquare },
 ];
 
+// Inject critical mobile meta tags at runtime (since index.html can't be edited directly)
+function useMobileMeta(brandName) {
+  useEffect(() => {
+    // Page title
+    document.title = brandName || "NxGenSports";
+    // viewport-fit=cover — required for iOS safe-area-inset-* to work
+    let vp = document.querySelector('meta[name="viewport"]');
+    if (vp && !vp.content.includes("viewport-fit")) {
+      vp.content = vp.content + ", viewport-fit=cover";
+    }
+    // Apple PWA meta
+    const setMeta = (name, content, prop = "name") => {
+      let el = document.querySelector(`meta[${prop}="${name}"]`);
+      if (!el) { el = document.createElement("meta"); el.setAttribute(prop, name); document.head.appendChild(el); }
+      el.content = content;
+    };
+    setMeta("apple-mobile-web-app-capable", "yes");
+    setMeta("apple-mobile-web-app-status-bar-style", "black-translucent");
+    setMeta("apple-mobile-web-app-title", "NxGenSports");
+    setMeta("mobile-web-app-capable", "yes");
+    setMeta("theme-color", "#0a0a0a");
+    setMeta("description", "NxGenSports — Next-Gen Athletic Intelligence Platform");
+  }, [brandName]);
+}
+
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
