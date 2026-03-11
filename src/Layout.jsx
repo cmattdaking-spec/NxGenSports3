@@ -95,21 +95,40 @@ const SPORT_LABELS = {
 };
 
 // ─── CLEANED UP NAV ─────────────────────────────────────────────────────────
+// Coach/Admin nav
 const navItems = [
-  { label: "Dashboard",    page: "Dashboard",            icon: Home,           roles: null },
-  { label: "Schedule",     page: "GameSchedule",         icon: CalendarDays,   roles: null },
-  { label: "Eligibility",  page: "AcademicEligibility",  icon: GraduationCap,  roles: null },
-  { label: "Roster",       page: "Roster",               icon: Users,          roles: null },
-  { label: "Health",       page: "PlayerHealth",         icon: Activity,       roles: null },
-  { label: "NxMessages",   page: "Messages",             icon: MessageSquare,  roles: null },
-  { label: "NxLab",        page: "NxLab",                icon: Clapperboard,   roles: null },
-  { label: "NxReady",      page: "NxPrep",               icon: BookOpen,       roles: null },
-  { label: "S&C",          page: "StrengthConditioning", icon: Dumbbell,       roles: null },
-  { label: "Recruiting",   page: "Recruiting",           icon: Star,           roles: COORD_ONLY },
-  { label: "Analytics",    page: "PerformanceAnalytics", icon: BarChart2,      roles: null },
-  { label: "Reports",      page: "Reports",              icon: TrendingUp,     roles: null },
-  { label: "Users",        page: "UserManagement",       icon: UserCog,        roles: ["admin","head_coach","athletic_director"] },
-  { label: "AD Portal",   page: "ADPortal",              icon: Globe,          roles: ["admin","athletic_director"] },
+  { label: "Dashboard",      page: "Dashboard",            icon: Home,           roles: null },
+  { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays,   roles: null },
+  { label: "Eligibility",    page: "AcademicEligibility",  icon: GraduationCap,  roles: null },
+  { label: "Roster",         page: "Roster",               icon: Users,          roles: null },
+  { label: "Health",         page: "PlayerHealth",         icon: Activity,       roles: null },
+  { label: "NxMessages",     page: "Messages",             icon: MessageSquare,  roles: null },
+  { label: "NxAnnouncement", page: "NxAnnouncement",       icon: Gamepad2,       roles: null },
+  { label: "NxLab",          page: "NxLab",                icon: Clapperboard,   roles: null },
+  { label: "S&C",            page: "StrengthConditioning", icon: Dumbbell,       roles: null },
+  { label: "Recruiting",     page: "Recruiting",           icon: Star,           roles: COORD_ONLY },
+  { label: "Analytics",      page: "PerformanceAnalytics", icon: BarChart2,      roles: null },
+  { label: "Reports",        page: "Reports",              icon: TrendingUp,     roles: null },
+  { label: "Users",          page: "UserManagement",       icon: UserCog,        roles: ["admin","head_coach","athletic_director"] },
+  { label: "AD Portal",      page: "ADPortal",             icon: Globe,          roles: ["admin","athletic_director"] },
+];
+
+// Player nav
+const playerNavItems = [
+  { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays },
+  { label: "NxLab",          page: "NxLab",                icon: Clapperboard },
+  { label: "My S&C",         page: "StrengthConditioning", icon: Dumbbell },
+  { label: "Recruiting",     page: "Recruiting",           icon: Star },
+  { label: "Analytics",      page: "PerformanceAnalytics", icon: BarChart2 },
+  { label: "NxMessages",     page: "Messages",             icon: MessageSquare },
+  { label: "Announcements",  page: "NxAnnouncement",       icon: Gamepad2 },
+];
+
+// Parent nav
+const parentNavItems = [
+  { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays },
+  { label: "NxMessages",     page: "Messages",             icon: MessageSquare },
+  { label: "Announcements",  page: "NxAnnouncement",       icon: Gamepad2 },
 ];
 
 export default function Layout({ children, currentPageName }) {
