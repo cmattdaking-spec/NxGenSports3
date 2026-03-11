@@ -79,11 +79,23 @@ export default function PlayerHealth() {
   };
   const openEdit = (r) => { setEditing(r); setForm({...r}); setShowForm(true); };
   const save = async () => {
-    if (editing) await base44.entities.PlayerHealth.update(editing.id, form);
-    else await base44.entities.PlayerHealth.create(form);
-    setShowForm(false); load();
+    setShowForm(false);
+    if (editing) {
+      setRecords(prev => prev.map(r => r.id === editing.id ? { ...r, ...form } : r));
+      await base44.entities.PlayerHealth.update(editing.id, form);
+    } else {
+      const tempId = `temp_${Date.now()}`;
+      setRecords(prev => [{ ...form, id: tempId }, ...prev]);
+      const created = await base44.entities.PlayerHealth.create(form);
+      setRecords(prev => prev.map(r => r.id === tempId ? created : r));
+    }
   };
-  const remove = async (id) => { if (confirm("Delete health record?")) { await base44.entities.PlayerHealth.delete(id); load(); } };
+  const remove = async (id) => {
+    if (confirm("Delete health record?")) {
+      setRecords(prev => prev.filter(r => r.id !== id));
+      await base44.entities.PlayerHealth.delete(id);
+    }
+  };
 
   const handlePlayerSelect = (playerId) => {
     const player = players.find(p => p.id === playerId);

@@ -69,22 +69,26 @@ export default function Playbook() {
   const openEdit = (p) => { setEditing(p); setForm({...p}); setShowForm(true); };
 
   const save = async () => {
+    setShowForm(false);
     if (editing) {
+      setPlays(prev => prev.map(p => p.id === editing.id ? { ...p, ...form } : p));
       await base44.entities.Play.update(editing.id, form);
-      setShowForm(false);
-      load();
     } else {
+      const tempId = `temp_${Date.now()}`;
+      const tempPlay = { ...form, id: tempId };
+      setPlays(prev => [...prev, tempPlay]);
       const newPlay = await base44.entities.Play.create(form);
-      setShowForm(false);
-      load();
-      // Auto-open designer for new play
+      setPlays(prev => prev.map(p => p.id === tempId ? newPlay : p));
       setDesignerPlay(newPlay);
       setShowDesigner(true);
     }
   };
 
   const remove = async (id) => {
-    if (confirm("Delete play?")) { await base44.entities.Play.delete(id); load(); }
+    if (confirm("Delete play?")) {
+      setPlays(prev => prev.filter(p => p.id !== id));
+      await base44.entities.Play.delete(id);
+    }
   };
 
   const getAISuggestions = async () => {
@@ -148,16 +152,24 @@ export default function Playbook() {
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search plays..."
           className="w-full bg-[#141414] border border-gray-800 text-white pl-9 pr-3 py-2 rounded-lg text-sm focus:outline-none" />
         </div>
-        <select value={filterUnit} onChange={e => setFilterUnit(e.target.value)}
-          className="bg-[#141414] border border-gray-800 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none">
-          <option value="all">All Units</option>
-          {UNITS.map(u => <option key={u} value={u}>{cfg.unitLabels[u] || u.replace("_"," ")}</option>)}
-        </select>
-        <select value={filterCat} onChange={e => setFilterCat(e.target.value)}
-          className="bg-[#141414] border border-gray-800 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none">
-          <option value="all">All Types</option>
-          {CATEGORIES.map(c => <option key={c} value={c}>{c.replace("_"," ")}</option>)}
-        </select>
+        <Select value={filterUnit} onValueChange={setFilterUnit}>
+          <SelectTrigger className="bg-[#141414] border-gray-800 text-gray-300 w-32">
+            <SelectValue placeholder="All Units" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Units</SelectItem>
+            {UNITS.map(u => <SelectItem key={u} value={u}>{cfg.unitLabels[u] || u.replace("_"," ")}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={filterCat} onValueChange={setFilterCat}>
+          <SelectTrigger className="bg-[#141414] border-gray-800 text-gray-300 w-32">
+            <SelectValue placeholder="All Types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c.replace("_"," ")}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* AI Suggestions */}
@@ -279,18 +291,26 @@ export default function Playbook() {
                     className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500" />
                 </div>
                 <div>
-                  <label className="text-gray-400 text-xs mb-1 block">Unit *</label>
-                  <select value={form.unit || UNITS[0]} onChange={e => setForm({...form, unit: e.target.value})}
-                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500">
-                    {UNITS.map(u => <option key={u} value={u}>{cfg.unitLabels[u] || u.replace("_"," ")}</option>)}
-                  </select>
+                 <label className="text-gray-400 text-xs mb-1 block">Unit *</label>
+                 <Select value={form.unit || UNITS[0]} onValueChange={v => setForm({...form, unit: v})}>
+                   <SelectTrigger className="bg-[#1a1a1a] border-gray-700 text-white w-full">
+                     <SelectValue />
+                   </SelectTrigger>
+                   <SelectContent>
+                     {UNITS.map(u => <SelectItem key={u} value={u}>{cfg.unitLabels[u] || u.replace("_"," ")}</SelectItem>)}
+                   </SelectContent>
+                 </Select>
                 </div>
                 <div>
-                  <label className="text-gray-400 text-xs mb-1 block">Category *</label>
-                  <select value={form.category || CATEGORIES[0]} onChange={e => setForm({...form, category: e.target.value})}
-                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500">
-                    {CATEGORIES.map(c => <option key={c} value={c}>{c.replace("_"," ")}</option>)}
-                  </select>
+                 <label className="text-gray-400 text-xs mb-1 block">Category *</label>
+                 <Select value={form.category || CATEGORIES[0]} onValueChange={v => setForm({...form, category: v})}>
+                   <SelectTrigger className="bg-[#1a1a1a] border-gray-700 text-white w-full">
+                     <SelectValue />
+                   </SelectTrigger>
+                   <SelectContent>
+                     {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c.replace("_"," ")}</SelectItem>)}
+                   </SelectContent>
+                 </Select>
                 </div>
 
               </div>

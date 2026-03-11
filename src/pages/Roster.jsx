@@ -128,29 +128,45 @@ export default function Roster() {
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Name, position, number, hometown..."
               className="w-full bg-[#1e1e1e] border border-gray-700 text-white pl-8 pr-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[var(--color-primary,#f97316)]" />
           </div>
-          <select value={filterUnit} onChange={e => setFilterUnit(e.target.value)}
-            className="bg-[#1e1e1e] border border-gray-700 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[var(--color-primary,#f97316)]">
-            <option value="all">All Units</option>
-            {UNITS.map(u => <option key={u} value={u}>{cfg.unitLabels[u] || u.replace("_", " ")}</option>)}
-          </select>
-          <select value={filterPos} onChange={e => setFilterPos(e.target.value)}
-            className="bg-[#1e1e1e] border border-gray-700 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[var(--color-primary,#f97316)]">
-            <option value="all">All Positions</option>
-            {POSITIONS.map(p => <option key={p} value={p}>{cfg.positionLabels[p] || p}</option>)}
-          </select>
-          <select value={filterYear} onChange={e => setFilterYear(e.target.value)}
-            className="bg-[#1e1e1e] border border-gray-700 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[var(--color-primary,#f97316)]">
-            <option value="all">All Years</option>
-            {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-            className="bg-[#1e1e1e] border border-gray-700 text-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[var(--color-primary,#f97316)]">
-            <option value="all">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="injured">Injured</option>
-            <option value="suspended">Suspended</option>
-            <option value="inactive">Inactive</option>
-          </select>
+          <Select value={filterUnit} onValueChange={setFilterUnit}>
+            <SelectTrigger className="bg-[#1e1e1e] border-gray-700 text-gray-300 w-32">
+              <SelectValue placeholder="All Units" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Units</SelectItem>
+              {UNITS.map(u => <SelectItem key={u} value={u}>{cfg.unitLabels[u] || u.replace("_"," ")}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterPos} onValueChange={setFilterPos}>
+            <SelectTrigger className="bg-[#1e1e1e] border-gray-700 text-gray-300 w-36">
+              <SelectValue placeholder="All Positions" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Positions</SelectItem>
+              {POSITIONS.map(p => <SelectItem key={p} value={p}>{cfg.positionLabels[p] || p}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterYear} onValueChange={setFilterYear}>
+            <SelectTrigger className="bg-[#1e1e1e] border-gray-700 text-gray-300 w-32">
+              <SelectValue placeholder="All Years" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Years</SelectItem>
+              {YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="bg-[#1e1e1e] border-gray-700 text-gray-300 w-32">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="injured">Injured</SelectItem>
+              <SelectItem value="suspended">Suspended</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <p className="text-gray-600 text-xs">{filtered.length} of {players.length} players</p>
       </div>
