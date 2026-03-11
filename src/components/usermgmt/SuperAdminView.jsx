@@ -192,7 +192,8 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
     if (expandedId === school.id) setExpandedId(null);
   };
 
-  const loading = schoolsLoading || usersLoading;
+  // Only block on schools loading — user count/members are bonus info
+  const loading = schoolsLoading;
 
   return (
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
