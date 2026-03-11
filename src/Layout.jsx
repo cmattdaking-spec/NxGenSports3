@@ -103,7 +103,7 @@ const navItems = [
   { label: "Roster",         page: "Roster",               icon: Users,          roles: null },
   { label: "Health",         page: "PlayerHealth",         icon: Activity,       roles: null },
   { label: "NxMessages",     page: "Messages",             icon: MessageSquare,  roles: null },
-  { label: "NxAnnouncement", page: "NxAnnouncement",       icon: Gamepad2,       roles: null },
+  { label: "NxAnnouncement", page: "NxAnnouncement",       icon: MessageSquare,  roles: null },
   { label: "NxLab",          page: "NxLab",                icon: Clapperboard,   roles: null },
   { label: "S&C",            page: "StrengthConditioning", icon: Dumbbell,       roles: null },
   { label: "Recruiting",     page: "Recruiting",           icon: Star,           roles: COORD_ONLY },
@@ -121,14 +121,14 @@ const playerNavItems = [
   { label: "Recruiting",     page: "Recruiting",           icon: Star },
   { label: "Analytics",      page: "PerformanceAnalytics", icon: BarChart2 },
   { label: "NxMessages",     page: "Messages",             icon: MessageSquare },
-  { label: "Announcements",  page: "NxAnnouncement",       icon: Gamepad2 },
+  { label: "Announcements",  page: "NxAnnouncement",       icon: MessageSquare },
 ];
 
 // Parent nav
 const parentNavItems = [
   { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays },
   { label: "NxMessages",     page: "Messages",             icon: MessageSquare },
-  { label: "Announcements",  page: "NxAnnouncement",       icon: Gamepad2 },
+  { label: "Announcements",  page: "NxAnnouncement",       icon: MessageSquare },
 ];
 
 export default function Layout({ children, currentPageName }) {

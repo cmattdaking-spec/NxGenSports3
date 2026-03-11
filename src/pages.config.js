@@ -57,7 +57,6 @@ import GameSchedule from './pages/GameSchedule';
 import InGameAssistant from './pages/InGameAssistant';
 import Messages from './pages/Messages';
 import NxLab from './pages/NxLab';
-import NxPrep from './pages/NxPrep';
 import PerformanceAnalytics from './pages/PerformanceAnalytics';
 import Playbook from './pages/Playbook';
 import PlayerDevelopment from './pages/PlayerDevelopment';
@@ -86,7 +85,6 @@ export const PAGES = {
     "InGameAssistant": InGameAssistant,
     "Messages": Messages,
     "NxLab": NxLab,
-    "NxPrep": NxPrep,
     "PerformanceAnalytics": PerformanceAnalytics,
     "Playbook": Playbook,
     "PlayerDevelopment": PlayerDevelopment,
