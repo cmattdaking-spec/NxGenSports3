@@ -38,9 +38,11 @@ export default function FilmRoom() {
     Promise.all([
       base44.entities.FilmSession.list("-created_date"),
       base44.auth.me(),
-    ]).then(([s, u]) => {
+      base44.entities.Player.list(),
+    ]).then(([s, u, pl]) => {
       setUser(u);
       setSessions(s);
+      setPlayers(pl);
       if (s.length > 0) loadSession(s[0], u);
       else setLoading(false);
     }).catch(() => setLoading(false));
