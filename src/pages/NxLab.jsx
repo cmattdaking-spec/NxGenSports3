@@ -345,7 +345,8 @@ export default function NxLab() {
               {activeSession && (
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <div className="hidden md:flex items-center gap-2 text-xs text-gray-500 mr-2">
-                    <span>{tags.length} tags</span><span className="text-green-400">{successRate}%</span>
+                    <span>{tags.length} tags</span>
+                    <span className="text-green-400">{successRate}% success</span>
                     {flaggedCount > 0 && <span className="text-yellow-500">{flaggedCount} flagged</span>}
                     {activeViewers.length > 0 && <span className="text-blue-400">{activeViewers.length} watching</span>}
                   </div>
