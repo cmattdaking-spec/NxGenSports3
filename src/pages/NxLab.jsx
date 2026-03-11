@@ -191,6 +191,7 @@ export default function NxLab() {
   const presenceIntervalRef = useRef(null);
 
   const { activeSport } = useSport();
+  const sportCfg = getSportConfig(activeSport);
   useEffect(() => {
     Promise.all([base44.entities.FilmSession.filter({ sport: activeSport }), base44.auth.me()])
       .then(([s, u]) => { setUser(u); setSessions(s); if (s.length > 0) loadSession(s[0], u); else setLoading(false); })
