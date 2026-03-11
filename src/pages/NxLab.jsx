@@ -194,6 +194,7 @@ export default function NxLab() {
 
   const { activeSport } = useSport();
   const sportCfg = getSportConfig(activeSport);
+  const isRaceSport = ["boys_track","girls_track","track","boys_cross_country","girls_cross_country","cross_country"].includes(activeSport);
   useEffect(() => {
     Promise.all([base44.entities.FilmSession.filter({ sport: activeSport }), base44.auth.me()])
       .then(([s, u]) => { setUser(u); setSessions(s); if (s.length > 0) loadSession(s[0], u); else setLoading(false); })
