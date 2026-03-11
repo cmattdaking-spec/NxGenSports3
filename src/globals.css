@@ -105,6 +105,60 @@ button, a, nav, [role="button"], [role="navigation"] {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 64px);
 }
 
+/* ── Sticky header / footer helpers ── */
+/* Use .sticky-header on any fixed/sticky top bar to always sit above content */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  /* Force GPU layer for smooth scroll-jank-free sticking */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  /* Ensure it paints above scrolling content */
+  backface-visibility: hidden;
+}
+
+/* Ensure the bottom nav doesn't overlap content on iOS when keyboard is open */
+.bottom-nav-ios {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  /* Respect iOS home indicator */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* GPU layer */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Scroll container performance hint */
+#main-scroll-container {
+  -webkit-overflow-scrolling: touch;
+  will-change: scroll-position;
+  /* Prevent layout thrashing from absolutely-positioned children */
+  contain: layout style;
+}
+
+/* Optimistic UI — dimmed state for items pending deletion */
+.optimistic-removing {
+  opacity: 0.4;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+/* Optimistic UI — highlight for newly added items */
+.optimistic-added {
+  animation: optimisticFadeIn 0.3s ease-out;
+}
+
+@keyframes optimisticFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* Mobile: Radix Select as bottom sheet */
 @media (max-width: 768px) {
   [data-radix-popper-content-wrapper] {
