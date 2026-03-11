@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Tag, Film, Zap, X, Menu, PenTool, Crosshair, Brain, Plus, Edit, Trash2, FlaskConical, BookOpen, Target, ClipboardList } from "lucide-react";
 import { useSport } from "@/components/SportContext";
+import { getSportConfig } from "@/components/SportConfig";
 import LoadingScreen from "../components/LoadingScreen";
 import VideoPlayer from "../components/filmroom/VideoPlayer";
 import TagForm from "../components/filmroom/TagForm";
