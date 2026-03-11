@@ -89,7 +89,7 @@ function UserManagementContent() {
   const currentAC = allUsers.find(u => u.is_associate_head_coach);
 
   if (isSuperAdmin) {
-    return <SuperAdminView allUsers={allUsers} loading={loading} onRefresh={() => { setLoading(true); loadUsers(user); }} />;
+    return <SuperAdminView allUsers={allUsers} loading={loading} user={user} onRefresh={() => { setLoading(true); loadUsers(user); }} />;
   }
 
   if (!canManageStaff) {
