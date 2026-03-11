@@ -220,12 +220,26 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
   return (
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-black text-white">School <span style={{ color: "var(--color-primary,#f97316)" }}>Management</span></h1>
-          <p className="text-gray-500 text-sm">{filteredSchools.length} school{filteredSchools.length !== 1 ? "s" : ""} · {allUsers.length} total users</p>
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <img src={SUITE_LOGO} alt="NxGenSports" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+          <div>
+            <h1 className="text-2xl font-black text-white">Nx<span style={{ color: "var(--color-primary,#f97316)" }}>GenSports</span></h1>
+            <p className="text-gray-500 text-sm">{filteredSchools.length} school{filteredSchools.length !== 1 ? "s" : ""} registered</p>
+          </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center flex-wrap">
+          {/* Super Admin color scheme */}
+          <div className="flex items-center gap-2 bg-[#141414] border border-gray-800 rounded-xl px-3 py-2">
+            <span className="text-gray-500 text-xs">Accent</span>
+            <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)}
+              className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent" />
+            <button onClick={saveAccentColor} disabled={savingColor}
+              className="text-xs px-2 py-0.5 rounded-lg text-white disabled:opacity-50"
+              style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+              {savingColor ? "..." : "Save"}
+            </button>
+          </div>
           <button onClick={() => { loadSchools(); onRefresh?.(); }} className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-all" title="Refresh">
             <RefreshCw className="w-4 h-4" />
           </button>
