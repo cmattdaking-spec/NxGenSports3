@@ -288,6 +288,10 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
           className="w-full bg-[#141414] border border-gray-800 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm placeholder-gray-600 outline-none" />
       </div>
 
+      {schoolsError && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm">{schoolsError}</div>
+      )}
+
       {/* School List */}
       <div className="space-y-3">
         {loading ? (
