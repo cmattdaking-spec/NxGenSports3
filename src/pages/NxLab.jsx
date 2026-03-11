@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Tag, Film, Zap, X, Menu, Users, PenTool, Crosshair, Brain, Shield, Swords, Target, Plus, Edit, Trash2, ExternalLink, ChevronDown, ChevronUp, FlaskConical } from "lucide-react";
+import { Tag, Film, Zap, X, Menu, PenTool, Crosshair, Brain, Plus, Edit, Trash2, FlaskConical, BookOpen, Target, ClipboardList } from "lucide-react";
 import { useSport } from "@/components/SportContext";
 import LoadingScreen from "../components/LoadingScreen";
 import VideoPlayer from "../components/filmroom/VideoPlayer";
@@ -13,6 +13,9 @@ import VideoAnnotationCanvas from "../components/filmroom/VideoAnnotationCanvas"
 import OpponentCard from "../components/scouting/OpponentCard";
 import DeepAnalysisModal from "../components/scouting/DeepAnalysisModal";
 import OpponentForm from "../components/scouting/OpponentForm";
+import PlaybookTab from "../components/nxlab/PlaybookTab";
+import GamePlanTab from "../components/nxlab/GamePlanTab";
+import PracticeTab from "../components/nxlab/PracticeTab";
 
 // ─── SCOUTING SUB-COMPONENT ──────────────────────────────────────────────────
 function ScoutingTab() {
@@ -164,6 +167,8 @@ function ScoutingTab() {
 // ─── MAIN NxLab PAGE ─────────────────────────────────────────────────────────
 export default function NxLab() {
   const [activeTab, setActiveTab] = useState("film");
+  const [user, setUser] = useState(null);
+  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
 
   // Film Room state
   const [sessions, setSessions] = useState([]);
@@ -279,7 +284,10 @@ export default function NxLab() {
         <div className="flex gap-1 bg-[#1a1a1a] rounded-lg p-0.5 overflow-x-auto">
            {[
              { id: "film", label: "Film Room", icon: Film },
-             { id: "scouting", label: "Scouting", icon: Crosshair }
+             { id: "scouting", label: "Scouting", icon: Crosshair },
+             { id: "playbook", label: "Playbook", icon: BookOpen },
+             { id: "gameplan", label: "Game Plan", icon: Target },
+             { id: "practice", label: "Practice", icon: ClipboardList },
            ].map(({ id, label, icon: Icon }) => (
              <button key={id} onClick={() => setActiveTab(id)}
                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap ${activeTab === id ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
@@ -293,6 +301,21 @@ export default function NxLab() {
       {/* SCOUTING TAB */}
       {activeTab === "scouting" && (
         <div className="flex-1 overflow-y-auto"><ScoutingTab /></div>
+      )}
+
+      {/* PLAYBOOK TAB */}
+      {activeTab === "playbook" && (
+        <div className="flex-1 overflow-y-auto"><PlaybookTab user={user} /></div>
+      )}
+
+      {/* GAME PLAN TAB */}
+      {activeTab === "gameplan" && (
+        <div className="flex-1 overflow-y-auto"><GamePlanTab user={user} /></div>
+      )}
+
+      {/* PRACTICE TAB */}
+      {activeTab === "practice" && (
+        <div className="flex-1 overflow-y-auto"><PracticeTab user={user} /></div>
       )}
 
       {/* FILM TAB */}
