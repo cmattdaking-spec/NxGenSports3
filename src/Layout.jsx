@@ -104,7 +104,7 @@ const navItems = [
   { label: "Health",         page: "PlayerHealth",         icon: Activity,       roles: null },
   { label: "NxMessages",     page: "Messages",             icon: MessageSquare,  roles: null },
   { label: "NxAnnouncement", page: "NxAnnouncement",       icon: MessageSquare,  roles: null },
-  { label: "NxLab",          page: "NxLab",                icon: Clapperboard,   roles: null },
+  { label: "NxLab",          page: "NxLab",                icon: Clapperboard,   roles: null, hideSports: ["boys_track","girls_track","boys_cross_country","girls_cross_country","track","cross_country"] },
   { label: "S&C",            page: "StrengthConditioning", icon: Dumbbell,       roles: null },
   { label: "Recruiting",     page: "Recruiting",           icon: Star,           roles: COORD_ONLY },
   { label: "Analytics",      page: "PerformanceAnalytics", icon: BarChart2,      roles: null },
