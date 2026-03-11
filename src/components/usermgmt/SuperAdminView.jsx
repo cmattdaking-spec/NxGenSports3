@@ -43,6 +43,7 @@ function generateSchoolCode() {
 
 const EMPTY_FORM = {
   school_name: "", mascot: "", team_id: "",
+  logo_url: "", primary_color: "#f97316", secondary_color: "",
   subscribed_sports: ["boys_football"], subscription_term: "annual",
   subscription_start: "", subscription_end: "",
   location_city: "", location_state: "",
