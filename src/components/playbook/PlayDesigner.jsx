@@ -804,7 +804,8 @@ export default function PlayDesigner({ onClose, onSave, initialData, playName, a
                 </button>
               ))}
               <div className="ml-auto flex items-center gap-1 text-gray-600 text-xs">
-                <span className="hidden md:inline">{fmt.label} · {fmt.players} players</span>
+                {fieldType === 'football' && <span className="hidden md:inline">{fmt.label} · {fmt.players} players</span>}
+                {fieldType === 'baseball' && <span className="hidden md:inline">Baseball / Softball</span>}
               </div>
             </div>
 
