@@ -3,6 +3,11 @@ import { Link, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import EnrollmentCheck from "@/components/EnrollmentCheck";
+import DashboardPage from "@/pages/Dashboard";
+import ADPortalPage from "@/pages/ADPortal";
+import NxLabPage from "@/pages/NxLab";
+import MessagesPage from "@/pages/Messages";
+import SettingsPage from "@/pages/Settings";
 import { SportLogoSVG } from "@/components/SportLogos";
 import { SportContext } from "@/components/SportContext";
 import {

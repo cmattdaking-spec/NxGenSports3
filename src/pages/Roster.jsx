@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Users, Filter } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import usePullToRefresh, { PullIndicator } from "@/components/hooks/usePullToRefresh";
 import PlayerCard from "../components/roster/PlayerCard";
 import PlayerForm from "../components/roster/PlayerForm";

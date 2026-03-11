@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Search, Edit, Trash2, X, Zap, BookOpen, Eye, Pen, Brain, Lock } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PlayDesigner from "@/components/playbook/PlayDesigner";
 import PlayDiagramViewer from "@/components/playbook/PlayDiagramViewer";
 import NxPlayAI from "@/components/playbook/NxPlayAI";
