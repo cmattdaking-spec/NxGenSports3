@@ -461,11 +461,14 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
                   <label className="text-gray-400 text-xs mb-1 block">Player *</label>
-                  <select value={form.player_id || ""} onChange={e => handlePlayerSelect(e.target.value)}
-                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500">
-                    <option value="">Select player...</option>
-                    {players.map(p => <option key={p.id} value={p.id}>{p.first_name} {p.last_name} ({p.position})</option>)}
-                  </select>
+                  <Select value={form.player_id || ""} onValueChange={handlePlayerSelect}>
+                    <SelectTrigger className="bg-[#1a1a1a] border-gray-700 text-white w-full">
+                      <SelectValue placeholder="Select player..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {players.map(p => <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name} ({p.position})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Date</label>
@@ -474,18 +477,26 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Availability *</label>
-                  <select value={form.availability || "full"} onChange={e => setForm({...form, availability: e.target.value})}
-                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500">
-                    {AVAILABILITY.map(a => <option key={a} value={a}>{a.replace("_"," ")}</option>)}
-                  </select>
+                  <Select value={form.availability || "full"} onValueChange={v => setForm({...form, availability: v})}>
+                    <SelectTrigger className="bg-[#1a1a1a] border-gray-700 text-white w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AVAILABILITY.map(a => <SelectItem key={a} value={a}>{a.replace("_"," ")}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Injury Type</label>
-                  <select value={form.injury_type || ""} onChange={e => setForm({...form, injury_type: e.target.value})}
-                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500">
-                    <option value="">Select or type below...</option>
-                    {sportCfg.injuryTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
+                  <Select value={form.injury_type || ""} onValueChange={v => setForm({...form, injury_type: v})}>
+                    <SelectTrigger className="bg-[#1a1a1a] border-gray-700 text-white w-full">
+                      <SelectValue placeholder="Select injury type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={null}>None</SelectItem>
+                      {sportCfg.injuryTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Body Location</label>
@@ -499,11 +510,15 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Cleared to Play</label>
-                  <select value={form.cleared_to_play ? "yes" : "no"} onChange={e => setForm({...form, cleared_to_play: e.target.value === "yes"})}
-                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500">
-                    <option value="yes">Yes</option>
-                    <option value="no">No</option>
-                  </select>
+                  <Select value={form.cleared_to_play ? "yes" : "no"} onValueChange={v => setForm({...form, cleared_to_play: v === "yes"})}>
+                    <SelectTrigger className="bg-[#1a1a1a] border-gray-700 text-white w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes</SelectItem>
+                      <SelectItem value="no">No</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Reported By</label>
