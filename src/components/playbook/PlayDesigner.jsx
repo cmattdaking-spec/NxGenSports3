@@ -2,8 +2,9 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import {
   X, RotateCcw, Undo2, Save, Type, Minus, ArrowRight,
   Circle, Square, Pen, Move, MousePointer2, Trash2, Play,
-  ChevronDown, Users, Flag
+  Users, Flag
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTeamLanguage } from "@/components/playbook/useTeamLanguage";
 
 // ─── Player type definitions using lettering system ──────────────────────────
