@@ -38,11 +38,23 @@ export default function PracticeTab({ user }) {
   const inp = "w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[var(--color-primary,#f97316)]";
 
   const save = async () => {
-    if (editing) await base44.entities.PracticePlan.update(editing.id, form);
-    else await base44.entities.PracticePlan.create(form);
-    setShowForm(false); load();
+    setShowForm(false);
+    if (editing) {
+      setPlans(prev => prev.map(p => p.id === editing.id ? { ...p, ...form } : p));
+      await base44.entities.PracticePlan.update(editing.id, form);
+    } else {
+      const tempId = `temp_${Date.now()}`;
+      setPlans(prev => [{ ...form, id: tempId }, ...prev]);
+      const created = await base44.entities.PracticePlan.create(form);
+      setPlans(prev => prev.map(p => p.id === tempId ? created : p));
+    }
   };
-  const remove = async (id) => { if (confirm("Delete practice plan?")) { await base44.entities.PracticePlan.delete(id); load(); } };
+  const remove = async (id) => {
+    if (confirm("Delete practice plan?")) {
+      setPlans(prev => prev.filter(p => p.id !== id));
+      await base44.entities.PracticePlan.delete(id);
+    }
+  };
   const addPeriod = () => setForm(f => ({ ...f, periods: [...(f.periods || []), { name: "", duration: 10, unit: cfg.practicePeriodUnits[0], drill: "", notes: "" }] }));
   const updatePeriod = (i, field, val) => setForm(f => { const p = [...(f.periods || [])]; p[i] = { ...p[i], [field]: val }; return { ...f, periods: p }; });
   const removePeriod = (i) => setForm(f => ({ ...f, periods: f.periods.filter((_, idx) => idx !== i) }));

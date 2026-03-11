@@ -79,14 +79,23 @@ export default function Roster() {
   const openEdit = (p) => { setEditing(p); setForm({ ...p }); setShowForm(true); };
 
   const save = async () => {
-    if (editing) await base44.entities.Player.update(editing.id, form);
-    else await base44.entities.Player.create({ ...form, sport: activeSport });
     setShowForm(false);
-    load();
+    if (editing) {
+      setPlayers(prev => prev.map(p => p.id === editing.id ? { ...p, ...form } : p));
+      await base44.entities.Player.update(editing.id, form);
+    } else {
+      const tempId = `temp_${Date.now()}`;
+      setPlayers(prev => [...prev, { ...form, id: tempId, sport: activeSport }]);
+      const created = await base44.entities.Player.create({ ...form, sport: activeSport });
+      setPlayers(prev => prev.map(p => p.id === tempId ? created : p));
+    }
   };
 
   const remove = async (id) => {
-    if (confirm("Remove this player from the roster?")) { await base44.entities.Player.delete(id); load(); }
+    if (confirm("Remove this player from the roster?")) {
+      setPlayers(prev => prev.filter(p => p.id !== id));
+      await base44.entities.Player.delete(id);
+    }
   };
 
   // Stats

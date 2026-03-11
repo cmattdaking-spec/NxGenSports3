@@ -51,18 +51,26 @@ export default function PlaybookTab({ user }) {
   const openEdit = (p) => { setEditing(p); setForm({...p}); setShowForm(true); };
 
   const save = async () => {
-    if (editing) await base44.entities.Play.update(editing.id, form);
-    else {
+    setShowForm(false);
+    if (editing) {
+      setPlays(prev => prev.map(p => p.id === editing.id ? { ...p, ...form } : p));
+      await base44.entities.Play.update(editing.id, form);
+    } else {
+      const tempId = `temp_${Date.now()}`;
+      setPlays(prev => [...prev, { ...form, id: tempId, sport: activeSport }]);
       const np = await base44.entities.Play.create({ ...form, sport: activeSport });
-      setShowForm(false);
+      setPlays(prev => prev.map(p => p.id === tempId ? np : p));
       setDesignerPlay(np);
       setShowDesigner(true);
-      load(); return;
     }
-    setShowForm(false); load();
   };
 
-  const remove = async (id) => { if (confirm("Delete play?")) { await base44.entities.Play.delete(id); load(); } };
+  const remove = async (id) => {
+    if (confirm("Delete play?")) {
+      setPlays(prev => prev.filter(p => p.id !== id));
+      await base44.entities.Play.delete(id);
+    }
+  };
 
   const getAISuggestions = async () => {
     setAiLoading(true); setAiSuggestions("");
