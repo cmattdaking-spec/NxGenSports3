@@ -321,8 +321,8 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* System Designer — role-gated internally */}
-      {user && (
+      {/* System Designer — head coach only */}
+      {user && user?.coaching_role === "head_coach" && (
         <SystemDesigner user={user} />
       )}
 
