@@ -4,6 +4,7 @@ import { Plus, Edit, Trash2, X, Zap, Crosshair, ExternalLink, ChevronDown, Chevr
 import LoadingScreen from "../components/LoadingScreen";
 import PlayLinker from "../components/scouting/PlayLinker";
 import usePullToRefresh, { PullIndicator } from "@/components/hooks/usePullToRefresh";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Scouting() {
   const [opponents, setOpponents] = useState([]);
@@ -399,12 +400,16 @@ Generate a detailed JSON report with strategic insights.`,
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Location</label>
-                  <select value={form.location || "home"} onChange={e => setForm({...form, location: e.target.value})}
-                    className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500">
-                    <option value="home">Home</option>
-                    <option value="away">Away</option>
-                    <option value="neutral">Neutral</option>
-                  </select>
+                  <Select value={form.location || "home"} onValueChange={v => setForm({...form, location: v})}>
+                    <SelectTrigger className="bg-[#1a1a1a] border-gray-700 text-white w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="home">Home</SelectItem>
+                      <SelectItem value="away">Away</SelectItem>
+                      <SelectItem value="neutral">Neutral</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Record</label>
