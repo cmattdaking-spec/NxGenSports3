@@ -50,11 +50,15 @@ const EMPTY_FORM = {
   poc_name: "", poc_role: "head_coach", poc_email: "", poc_phone: "",
 };
 
-export default function SuperAdminView({ allUsers, loading: usersLoading, onRefresh }) {
+const SUITE_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/29e077944_generated_image.png";
+
+export default function SuperAdminView({ allUsers, loading: usersLoading, onRefresh, user }) {
   const [schools, setSchools] = useState([]);
   const [schoolsLoading, setSchoolsLoading] = useState(true);
-  // Schools load independently — don't block on allUsers (getTeamUsers can timeout)
+  const [schoolsError, setSchoolsError] = useState("");
   const [showAddSchool, setShowAddSchool] = useState(false);
+  const [accentColor, setAccentColor] = useState(user?.accent_color || "#f97316");
+  const [savingColor, setSavingColor] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState({ text: "", type: "" });
