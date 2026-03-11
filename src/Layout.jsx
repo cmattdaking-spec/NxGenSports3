@@ -413,10 +413,18 @@ export default function Layout({ children, currentPageName }) {
             const active = currentPageName === page;
             return (
               <Link key={page} to={createPageUrl(page)}
-                onClick={() => {
-                  // Save scroll before leaving, restore after navigating
+                onClick={(e) => {
+                  // If already on this tab, scroll to top (reset-to-root feel)
+                  if (active) {
+                    e.preventDefault();
+                    const container = document.getElementById("main-scroll-container");
+                    if (container) container.scrollTo({ top: 0, behavior: "smooth" });
+                    return;
+                  }
+                  // Save scroll position before leaving
                   const container = document.getElementById("main-scroll-container");
                   if (container) scrollPositions.current[currentPageName] = container.scrollTop;
+                  // Restore scroll position for destination tab
                   requestAnimationFrame(() => {
                     const next = document.getElementById("main-scroll-container");
                     if (next) next.scrollTop = scrollPositions.current[page] || 0;
