@@ -8,8 +8,8 @@ import {
   Users, BookOpen, Target, Activity, TrendingUp,
   ClipboardList, Crosshair, Zap, AlertTriangle,
   ArrowRight, Shield, Sparkles, X, ChevronRight,
-  Star, Lock, Building2
-} from "lucide-react";
+  Star, Lock, Building2 } from
+"lucide-react";
 
 const SPORT_NAMES = {
   nxgensports: "NxGenSports",
@@ -44,14 +44,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     Promise.all([
-      base44.auth.me().catch(() => null),
-      base44.entities.Player.filter({ sport: activeSport }),
-      base44.entities.PlayerHealth.list(),
-      base44.entities.Play.filter({ sport: activeSport }),
-      base44.entities.GamePlan.filter({ sport: activeSport }),
-      base44.entities.PracticePlan.list(),
-      base44.entities.Opponent.filter({ sport: activeSport })
-    ]).then(([u, p, h, pl, gp, pr, op]) => {
+    base44.auth.me().catch(() => null),
+    base44.entities.Player.filter({ sport: activeSport }),
+    base44.entities.PlayerHealth.list(),
+    base44.entities.Play.filter({ sport: activeSport }),
+    base44.entities.GamePlan.filter({ sport: activeSport }),
+    base44.entities.PracticePlan.list(),
+    base44.entities.Opponent.filter({ sport: activeSport })]
+    ).then(([u, p, h, pl, gp, pr, op]) => {
       setUser(u);
       setPlayers(p);
       setHealthRecords(h);
@@ -68,9 +68,9 @@ export default function Dashboard() {
     if (!u) return;
     setAiLoading(true);
     const role = u.role || "coach";
-    const injured = p.filter(pl => pl.status === "injured").length;
-    const nextGame = op.find(o => new Date(o.game_date) >= new Date());
-    const upcomingPractice = pr.find(practice => practice.status !== "completed" && new Date(practice.date) >= new Date());
+    const injured = p.filter((pl) => pl.status === "injured").length;
+    const nextGame = op.find((o) => new Date(o.game_date) >= new Date());
+    const upcomingPractice = pr.find((practice) => practice.status !== "completed" && new Date(practice.date) >= new Date());
     const context = `Role: ${role}. Players: ${p.length}. Injured: ${injured}. Plays in playbook: ${pl.length}. Game plans: ${gp.length}. Next game: ${nextGame ? nextGame.name + " on " + nextGame.game_date : "none"}. Upcoming practice: ${upcomingPractice ? upcomingPractice.title + " on " + upcomingPractice.date : "none"}.`;
     const res = await base44.integrations.Core.InvokeLLM({
       prompt: `You are an AI assistant for a ${activeSport} team management app. Based on the current team data, generate 3 personalized action suggestions for a user with role "${role}". Keep each suggestion concise (under 15 words). Focus on the most impactful next steps given the data. Context: ${context}`,
@@ -95,17 +95,17 @@ export default function Dashboard() {
     setAiLoading(false);
   };
 
-  const injured = players.filter(p => p.status === "injured");
-  const limited = healthRecords.filter(h => h.availability === "limited" || h.availability === "out");
-  const nextGame = opponents.find(o => new Date(o.game_date) >= new Date());
-  const upcomingPractice = practices.find(p => p.status !== "completed" && new Date(p.date) >= new Date());
+  const injured = players.filter((p) => p.status === "injured");
+  const limited = healthRecords.filter((h) => h.availability === "limited" || h.availability === "out");
+  const nextGame = opponents.find((o) => new Date(o.game_date) >= new Date());
+  const upcomingPractice = practices.find((p) => p.status !== "completed" && new Date(p.date) >= new Date());
 
   const stats = [
-    { label: "Players", value: players.length, icon: Users, page: "Roster", color: "from-blue-600 to-blue-700" },
-    { label: `Total ${cfg.termPlay}s`, value: plays.length, icon: BookOpen, page: "Playbook", color: "from-orange-500 to-orange-600" },
-    { label: "Game Plans", value: gamePlans.length, icon: Target, page: "GamePlan", color: "from-purple-600 to-purple-700" },
-    { label: "Health Issues", value: injured.length + limited.length, icon: Activity, page: "PlayerHealth", color: "from-red-600 to-red-700" },
-  ];
+  { label: "Players", value: players.length, icon: Users, page: "Roster", color: "from-blue-600 to-blue-700" },
+  { label: `Total ${cfg.termPlay}s`, value: plays.length, icon: BookOpen, page: "Playbook", color: "from-orange-500 to-orange-600" },
+  { label: "Game Plans", value: gamePlans.length, icon: Target, page: "GamePlan", color: "from-purple-600 to-purple-700" },
+  { label: "Health Issues", value: injured.length + limited.length, icon: Activity, page: "PlayerHealth", color: "from-red-600 to-red-700" }];
+
 
   if (loading) {
     return (
@@ -116,13 +116,13 @@ export default function Dashboard() {
             <img
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8dea6f5ebfce20bad2a8c/871a00698_image_aaa46895.png"
               alt="NxDown"
-              className="w-8 h-8 rounded-lg object-cover"
-            />
+              className="w-8 h-8 rounded-lg object-cover" />
+
           </div>
           <p className="text-gray-400 text-sm">Loading your command center...</p>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -142,11 +142,11 @@ export default function Dashboard() {
             <div className="flex items-center gap-4">
               <div className="relative flex-shrink-0">
                 <div className="absolute inset-0 rounded-2xl blur-lg opacity-30" style={{ backgroundColor: "var(--color-primary,#f97316)" }} />
-                <img
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a8dea6f5ebfce20bad2a8c/871a00698_image_aaa46895.png"
-                  alt="NxDown"
-                  className="relative w-14 h-14 rounded-2xl object-cover shadow-2xl"
-                />
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/681c5ffa8_image_6f7e875e.png"
+
+                alt="NxDown" className="relative w-14 h-14 rounded-2xl object-cover shadow-2xl" />
+
+
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
@@ -156,16 +156,16 @@ export default function Dashboard() {
                   <span className="hidden md:inline text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full font-semibold tracking-wider">PRO</span>
                 </div>
                 <p className="text-gray-400 text-sm font-medium">
-                {user
-                  ? <>Welcome back, <span className="text-white font-semibold">{user.full_name?.split(" ")[0] || "Coach"}</span></>
-                  : `Next-Gen ${activeSport.charAt(0).toUpperCase() + activeSport.slice(1)} Systems`
-                }
-                  {user?.school_name && (
-                    <span className="ml-2 text-gray-600">· <Building2 className="w-3 h-3 inline mb-0.5" /> {user.school_name}</span>
-                  )}
+                {user ?
+                  <>Welcome back, <span className="text-white font-semibold">{user.full_name?.split(" ")[0] || "Coach"}</span></> :
+                  `Next-Gen ${activeSport.charAt(0).toUpperCase() + activeSport.slice(1)} Systems`
+                  }
+                  {user?.school_name &&
+                  <span className="ml-2 text-gray-600">· <Building2 className="w-3 h-3 inline mb-0.5" /> {user.school_name}</span>
+                  }
                 </p>
                 <p className="text-gray-600 text-xs mt-0.5 capitalize">
-                  {user?.role?.replace(/_/g, " ") || `${activeSport.replace(/_/g," ")} Intelligence Platform`}
+                  {user?.role?.replace(/_/g, " ") || `${activeSport.replace(/_/g, " ")} Intelligence Platform`}
                   {user?.is_associate_head_coach && <span className="text-cyan-400 ml-1.5 font-semibold">(Associate HC)</span>}
                 </p>
               </div>
@@ -193,8 +193,8 @@ export default function Dashboard() {
       <div className="p-4 md:p-6 space-y-6">
 
         {/* Nx AI Suggestions */}
-        {!aiDismissed && (aiLoading || aiSuggestions.length > 0) && (
-          <div className="bg-[#141414] border rounded-xl p-4" style={{ borderColor: "var(--color-primary,#f97316)33" }}>
+        {!aiDismissed && (aiLoading || aiSuggestions.length > 0) &&
+        <div className="bg-[#141414] border rounded-xl p-4" style={{ borderColor: "var(--color-primary,#f97316)33" }}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4" style={{ color: "var(--color-primary,#f97316)" }} />
@@ -204,43 +204,43 @@ export default function Dashboard() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            {aiLoading ? (
-              <div className="flex items-center gap-2 text-gray-500 text-sm">
+            {aiLoading ?
+          <div className="flex items-center gap-2 text-gray-500 text-sm">
                 <div className="w-3 h-3 rounded-full border border-gray-500 border-t-transparent animate-spin" />
                 Nx is analyzing your team data...
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                {aiSuggestions.map((s, i) => (
-                  <Link key={i} to={createPageUrl(s.page || "Dashboard")}
-                    className="flex items-center gap-2 p-3 bg-[#1a1a1a] rounded-lg border border-transparent transition-all group"
-                    style={{ "--hover-border": "var(--color-primary,#f97316)44" }}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = "var(--color-primary,#f97316)44"}
-                    onMouseLeave={e => e.currentTarget.style.borderColor = "transparent"}>
+              </div> :
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                {aiSuggestions.map((s, i) =>
+            <Link key={i} to={createPageUrl(s.page || "Dashboard")}
+            className="flex items-center gap-2 p-3 bg-[#1a1a1a] rounded-lg border border-transparent transition-all group"
+            style={{ "--hover-border": "var(--color-primary,#f97316)44" }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = "var(--color-primary,#f97316)44"}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = "transparent"}>
                     <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--color-primary,#f97316)22" }}>
                       <Zap className="w-3 h-3" style={{ color: "var(--color-primary,#f97316)" }} />
                     </div>
                     <span className="text-gray-300 text-xs flex-1">{s.text}</span>
                     <ChevronRight className="w-3 h-3 text-gray-600 group-hover:text-gray-400 flex-shrink-0" />
                   </Link>
-                ))}
-              </div>
             )}
+              </div>
+          }
           </div>
-        )}
+        }
 
         {/* Stat Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {stats.map(({ label, value, icon: Icon, page, color }) => (
-            <Link key={label} to={createPageUrl(page)}
-              className="bg-[#141414] border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-all group">
+          {stats.map(({ label, value, icon: Icon, page, color }) =>
+          <Link key={label} to={createPageUrl(page)}
+          className="bg-[#141414] border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-all group">
               <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${color} flex items-center justify-center mb-3`}>
                 <Icon className="w-5 h-5 text-white" />
               </div>
               <p className="text-2xl font-black text-white">{value}</p>
               <p className="text-gray-500 text-xs mt-1">{label}</p>
             </Link>
-          ))}
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -254,20 +254,20 @@ export default function Dashboard() {
                 Full Schedule <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-            {nextGame ? (
-              <div>
+            {nextGame ?
+            <div>
                 <p className="text-2xl font-black text-white">vs. {nextGame.name}</p>
                 <p className="text-sm mt-1" style={{ color: "var(--color-primary,#f97316)" }}>{nextGame.game_date} · {nextGame.location}</p>
-                {nextGame.offensive_tendency && (
-                  <p className="text-gray-400 text-xs mt-2 line-clamp-2"><span className="text-gray-500">{cfg.gamePlanKeyTendenciesLabel.split(" ")[0]}:</span> {nextGame.offensive_tendency}</p>
-                )}
-                {nextGame.weaknesses && (
-                  <p className="text-green-400 text-xs mt-1 line-clamp-1">⚡ {nextGame.weaknesses}</p>
-                )}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-sm">No upcoming games scheduled</p>
-            )}
+                {nextGame.offensive_tendency &&
+              <p className="text-gray-400 text-xs mt-2 line-clamp-2"><span className="text-gray-500">{cfg.gamePlanKeyTendenciesLabel.split(" ")[0]}:</span> {nextGame.offensive_tendency}</p>
+              }
+                {nextGame.weaknesses &&
+              <p className="text-green-400 text-xs mt-1 line-clamp-1">⚡ {nextGame.weaknesses}</p>
+              }
+              </div> :
+
+            <p className="text-gray-500 text-sm">No upcoming games scheduled</p>
+            }
           </div>
 
           {/* Health Alerts */}
@@ -280,21 +280,21 @@ export default function Dashboard() {
                 View All <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-            {injured.length === 0 && limited.length === 0 ? (
-              <div className="flex items-center gap-2">
+            {injured.length === 0 && limited.length === 0 ?
+            <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-500" />
                 <p className="text-gray-400 text-sm">All players healthy</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {injured.slice(0, 4).map(p => (
-                  <div key={p.id} className="flex items-center justify-between">
+              </div> :
+
+            <div className="space-y-2">
+                {injured.slice(0, 4).map((p) =>
+              <div key={p.id} className="flex items-center justify-between">
                     <span className="text-white text-sm">{p.first_name} {p.last_name}</span>
                     <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">{p.position} · Injured</span>
                   </div>
-                ))}
+              )}
               </div>
-            )}
+            }
           </div>
 
           {/* Quick Actions */}
@@ -304,19 +304,19 @@ export default function Dashboard() {
             </h2>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: "Add Play", page: "Playbook", icon: BookOpen },
-                { label: "Edit Depth Chart", page: "DepthChart", icon: TrendingUp },
-                { label: "New Practice", page: "Practice", icon: ClipboardList },
-                { label: "Game Schedule", page: "GameSchedule", icon: Crosshair },
-              ].map(({ label, page, icon: Icon }) => (
-                <Link key={label} to={createPageUrl(page)}
-                  className="flex items-center gap-2 p-3 bg-[#1a1a1a] rounded-lg border border-transparent transition-all"
-                  onMouseEnter={e => { e.currentTarget.style.borderColor="var(--color-primary,#f97316)44"; e.currentTarget.style.backgroundColor="var(--color-primary,#f97316)10"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor="transparent"; e.currentTarget.style.backgroundColor=""; }}>
+              { label: "Add Play", page: "Playbook", icon: BookOpen },
+              { label: "Edit Depth Chart", page: "DepthChart", icon: TrendingUp },
+              { label: "New Practice", page: "Practice", icon: ClipboardList },
+              { label: "Game Schedule", page: "GameSchedule", icon: Crosshair }].
+              map(({ label, page, icon: Icon }) =>
+              <Link key={label} to={createPageUrl(page)}
+              className="flex items-center gap-2 p-3 bg-[#1a1a1a] rounded-lg border border-transparent transition-all"
+              onMouseEnter={(e) => {e.currentTarget.style.borderColor = "var(--color-primary,#f97316)44";e.currentTarget.style.backgroundColor = "var(--color-primary,#f97316)10";}}
+              onMouseLeave={(e) => {e.currentTarget.style.borderColor = "transparent";e.currentTarget.style.backgroundColor = "";}}>
                   <Icon className="w-4 h-4" style={{ color: "var(--color-primary,#f97316)" }} />
                   <span className="text-gray-300 text-xs font-medium">{label}</span>
                 </Link>
-              ))}
+              )}
             </div>
           </div>
 
@@ -330,37 +330,37 @@ export default function Dashboard() {
                 View All <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-            {upcomingPractice ? (
-              <div>
+            {upcomingPractice ?
+            <div>
                 <p className="text-xl font-black text-white">{upcomingPractice.title}</p>
                 <p className="text-sm mt-1" style={{ color: "var(--color-primary,#f97316)" }}>{upcomingPractice.date}</p>
                 {upcomingPractice.focus && <p className="text-gray-400 text-xs mt-2">{upcomingPractice.focus}</p>}
-                {upcomingPractice.duration_minutes && (
-                  <p className="text-gray-500 text-xs mt-1">{upcomingPractice.duration_minutes} min</p>
-                )}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-sm">No upcoming practices</p>
-            )}
+                {upcomingPractice.duration_minutes &&
+              <p className="text-gray-500 text-xs mt-1">{upcomingPractice.duration_minutes} min</p>
+              }
+              </div> :
+
+            <p className="text-gray-500 text-sm">No upcoming practices</p>
+            }
           </div>
         </div>
 
         {/* Platform Feature Highlights */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
-            { icon: Shield, title: "Team Account Isolation", desc: "Your data is fully isolated per school. No cross-team data access.", color: "text-green-400", bg: "bg-green-500/10 border-green-500/20" },
-            { icon: Star, title: "Associate HC Program", desc: "Head Coach can designate 1 Associate HC with coordinator-level access.", color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
-            { icon: Sparkles, title: "Nx AI Intelligence", desc: "Game plans, play variations, player development & in-game strategy.", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" },
-          ].map(({ icon: Icon, title, desc, color, bg }) => (
-            <div key={title} className={`border rounded-xl p-4 ${bg}`}>
+          { icon: Shield, title: "Team Account Isolation", desc: "Your data is fully isolated per school. No cross-team data access.", color: "text-green-400", bg: "bg-green-500/10 border-green-500/20" },
+          { icon: Star, title: "Associate HC Program", desc: "Head Coach can designate 1 Associate HC with coordinator-level access.", color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
+          { icon: Sparkles, title: "Nx AI Intelligence", desc: "Game plans, play variations, player development & in-game strategy.", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" }].
+          map(({ icon: Icon, title, desc, color, bg }) =>
+          <div key={title} className={`border rounded-xl p-4 ${bg}`}>
               <Icon className={`w-5 h-5 ${color} mb-2`} />
               <p className={`font-semibold text-sm ${color}`}>{title}</p>
               <p className="text-gray-500 text-xs mt-1">{desc}</p>
             </div>
-          ))}
+          )}
         </div>
 
       </div>
-    </div>
-  );
+    </div>);
+
 }
