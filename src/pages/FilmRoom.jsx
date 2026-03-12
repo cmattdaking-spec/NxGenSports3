@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { useSport } from "@/components/SportContext";
 import { Tag, Film, Zap, X, Menu, Users, PenTool, Star } from "lucide-react";
 import NxHighlight from "../components/filmroom/NxHighlight";
 import LoadingScreen from "../components/LoadingScreen";
