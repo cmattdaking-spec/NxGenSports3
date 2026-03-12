@@ -34,20 +34,23 @@ export default function FilmRoom() {
   const playerRef = useRef(null);
   const videoContainerRef = useRef(null);
   const presenceIntervalRef = useRef(null);
+  const { activeSport, teamId } = useSport();
 
   useEffect(() => {
-    Promise.all([
-      base44.entities.FilmSession.list("-created_date"),
-      base44.auth.me(),
-      base44.entities.Player.list(),
-    ]).then(([s, u, pl]) => {
+    base44.auth.me().then(u => {
       setUser(u);
-      setSessions(s);
-      setPlayers(pl);
-      if (s.length > 0) loadSession(s[0], u);
-      else setLoading(false);
+      const filter = { sport: activeSport, ...(u?.team_id ? { team_id: u.team_id } : {}) };
+      Promise.all([
+        base44.entities.FilmSession.filter(filter, "-created_date"),
+        base44.entities.Player.filter({ sport: activeSport, ...(u?.team_id ? { team_id: u.team_id } : {}) }),
+      ]).then(([s, pl]) => {
+        setSessions(s);
+        setPlayers(pl);
+        if (s.length > 0) loadSession(s[0], u);
+        else setLoading(false);
+      }).catch(() => setLoading(false));
     }).catch(() => setLoading(false));
-  }, []);
+  }, [activeSport]);
 
   // Real-time subscription for tags
   useEffect(() => {
