@@ -107,7 +107,12 @@ export default function FilmRoom() {
   };
 
   const createSession = async (data) => {
-    const s = await base44.entities.FilmSession.create({ ...data, tag_count: 0 });
+    const s = await base44.entities.FilmSession.create({
+      ...data,
+      tag_count: 0,
+      sport: activeSport,
+      team_id: user?.team_id || teamId || "",
+    });
     const updated = [s, ...sessions];
     setSessions(updated);
     loadSession(s, user);
