@@ -72,6 +72,8 @@ import Scouting from './pages/Scouting';
 import Settings from './pages/Settings';
 import StrengthConditioning from './pages/StrengthConditioning';
 import UserManagement from './pages/UserManagement';
+import PlayerPortal from './pages/PlayerPortal';
+import ParentPortal from './pages/ParentPortal';
 import __Layout from './Layout.jsx';
 
 
@@ -101,9 +103,12 @@ export const PAGES = {
     "Settings": Settings,
     "StrengthConditioning": StrengthConditioning,
     "UserManagement": UserManagement,
+    "PlayerPortal": PlayerPortal,
+    "ParentPortal": ParentPortal,
 }
 
 export const pagesConfig = {
+    // Default landing page; Layout further routes ADs to ADPortal.
     mainPage: "Dashboard",
     Pages: PAGES,
     Layout: __Layout,

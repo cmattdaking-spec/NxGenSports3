@@ -7,6 +7,7 @@ import ADPlayersTab from "@/components/adportal/ADPlayersTab";
 import ADScheduleTab from "@/components/adportal/ADScheduleTab";
 import ADHealthTab from "@/components/adportal/ADHealthTab";
 import ADHighlightsTab from "@/components/adportal/ADHighlightsTab";
+import SocialShareBar from "@/components/SocialShareBar";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -74,8 +75,14 @@ function ADPortalContent() {
   useEffect(() => { loadData(); }, [loadData]);
 
   const allSports = [...new Set(players.map(p => p.sport || "football"))].sort();
-  const playersBySport = players.reduce((acc, p) => { const s = p.sport || "football"; if (!acc[s]) acc[s] = []; acc[s].push(p); return acc; }, {});
+  const playersBySport = players.reduce((acc, p) => {
+    const s = p.sport || "football";
+    if (!acc[s]) acc[s] = [];
+    acc[s].push(p);
+    return acc;
+  }, {});
   const healthIssues = healthRecords.filter(h => h.availability !== "full").length;
+  const eligibilityIssues = players.filter(p => p.academic_eligible === false).length;
 
   if (loading) return (
     <div className="flex items-center justify-center h-96 bg-[#0a0a0a]">
@@ -105,19 +112,34 @@ function ADPortalContent() {
               </p>
             </div>
           </div>
-          {/* Stats */}
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { label: "Athletes", value: players.length, color: "text-cyan-400" },
-              { label: "Programs", value: allSports.length, color: "text-blue-400" },
-              { label: "Staff", value: staff.length, color: "text-purple-400" },
-              { label: "Health Issues", value: healthIssues, color: healthIssues > 0 ? "text-red-400" : "text-green-400" },
-            ].map(({ label, value, color }) => (
-              <div key={label} className="bg-[#141414] border border-gray-800 rounded-xl p-2.5 text-center">
-                <p className={`text-xl font-black ${color}`}>{value}</p>
-                <p className="text-gray-500 text-xs mt-0.5">{label}</p>
+          {/* Stats + Social */}
+          <div className="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="grid grid-cols-4 gap-2 flex-1 min-w-0">
+              {[
+                { label: "Athletes", value: players.length, color: "text-cyan-400" },
+                { label: "Teams", value: allSports.length, color: "text-blue-400" },
+                { label: "Staff", value: staff.length, color: "text-purple-400" },
+                { label: "Health Issues", value: healthIssues, color: healthIssues > 0 ? "text-red-400" : "text-green-400" },
+              ].map(({ label, value, color }) => (
+                <div key={label} className="bg-[#141414] border border-gray-800 rounded-xl p-2.5 text-center">
+                  <p className={`text-xl font-black ${color}`}>{value}</p>
+                  <p className="text-gray-500 text-xs mt-0.5">{label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col items-start md:items-end gap-2">
+              <div className="bg-[#141414] border border-gray-800 rounded-xl px-3 py-2">
+                <p className="text-xs text-gray-400">
+                  <span className="text-white font-semibold">Eligibility Alerts: </span>
+                  {eligibilityIssues > 0 ? (
+                    <span className="text-yellow-400 font-semibold">{eligibilityIssues} athlete(s) at risk</span>
+                  ) : (
+                    <span className="text-green-400 font-semibold">All athletes eligible</span>
+                  )}
+                </p>
               </div>
-            ))}
+              <SocialShareBar label="Share school update" />
+            </div>
           </div>
         </div>
       </div>

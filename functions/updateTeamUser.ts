@@ -31,6 +31,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: user not on your team' }, { status: 403 });
     }
 
+    // Parent users without team assignment can only be edited by superadmins
+    if (targetUser.coaching_role === 'parent' && !targetUser.team_id) {
+      return Response.json({ error: 'Forbidden: parent users must be assigned to a team by a superadmin before they can be edited' }, { status: 403 });
+    }
+
     const targetCoachRole = targetUser.coaching_role || targetUser.role;
 
     // Head Coach: can only manage staff for their own programs (sports) at their school.

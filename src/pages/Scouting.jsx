@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Edit, Trash2, X, Zap, Crosshair, ExternalLink, ChevronDown, ChevronUp, Brain, Shield, Swords, Users, Target } from "lucide-react";
+import { Plus, Edit, Trash2, X, Zap, Crosshair, ExternalLink, ChevronDown, ChevronUp, Brain, Shield, Swords, Users, Target, Lock } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
 import PlayLinker from "../components/scouting/PlayLinker";
 import usePullToRefresh, { PullIndicator } from "@/components/hooks/usePullToRefresh";
@@ -18,9 +18,13 @@ export default function Scouting() {
   const [deepAnalysisTarget, setDeepAnalysisTarget] = useState(null);
   const [deepAnalysisLoading, setDeepAnalysisLoading] = useState(false);
   const [deepReport, setDeepReport] = useState(null);
+  const [user, setUser] = useState(null);
 
   const load = () => base44.entities.Opponent.list("-game_date").then(d => { setOpponents(d); setLoading(false); });
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+    load();
+  }, []);
 
   const { refreshing, pullDelta, handlers: pullHandlers } = usePullToRefresh(
     () => base44.entities.Opponent.list("-game_date").then(d => setOpponents(d))
@@ -205,6 +209,24 @@ Generate a detailed JSON report with strategic insights.`,
   );
 
   if (loading) return <LoadingScreen />;
+
+  const isAD = user?.coaching_role === "athletic_director";
+
+  if (isAD) {
+    return (
+      <div className="bg-[#0a0a0a] min-h-full flex items-center justify-center">
+        <div className="text-center text-gray-500 max-w-sm px-4">
+          <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-6 h-6 text-red-400" />
+          </div>
+          <p className="text-white font-bold text-lg">Scouting Access Restricted</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Opponent scouting and strategy are restricted to coaching staff.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6" {...pullHandlers}>

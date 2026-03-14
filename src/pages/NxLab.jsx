@@ -274,6 +274,24 @@ export default function NxLab() {
 
   if (loading && sessions.length === 0 && !activeSession && activeTab === "film") return <LoadingScreen />;
 
+  const isAD = user?.coaching_role === "athletic_director";
+
+  if (isAD) {
+    return (
+      <div className="bg-[#0a0a0a] min-h-full flex items-center justify-center">
+        <div className="text-center text-gray-500 max-w-sm px-4">
+          <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-6 h-6 text-red-400" />
+          </div>
+          <p className="text-white font-bold text-lg">NxLab Access Restricted</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Film, advanced scouting, play design, and game plans are reserved for coaching staff.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#0a0a0a] min-h-full flex flex-col h-screen overflow-hidden">
       {/* Top Nav */}

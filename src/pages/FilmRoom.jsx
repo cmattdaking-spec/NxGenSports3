@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useSport } from "@/components/SportContext";
-import { Tag, Film, Zap, X, Menu, Users, PenTool, Star } from "lucide-react";
+import { Tag, Film, Zap, X, Menu, Users, PenTool, Star, Lock } from "lucide-react";
 import NxHighlight from "../components/filmroom/NxHighlight";
 import LoadingScreen from "../components/LoadingScreen";
 import VideoPlayer from "../components/filmroom/VideoPlayer";
@@ -174,6 +174,24 @@ export default function FilmRoom() {
   const activeViewers = Object.entries(presence).filter(([, v]) => Date.now() - v.lastSeen < 30000).map(([email, v]) => ({ email, name: v.name }));
 
   if (loading && sessions.length === 0 && !activeSession) return <LoadingScreen />;
+
+  const isAD = user?.coaching_role === "athletic_director";
+
+  if (isAD) {
+    return (
+      <div className="bg-[#0a0a0a] min-h-full flex items-center justify-center">
+        <div className="text-center text-gray-500 max-w-sm px-4">
+          <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-6 h-6 text-red-400" />
+          </div>
+          <p className="text-white font-bold text-lg">Film Room Access Restricted</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Opponent and team film workflows are managed by coaching staff. Athletic Directors can review summaries in reports.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#0a0a0a] min-h-full flex flex-col md:flex-row h-screen overflow-hidden">
