@@ -47,7 +47,8 @@ export default function ScoutingReport() {
     if (!game) return;
     const prompt = `Generate a detailed scouting report for our team's performance in the game against ${game.opponent_name} on ${game.date}. Sport: ${activeSport}. Include strengths, weaknesses, key plays, and recommendations.`;
     const res = await base44.integrations.Core.InvokeLLM({ prompt });
-    setForm({ ...form, report: res.response, ai_generated: true });
+    const response = typeof res === 'object' && res !== null && 'response' in res ? res.response : res;
+    setForm({ ...form, report: response, ai_generated: true });
     setAiLoading(false);
   };
 

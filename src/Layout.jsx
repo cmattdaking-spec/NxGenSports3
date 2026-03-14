@@ -405,13 +405,9 @@ export default function Layout({ children, currentPageName }) {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[#111111] border-b border-gray-800 safe-area-top">
-          {currentPageName !== "Dashboard" && currentPageName !== "ADPortal" ? (
-            <button onClick={() => navigate(-1)} className="text-gray-400 p-1 flex items-center gap-1">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          ) : (
-            <div className="w-8" />
-          )}
+          <button onClick={() => setMobileOpen(true)} className="text-gray-400 p-1">
+            <Menu className="w-5 h-5" />
+          </button>
           <span className="text-white font-black text-lg">{brandPrefix}<span style={{ color: "var(--color-primary, #3b82f6)" }}>{brandSuffix}</span></span>
           <div className="w-8" />
         </header>
