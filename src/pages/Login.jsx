@@ -15,15 +15,6 @@ const SPORT_OPTIONS = [
   { id: "wrestling", label: "Wrestling" },
 ];
 
-const SCHOOL_OPTIONS = [
-  { value: "", label: "Select your school" },
-  { value: "lincoln-high", label: "Lincoln High School" },
-  { value: "washington-academy", label: "Washington Academy" },
-  { value: "jefferson-college", label: "Jefferson College" },
-  { value: "roosevelt-university", label: "Roosevelt University" },
-  { value: "kennedy-tech", label: "Kennedy Technical Institute" },
-];
-
 export default function Login() {
   const { navigateToLogin } = useAuth();
   const [formData, setFormData] = useState({
@@ -35,11 +26,36 @@ export default function Login() {
   });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [schools, setSchools] = useState([]);
+  const [schoolsLoading, setSchoolsLoading] = useState(true);
+  const [schoolsError, setSchoolsError] = useState("");
 
   useEffect(() => {
     // Ensure brand colors are applied even before app settings load
     document.documentElement.style.setProperty("--color-primary", "#00F2FF");
     document.documentElement.style.setProperty("--color-secondary", "#E8E8E8");
+  }, []);
+
+  useEffect(() => {
+    // Fetch schools from the superadmin endpoint
+    const loadSchools = async () => {
+      try {
+        setSchoolsLoading(true);
+        setSchoolsError("");
+        const response = await base44.functions.invoke("listAllSchools");
+        const schoolsData = response.data?.schools || [];
+        setSchools(schoolsData);
+      } catch (err) {
+        console.error("Failed to load schools:", err);
+        setSchoolsError("Failed to load schools. Please try again.");
+        // Fallback to empty array
+        setSchools([]);
+      } finally {
+        setSchoolsLoading(false);
+      }
+    };
+
+    loadSchools();
   }, []);
 
   const handleInputChange = (e) => {
@@ -170,19 +186,30 @@ export default function Login() {
             {/* School */}
             <div>
               <label className="text-xs text-gray-400 mb-1 block">School</label>
-              <select
-                name="school"
-                value={formData.school}
-                onChange={handleInputChange}
-                className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-[#00F2FF] transition-colors"
-                required
-              >
-                {SCHOOL_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value} className="bg-[#181818]">
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              {schoolsLoading ? (
+                <div className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-400">
+                  Loading schools...
+                </div>
+              ) : schoolsError ? (
+                <div className="w-full bg-[#181818] border border-red-500/30 rounded-xl px-3 py-2 text-sm text-red-400">
+                  {schoolsError}
+                </div>
+              ) : (
+                <select
+                  name="school"
+                  value={formData.school}
+                  onChange={handleInputChange}
+                  className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-[#00F2FF] transition-colors"
+                  required
+                >
+                  <option value="" className="bg-[#181818]">Select your school</option>
+                  {schools.map(school => (
+                    <option key={school.id} value={school.id} className="bg-[#181818]">
+                      {school.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             {/* Position */}
