@@ -50,7 +50,7 @@ export default function Reports() {
   const filteredMetrics = selectedPlayer === "all" ? metrics : metrics.filter(m => m.player_name === selectedPlayer);
   const trendData = filteredMetrics
     .filter(m => m.game_date)
-    .sort((a, b) => new Date(a.game_date) - new Date(b.game_date))
+    .sort((a, b) => new Date(a.game_date).getTime() - new Date(b.game_date).getTime())
     .map(m => ({ date: m.game_date?.slice(5), grade: m.play_grade, speed: m.top_speed_mph, snaps: m.snap_count }));
 
   // ── Health data ───────────────────────────────────────────────────────────
