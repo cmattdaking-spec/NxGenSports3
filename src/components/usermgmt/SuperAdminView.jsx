@@ -96,6 +96,7 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
   useEffect(() => { loadSchools(); }, []);
 
   // Build member counts from allUsers by team_id
+  // Scope member counts to users belonging to schools assigned to this super admin.
   const memberCountByTeam = allUsers.reduce((acc, u) => {
     if (u.team_id) acc[u.team_id] = (acc[u.team_id] || 0) + 1;
     return acc;
@@ -145,6 +146,8 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         poc_role: form.poc_role,
         poc_email: form.poc_email.trim(),
         poc_phone: form.poc_phone.trim(),
+        // Assign this school to the creating super admin for scoped visibility.
+        super_admin_id: user?.id || null,
       };
 
       await Promise.all([

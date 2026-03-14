@@ -8,18 +8,35 @@ Deno.serve(async (req) => {
 
     // Any authenticated user can fetch their team members for messaging
 
-    // Super admin sees all users (minus other super admins)
+    // Super admin: only sees users for schools explicitly assigned to them
+    // (minus other super admins).
     if (user.role === 'super_admin') {
+      const allSchools = await base44.asServiceRole.entities.School.list('-created_date', 500);
+      const myTeamIds = new Set(
+        allSchools
+          .filter((s: any) => !s.super_admin_id || s.super_admin_id === user.id)
+          .map((s: any) => s.team_id)
+          .filter(Boolean),
+      );
+
+      if (myTeamIds.size === 0) {
+        return Response.json([]);
+      }
+
       const allUsers = await base44.asServiceRole.entities.User.list();
-      return Response.json(allUsers.filter(u => u.role !== 'super_admin'));
+      const scopedUsers = allUsers.filter((u: any) =>
+        u.role !== 'super_admin' && u.team_id && myTeamIds.has(u.team_id)
+      );
+
+      return Response.json(scopedUsers);
     }
 
-    // Everyone else: filter by team_id
+    // Everyone else: filter by team_id (school-level isolation)
     const teamId = user.team_id;
     if (!teamId) return Response.json([]);
 
     const allUsers = await base44.asServiceRole.entities.User.list();
-    const teamUsers = allUsers.filter(u => u.team_id === teamId && u.role !== 'super_admin');
+    const teamUsers = allUsers.filter((u: any) => u.team_id === teamId && u.role !== 'super_admin');
     return Response.json(teamUsers);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
