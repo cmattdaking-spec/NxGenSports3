@@ -18,7 +18,8 @@ Deno.serve(async (req) => {
       schoolId,
       assignedSports,
       position,
-      email
+      email,
+      childPlayerId
     } = body;
 
     if (!firstName || !lastName || !schoolId || !assignedSports || assignedSports.length === 0) {
@@ -39,12 +40,21 @@ Deno.serve(async (req) => {
       team_id: null, // Unassigned - only superadmin can assign
       profile_verified: false, // Will need superadmin approval
       email: email, // If provided during signup
+      user_type: 'parent',
+      child_ids: childPlayerId ? [childPlayerId] : [],
       // Mark as pending superadmin approval
       status: 'pending_approval'
     };
 
     // Create the user record
     const newUser = await base44.asServiceRole.entities.User.create(userData);
+
+    // Establish parent-child relationship if childPlayerId provided
+    if (childPlayerId) {
+      await base44.asServiceRole.entities.User.update(childPlayerId, {
+        parent_id: newUser.id
+      });
+    }
 
     return Response.json({
       success: true,

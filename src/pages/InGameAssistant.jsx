@@ -24,6 +24,20 @@ export default function InGameAssistant() {
   const [aiLoading, setAiLoading] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
   const [expanded, setExpanded] = useState("play_calls");
+  const [formation, setFormation] = useState("");
+  const [playPackage, setPlayPackage] = useState("");
+  const [motion, setMotion] = useState("");
+  const [tag, setTag] = useState("");
+  const [structuredCall, setStructuredCall] = useState("");
+
+  const buildStructuredCall = () => {
+    const parts = [formation, playPackage, motion, tag].filter(Boolean);
+    setStructuredCall(parts.join(" -> "));
+  };
+
+  useEffect(() => {
+    buildStructuredCall();
+  }, [formation, playPackage, motion, tag]);
 
   useEffect(() => {
     Promise.all([
@@ -215,6 +229,38 @@ Generate specific, actionable real-time suggestions.`,
               <Brain className={`w-4 h-4 ${aiLoading ? "animate-pulse" : ""}`} />
               {aiLoading ? "Nx AI Thinking..." : "Get Nx Suggestions"}
             </button>
+          </div>
+
+          {/* Structured Play Call Panel */}
+          <div className="bg-[#141414] border border-gray-800 rounded-xl p-4 space-y-3">
+            <p className="text-white font-semibold text-sm">Structured Play Call</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-gray-400 text-xs mb-1 block">Formation</label>
+                <input value={formation} onChange={e => setFormation(e.target.value)} placeholder="e.g. 21 Personnel"
+                  className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+              </div>
+              <div>
+                <label className="text-gray-400 text-xs mb-1 block">Package</label>
+                <input value={playPackage} onChange={e => setPlayPackage(e.target.value)} placeholder="e.g. Trips Right"
+                  className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+              </div>
+              <div>
+                <label className="text-gray-400 text-xs mb-1 block">Motion</label>
+                <input value={motion} onChange={e => setMotion(e.target.value)} placeholder="e.g. Bubble Screen"
+                  className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+              </div>
+              <div>
+                <label className="text-gray-400 text-xs mb-1 block">Tag</label>
+                <input value={tag} onChange={e => setTag(e.target.value)} placeholder="e.g. Hot Route"
+                  className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+              </div>
+            </div>
+            <div>
+              <label className="text-gray-400 text-xs mb-1 block">Play Call</label>
+              <input value={structuredCall} readOnly
+                className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm" />
+            </div>
           </div>
         </div>
 

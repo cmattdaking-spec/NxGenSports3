@@ -29,6 +29,7 @@ export default function GameCard({ opponent, plan, isPast, expanded, onToggleExp
             </div>
             <div className="flex flex-wrap gap-3 text-xs text-gray-500">
               <span>{opponent.game_date}</span>
+              {opponent.start_time && <span>{opponent.start_time}</span>}
               {opponent.location && <span>{opponent.location}</span>}
               {opponent.conference && <span>· {opponent.conference}</span>}
             </div>
