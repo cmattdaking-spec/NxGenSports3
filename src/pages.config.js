@@ -55,6 +55,7 @@ import FilmRoom from './pages/FilmRoom';
 import GamePlan from './pages/GamePlan';
 import GameSchedule from './pages/GameSchedule';
 import InGameAssistant from './pages/InGameAssistant';
+import Login from './pages/Login';
 import Messages from './pages/Messages';
 import NxAnnouncement from './pages/NxAnnouncement';
 import NxLab from './pages/NxLab';
@@ -83,6 +84,7 @@ export const PAGES = {
     "GamePlan": GamePlan,
     "GameSchedule": GameSchedule,
     "InGameAssistant": InGameAssistant,
+    "Login": Login,
     "Messages": Messages,
     "NxAnnouncement": NxAnnouncement,
     "NxLab": NxLab,
@@ -102,7 +104,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "FilmRoom",
+    mainPage: "Dashboard",
     Pages: PAGES,
     Layout: __Layout,
 };
