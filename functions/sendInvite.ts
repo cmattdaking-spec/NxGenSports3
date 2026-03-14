@@ -13,10 +13,14 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { email, coaching_role, team_id, school_name, school_code, assigned_positions, assigned_phases, assigned_sports, invite_type, poc_name } = body;
+    const { email, coaching_role, team_id, school_name, school_code, assigned_positions, assigned_phases, assigned_sports, invite_type, poc_name, child_player_id } = body;
 
     if (!email || !team_id) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    if (invite_type === 'parent' && !child_player_id) {
+      return Response.json({ error: 'Child player ID is required for parent invites' }, { status: 400 });
     }
 
     // Create the invite record
@@ -33,6 +37,7 @@ Deno.serve(async (req) => {
       invited_by: user.email,
       invite_type: invite_type || 'staff',
       poc_name: poc_name || '',
+      child_player_id: child_player_id || null,
     });
 
     // Determine platform role — HC and AD get admin, everyone else gets user

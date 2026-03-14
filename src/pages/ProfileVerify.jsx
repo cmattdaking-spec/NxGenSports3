@@ -35,10 +35,10 @@ export default function ProfileVerify() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState(null);
   const [fullName, setFullName] = useState("");
   const [position, setPosition] = useState("");
-  const [sports, setSports] = useState<string[]>([]);
+  const [sports, setSports] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,14 +47,14 @@ export default function ProfileVerify() {
       .then((u) => {
         setUser(u);
         setFullName(u?.full_name || u?.first_name || "");
-        setPosition((u as any)?.position || "");
+        setPosition(u?.position || "");
         setSports(u?.assigned_sports || []);
       })
       .catch(() => setError("Unable to load your profile."))
       .finally(() => setLoading(false));
   }, []);
 
-  const toggleSport = (sport: string) => {
+  const toggleSport = (sport) => {
     setSports((prev) =>
       prev.includes(sport) ? prev.filter((s) => s !== sport) : [...prev, sport]
     );
@@ -65,7 +65,7 @@ export default function ProfileVerify() {
     setSaving(true);
     setError("");
     try {
-      const allowedSports = (user.assigned_sports || []).filter((s: string) =>
+      const allowedSports = (user.assigned_sports || []).filter((s) =>
         sports.includes(s)
       );
 
@@ -74,10 +74,10 @@ export default function ProfileVerify() {
         position: position || undefined,
         assigned_sports: allowedSports,
         profile_verified: true,
-      } as any);
+      });
 
       navigate(createPageUrl("Dashboard"), { replace: true });
-    } catch (e: any) {
+    } catch (e) {
       setError(e?.message || "Failed to save profile.");
     } finally {
       setSaving(false);
@@ -162,7 +162,7 @@ export default function ProfileVerify() {
                   These were assigned by your Athletic Director. You can deselect sports that do not apply.
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {assignedSports.map((s: string) => (
+                    {assignedSports.map((s) => (
                     <button
                       key={s}
                       type="button"
