@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useSport } from "@/components/SportContext";
 import { getSportConfig } from "@/components/SportConfig";
-import { BarChart2, Activity, GraduationCap, TrendingUp, AlertTriangle, Brain } from "lucide-react";
+import { BarChart2, Activity, GraduationCap, TrendingUp, AlertTriangle, Brain, FileText } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell
