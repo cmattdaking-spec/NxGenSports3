@@ -4,6 +4,32 @@ import {
   Play, Plus, Trash2, GripVertical, ChevronDown, ChevronUp,
   ListVideo, PlayCircle, Edit2, Check, X, SkipForward, Pause
 } from "lucide-react";
+import { getEmbedUrl, isIframe } from "@/components/filmroom/VideoPlayer";
+
+function PlaylistVideoPlayer({ url, title, index }) {
+  const embedUrl = getEmbedUrl(url);
+  if (isIframe(url)) {
+    return (
+      <iframe
+        key={index}
+        src={embedUrl}
+        className="w-full h-full"
+        allowFullScreen
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        title={title}
+      />
+    );
+  }
+  return (
+    <video
+      key={index}
+      src={url}
+      controls
+      autoPlay
+      className="w-full h-full"
+    />
+  );
+}
 
 export default function Playlists() {
   const [playlists, setPlaylists] = useState([]);
@@ -162,12 +188,11 @@ export default function Playlists() {
               <button onClick={() => setPlayingPlaylist(null)}><X className="w-6 h-6 text-gray-400 hover:text-white" /></button>
             </div>
             <div className="aspect-video bg-black rounded-2xl overflow-hidden">
-              <iframe
+              <PlaylistVideoPlayer
                 key={currentVideoIdx}
-                src={playingPlaylist.videos[currentVideoIdx]?.url}
-                className="w-full h-full"
-                allowFullScreen
+                url={playingPlaylist.videos[currentVideoIdx]?.url}
                 title={playingPlaylist.videos[currentVideoIdx]?.title}
+                index={currentVideoIdx}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -252,7 +277,7 @@ export default function Playlists() {
                         {video.notes && <p className="text-gray-500 text-xs truncate">{video.notes}</p>}
                       </div>
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => window.open(video.url, "_blank")} className="p-1 text-[var(--color-primary,#3b82f6)] hover:opacity-70">
+                        <button onClick={() => { setPlayingPlaylist(playlist); setCurrentVideoIdx(idx); }} className="p-1 text-[var(--color-primary,#3b82f6)] hover:opacity-70">
                           <Play className="w-3.5 h-3.5" />
                         </button>
                         <button onClick={() => removeVideo(playlist, video.id)} className="p-1 text-red-400 hover:text-red-300">
