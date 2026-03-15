@@ -40,7 +40,8 @@ export default function Practice() {
   };
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); load(); }, []);
 
-  const canEdit = user && (user.role === "admin" || PRACTICE_EDIT_ROLES.includes(user.coaching_role) || PRACTICE_EDIT_ROLES.includes(user.role));
+  const isPlayer = user?.user_type === "player" || user?.coaching_role === "player";
+  const canEdit = user && !isPlayer && (user.role === "admin" || PRACTICE_EDIT_ROLES.includes(user.coaching_role) || PRACTICE_EDIT_ROLES.includes(user.role));
 
   const openAdd = () => {
     setEditing(null);

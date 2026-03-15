@@ -136,6 +136,8 @@ const playerNavItems = [
   { label: "Home",           page: "NxAnnouncement",       icon: Home },
   { label: "Announcements",  page: "NxAnnouncement",       icon: MessageSquare },
   { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays },
+  { label: "Game Plan",      page: "GamePlan",             icon: Target },
+  { label: "Practice",       page: "Practice",             icon: ClipboardList },
   { label: "Eligibility",    page: "AcademicEligibility",  icon: GraduationCap },
   { label: "Health",         page: "PlayerHealth",         icon: Activity },
   { label: "NxMessages",     page: "Messages",             icon: MessageSquare },
