@@ -457,21 +457,6 @@ export default function Layout({ children, currentPageName }) {
     </div>
   );
 
-  // Redirect root — ADs go to ADPortal, players/parents to their portal, everyone else to Dashboard
-  if (location.pathname === "/" || location.pathname === "") {
-    const isAthlDir = effectiveRole === "athletic_director" || user?.role === "admin" && user?.coaching_role === "athletic_director";
-    if (isPlayer) {
-      return <Navigate to={createPageUrl("NxAnnouncement")} replace />;
-    }
-    if (isParent) {
-      return <Navigate to={createPageUrl("NxAnnouncement")} replace />;
-    }
-    if (isAD && !isHeadCoach) {
-      return <Navigate to={createPageUrl("ADPortal")} replace />;
-    }
-    return <Navigate to="/Dashboard" replace />;
-  }
-
   const mobileTabPages = [isAD ? "ADPortal" : "Dashboard", "NxLab", "Messages", "Settings"];
   const isMobileTabPage = mobileTabPages.includes(currentPageName);
   const showMobileBack = location.pathname.split("/").filter(Boolean).length > 1;
@@ -495,6 +480,22 @@ export default function Layout({ children, currentPageName }) {
       return { ...prev, [currentPageName]: children };
     });
   }, [isMobileTabPage, currentPageName]);
+
+  // Redirect root — ADs go to ADPortal, players/parents to their portal, everyone else to Dashboard.
+  let rootRedirectTo = null;
+  if (location.pathname === "/" || location.pathname === "") {
+    if (isPlayer || isParent) {
+      rootRedirectTo = createPageUrl("NxAnnouncement");
+    } else if (isAD && !isHeadCoach) {
+      rootRedirectTo = createPageUrl("ADPortal");
+    } else {
+      rootRedirectTo = "/Dashboard";
+    }
+  }
+
+  if (rootRedirectTo) {
+    return <Navigate to={rootRedirectTo} replace />;
+  }
 
   const sportContextValue = {
     activeSport,
