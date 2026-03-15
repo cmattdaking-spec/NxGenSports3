@@ -176,6 +176,7 @@ export default function FilmRoom() {
   if (loading && sessions.length === 0 && !activeSession) return <LoadingScreen />;
 
   const isAD = user?.coaching_role === "athletic_director";
+  const isPlayer = user?.user_type === "player" || user?.coaching_role === "player";
 
   if (isAD) {
     return (
@@ -207,6 +208,8 @@ export default function FilmRoom() {
           sessions={sessions} activeId={activeSession?.id}
           onSelect={s => { loadSession(s, user); setSidebarOpen(false); }}
           onCreate={createSession} onDelete={deleteSession}
+          canAddSession={!isPlayer}
+          canDeleteSession={!isPlayer}
         />
       </aside>
 
@@ -244,41 +247,52 @@ export default function FilmRoom() {
                 {flaggedCount > 0 && <span className="text-yellow-500">{flaggedCount} flagged</span>}
               </div>
 
-              {/* Annotate button */}
-              <button onClick={() => setShowAnnotation(v => !v)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${showAnnotation ? "text-white border-transparent" : "border-gray-700 text-gray-400 hover:text-white"}`}
-                style={showAnnotation ? { backgroundColor: "#7c3aed" } : {}}>
-                <PenTool className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Annotate</span>
-              </button>
+              {/* Annotate button — coaching staff only */}
+              {!isPlayer && (
+                <button onClick={() => setShowAnnotation(v => !v)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${showAnnotation ? "text-white border-transparent" : "border-gray-700 text-gray-400 hover:text-white"}`}
+                  style={showAnnotation ? { backgroundColor: "#7c3aed" } : {}}>
+                  <PenTool className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Annotate</span>
+                </button>
+              )}
 
-              {/* AI Analysis button */}
-              <button onClick={() => setShowAIAnalysis(v => !v)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${showAIAnalysis ? "text-white border-transparent" : "border-gray-700 text-gray-400 hover:text-white"}`}
-                style={showAIAnalysis ? { backgroundColor: "var(--color-primary,#f97316)" } : { borderColor: "var(--color-primary,#f97316)4d", color: "var(--color-primary,#f97316)" }}>
-                <Zap className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">AI Detect</span>
-              </button>
+              {/* AI Analysis button — coaching staff only */}
+              {!isPlayer && (
+                <button onClick={() => setShowAIAnalysis(v => !v)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${showAIAnalysis ? "text-white border-transparent" : "border-gray-700 text-gray-400 hover:text-white"}`}
+                  style={showAIAnalysis ? { backgroundColor: "var(--color-primary,#f97316)" } : { borderColor: "var(--color-primary,#f97316)4d", color: "var(--color-primary,#f97316)" }}>
+                  <Zap className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">AI Detect</span>
+                </button>
+              )}
 
-              <button onClick={getAIBreakdown} disabled={aiLoading || !tags.length}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border disabled:opacity-40"
-                style={{ color: "var(--color-primary,#f97316)", borderColor: "var(--color-primary,#f97316)4d", backgroundColor: "var(--color-primary,#f97316)1a" }}>
-                <Zap className={`w-3.5 h-3.5 ${aiLoading ? "animate-pulse" : ""}`} />
-                <span className="hidden sm:inline">{aiLoading ? "Analyzing..." : "Breakdown"}</span>
-              </button>
+              {/* Breakdown — coaching staff only */}
+              {!isPlayer && (
+                <button onClick={getAIBreakdown} disabled={aiLoading || !tags.length}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border disabled:opacity-40"
+                  style={{ color: "var(--color-primary,#f97316)", borderColor: "var(--color-primary,#f97316)4d", backgroundColor: "var(--color-primary,#f97316)1a" }}>
+                  <Zap className={`w-3.5 h-3.5 ${aiLoading ? "animate-pulse" : ""}`} />
+                  <span className="hidden sm:inline">{aiLoading ? "Analyzing..." : "Breakdown"}</span>
+                </button>
+              )}
 
+              {/* NxHighlight — available to all including players */}
               <button onClick={() => setShowHighlight(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-yellow-400 border border-yellow-400/30 bg-yellow-400/10 hover:bg-yellow-400/20 transition-all">
                 <Star className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">NxHighlight</span>
               </button>
 
-              <button onClick={() => setShowTagForm(f => !f)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
-                style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
-                <Tag className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Tag Play</span>
-              </button>
+              {/* Tag Play — coaching staff only */}
+              {!isPlayer && (
+                <button onClick={() => setShowTagForm(f => !f)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                  style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+                  <Tag className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Tag Play</span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -288,7 +302,7 @@ export default function FilmRoom() {
           <div className="flex-1 flex items-center justify-center flex-col gap-4">
             <Film className="w-16 h-16 text-gray-800" />
             <p className="text-gray-500 text-lg font-semibold">No Film Session Selected</p>
-            <p className="text-gray-600 text-sm">Create a session using the panel on the left</p>
+            <p className="text-gray-600 text-sm">{isPlayer ? "Select a session from the panel on the left" : "Create a session using the panel on the left"}</p>
             <button onClick={() => setSidebarOpen(true)} className="md:hidden text-white px-4 py-2 rounded-lg text-sm font-medium"
               style={{ backgroundColor: "var(--color-primary,#f97316)" }}>Open Sessions</button>
           </div>

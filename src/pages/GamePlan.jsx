@@ -47,6 +47,7 @@ export default function GamePlan() {
 
   const EDIT_ROLES = ["head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
   const canEdit = user && (user.role === "admin" || EDIT_ROLES.includes(user.coaching_role) || (user.is_associate_head_coach));
+  const isPlayer = user?.user_type === "player" || user?.coaching_role === "player";
 
   const UNITS = cfg.units;
 
@@ -119,7 +120,7 @@ export default function GamePlan() {
 
         {/* Tabs */}
         <div className="flex gap-1 mt-4 bg-[#141414] border border-gray-800 rounded-lg p-1 w-fit">
-          {[{ id: "plans", label: "Game Plans" }, { id: "ai", label: "NxPlan AI" }].map(t => (
+          {[{ id: "plans", label: "Game Plans" }, ...(!isPlayer ? [{ id: "ai", label: "NxPlan AI" }] : [])].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === t.id ? "text-white" : "text-gray-400 hover:text-white"}`}
               style={tab === t.id ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
@@ -160,10 +161,12 @@ export default function GamePlan() {
                 <Target className="w-12 h-12 mx-auto mb-3 opacity-20" />
                 <p className="font-semibold text-gray-500">No game plans yet</p>
                 <p className="text-sm mt-1">Create a plan manually or use NxPlan AI</p>
-                <button onClick={() => setTab("ai")} className="mt-4 px-4 py-2 rounded-xl text-white text-sm font-semibold"
-                  style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
-                  <Brain className="w-4 h-4 inline mr-1" /> Try NxPlan AI
-                </button>
+                {!isPlayer && (
+                  <button onClick={() => setTab("ai")} className="mt-4 px-4 py-2 rounded-xl text-white text-sm font-semibold"
+                    style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+                    <Brain className="w-4 h-4 inline mr-1" /> Try NxPlan AI
+                  </button>
+                )}
               </div>
             ) : plans.map(plan => {
               const sections = playsByUnit(plan);

@@ -8,7 +8,7 @@ const ROLE_LABELS = {
   special_teams_coordinator: "Special Teams Coordinator",
   strength_conditioning_coordinator: "S&C Coordinator",
   position_coach: "Position Coach", trainer: "Trainer", player: "Player",
-  athletic_director: "Athletic Director",
+  athletic_director: "Athletic Director", parent: "Parent",
 };
 
 const SPORT_LABELS = {
@@ -56,7 +56,7 @@ export default function PendingInvites({ teamId, onRevoked }) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-white text-sm font-medium">{invite.poc_name || invite.email}</p>
+                <p className="text-white text-sm font-medium">{invite.poc_name || [invite.first_name, invite.last_name].filter(Boolean).join(" ") || invite.email}</p>
                 <span className="text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded-full">
                   Pending
                 </span>

@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { CalendarDays, Users, Activity, MessageSquare } from "lucide-react";
+import { CalendarDays, Activity, MessageSquare, Megaphone } from "lucide-react";
 
 export default function ParentPortal() {
-  const [user, setUser] = useState<any>(null);
-  const [player, setPlayer] = useState<any>(null);
-  const [nextGame, setNextGame] = useState<any>(null);
+  const [user, setUser] = useState(null);
+  const [player, setPlayer] = useState(null);
+  const [nextGame, setNextGame] = useState(null);
 
   useEffect(() => {
     base44.auth
@@ -50,6 +50,21 @@ export default function ParentPortal() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Link
+          to={createPageUrl("NxAnnouncement")}
+          className="bg-[#141414] border border-gray-800 rounded-2xl p-4 hover:border-gray-700 transition-all"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Megaphone className="w-4 h-4 text-[var(--color-primary,#00F2FF)]" />
+            <span className="text-sm font-semibold text-white">
+              NxAnnouncement
+            </span>
+          </div>
+          <p className="text-gray-500 text-sm">
+            See the latest updates from your athlete&apos;s program.
+          </p>
+        </Link>
+
+        <Link
           to={createPageUrl("GameSchedule")}
           className="bg-[#141414] border border-gray-800 rounded-2xl p-4 hover:border-gray-700 transition-all"
         >
@@ -89,20 +104,13 @@ export default function ParentPortal() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Link
           to={createPageUrl("GameSchedule")}
           className="bg-[#141414] border border-gray-800 rounded-xl p-3 flex items-center gap-2 hover:border-gray-700 transition-all"
         >
           <CalendarDays className="w-4 h-4 text-[var(--color-primary,#00F2FF)]" />
           <span className="text-xs text-white font-medium">Schedule</span>
-        </Link>
-        <Link
-          to={createPageUrl("Roster")}
-          className="bg-[#141414] border border-gray-800 rounded-xl p-3 flex items-center gap-2 hover:border-gray-700 transition-all"
-        >
-          <Users className="w-4 h-4 text-[var(--color-primary,#00F2FF)]" />
-          <span className="text-xs text-white font-medium">Roster</span>
         </Link>
         <Link
           to={createPageUrl("PlayerHealth")}
@@ -124,7 +132,7 @@ export default function ParentPortal() {
           to={createPageUrl("NxAnnouncement")}
           className="bg-[#141414] border border-gray-800 rounded-xl p-3 flex items-center gap-2 hover:border-gray-700 transition-all"
         >
-          <MessageSquare className="w-4 h-4 text-[var(--color-primary,#00F2FF)]" />
+          <Megaphone className="w-4 h-4 text-[var(--color-primary,#00F2FF)]" />
           <span className="text-xs text-white font-medium">Announcements</span>
         </Link>
       </div>

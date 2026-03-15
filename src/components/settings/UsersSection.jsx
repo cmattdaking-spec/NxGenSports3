@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Users, Mail, Edit2, Check, X, UserPlus, Star, AlertTriangle, Trash2, RefreshCw } from "lucide-react";
 import PendingInvites from "@/components/usermgmt/PendingInvites";
+import InviteForm from "@/components/usermgmt/InviteForm";
 
 const ROLES = [
   { value: "athletic_director", label: "Athletic Director" },
@@ -35,10 +36,6 @@ export default function UsersSection({ currentUser }) {
   const [editForm, setEditForm] = useState({ full_name: "", coaching_role: "" });
   const [saving, setSaving] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("position_coach");
-  const [inviting, setInviting] = useState(false);
-  const [inviteMsg, setInviteMsg] = useState("");
   const [acDesignating, setAcDesignating] = useState(false);
 
   const canDesignateAC = ["head_coach", "admin"].includes(currentUser?.coaching_role || currentUser?.role);
@@ -94,26 +91,6 @@ export default function UsersSection({ currentUser }) {
     setAcDesignating(false);
   };
 
-  const handleInvite = async () => {
-    if (!inviteEmail.trim()) return;
-    setInviting(true);
-    setInviteMsg("");
-    await base44.entities.Invite.create({
-      email: inviteEmail.trim(),
-      team_id: myTeam,
-      coaching_role: inviteRole,
-      assigned_positions: [],
-      assigned_phases: [],
-      status: "pending",
-      invited_by: currentUser?.email,
-    });
-    await base44.users.inviteUser(inviteEmail.trim(), "admin");
-    setInviteMsg(`Invitation sent to ${inviteEmail}`);
-    setInviteEmail("");
-    setInviting(false);
-    setTimeout(() => setInviteMsg(""), 4000);
-  };
-
   return (
     <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5">
       <div className="flex items-center justify-between mb-4">
@@ -139,33 +116,16 @@ export default function UsersSection({ currentUser }) {
         <div className="mb-4 p-4 bg-[#1a1a1a] border border-gray-700 rounded-xl space-y-3">
           <div className="flex items-start gap-2 text-xs text-yellow-300 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2">
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-yellow-400" />
-            Invited staff will be enrolled into your school automatically upon accepting.
+            Invited staff, players, and parents will be enrolled into your school automatically after they finish registration.
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-gray-400 text-xs mb-1 block">Email</label>
-              <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleInvite()}
-                placeholder="coach@school.edu"
-                className="w-full bg-[#111] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-600 outline-none focus:border-[var(--color-primary,#3b82f6)]" />
-            </div>
-            <div>
-              <label className="text-gray-400 text-xs mb-1 block">Role</label>
-              <select value={inviteRole} onChange={e => setInviteRole(e.target.value)}
-                className="w-full bg-[#111] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-[var(--color-primary,#3b82f6)]">
-                {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-              </select>
-            </div>
-          </div>
-          {inviteMsg && <p className="text-green-400 text-xs">{inviteMsg}</p>}
-          <div className="flex gap-2">
-            <button onClick={handleInvite} disabled={inviting || !inviteEmail.trim()}
-              className="px-4 py-2 rounded-lg text-white text-sm font-semibold disabled:opacity-50"
-              style={{ backgroundColor: "var(--color-primary,#3b82f6)" }}>
-              {inviting ? "Sending..." : "Send Invite"}
-            </button>
-            <button onClick={() => setShowInvite(false)} className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 text-sm hover:bg-gray-700">Cancel</button>
-          </div>
+          <InviteForm
+            user={currentUser}
+            onClose={() => setShowInvite(false)}
+            onInvited={() => {
+              setShowInvite(false);
+              load();
+            }}
+          />
         </div>
       )}
 

@@ -1,56 +1,95 @@
 import { useState, useEffect } from "react";
 import { useSport } from "@/components/SportContext";
 import { base44 } from "@/api/base44Client";
-import { BarChart2, Upload, Database, Activity, Plus, RefreshCw, Film, TrendingUp } from "lucide-react";
+import { BarChart2, Activity, Plus, TrendingUp, Clock, Users } from "lucide-react";
 import LoadingScreen from "../components/LoadingScreen";
-import DataImportPanel from "../components/analytics/DataImportPanel";
-import ImportHistory from "../components/analytics/ImportHistory";
 import PerformanceMetricsPanel from "../components/analytics/PerformanceMetricsPanel";
 import AddMetricForm from "../components/analytics/AddMetricForm";
 
 const TABS = [
   { id: "dashboard", label: "Dashboard", icon: BarChart2 },
-  { id: "import", label: "Import Data", icon: Upload },
   { id: "metrics", label: "Player Metrics", icon: Activity },
-  { id: "history", label: "Import History", icon: Database },
 ];
+
+const PLAYER_USAGE_ENTITY_CANDIDATES = [
+  "PlayerAreaUsage",
+  "PlayerUsageTime",
+  "PlayerEngagement",
+  "PlayerTimeLog",
+];
+
+const AREA_ORDER = [
+  { key: "nxlab_film", label: "NxLab-Film" },
+  { key: "game_plan", label: "Game Plan" },
+  { key: "practice_plan", label: "Practice Plan" },
+  { key: "playbook", label: "Playbook" },
+  { key: "my_sc", label: "My S&C" },
+  { key: "recruiting", label: "Recruiting" },
+  { key: "analytics", label: "Analytics" },
+];
+
+const PAGE_TO_AREA = {
+  NxLab: "nxlab_film",
+  GamePlan: "game_plan",
+  Practice: "practice_plan",
+  Playbook: "playbook",
+  StrengthConditioning: "my_sc",
+  Recruiting: "recruiting",
+  PerformanceAnalytics: "analytics",
+};
+
+const getUsageDurationSeconds = (record) => {
+  if (Number.isFinite(record?.duration_seconds)) return record.duration_seconds;
+  if (Number.isFinite(record?.duration_secs)) return record.duration_secs;
+  if (Number.isFinite(record?.seconds_spent)) return record.seconds_spent;
+  if (Number.isFinite(record?.duration_minutes)) return record.duration_minutes * 60;
+  if (Number.isFinite(record?.minutes_spent)) return record.minutes_spent * 60;
+  return 0;
+};
+
+const normalizeAreaKey = (record) => {
+  if (record?.area_key) return record.area_key;
+  if (record?.area) return record.area;
+  if (record?.module) return record.module;
+  if (record?.page && PAGE_TO_AREA[record.page]) return PAGE_TO_AREA[record.page];
+  return null;
+};
 
 export default function PerformanceAnalytics() {
   const { activeSport } = useSport();
   const [tab, setTab] = useState("dashboard");
-  const [imports, setImports] = useState([]);
   const [metrics, setMetrics] = useState([]);
   const [players, setPlayers] = useState([]);
-  const [filmSessions, setFilmSessions] = useState([]);
+  const [usageRecords, setUsageRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddMetric, setShowAddMetric] = useState(false);
-  const [lastImportAnalysis, setLastImportAnalysis] = useState(null);
 
   useEffect(() => {
+    const loadUsageRecords = async () => {
+      for (const entityName of PLAYER_USAGE_ENTITY_CANDIDATES) {
+        try {
+          const entity = base44.entities?.[entityName];
+          if (!entity || typeof entity.list !== "function") continue;
+          const rows = await entity.list("-created_date", 1000);
+          return rows || [];
+        } catch {
+          // Try next candidate.
+        }
+      }
+      return [];
+    };
+
     Promise.all([
-      base44.entities.PerformanceImport.list("-created_date"),
       base44.entities.PerformanceMetric.filter({ sport: activeSport }, "-game_date", 100),
-      base44.entities.Player.filter({ sport: activeSport }, "-created_date", 100),
-      base44.entities.FilmSession.filter({ sport: activeSport }, "-created_date", 20),
-    ]).then(([imp, met, pls, films]) => {
-      setImports(imp);
+      base44.entities.Player.filter({ sport: activeSport }, "-created_date", 200),
+      loadUsageRecords(),
+    ]).then(([met, pls, usage]) => {
       setMetrics(met);
       setPlayers(pls);
-      setFilmSessions(films);
+      setUsageRecords(usage);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [activeSport]);
-
-  const handleImported = (record, analysis) => {
-    setImports(prev => [record, ...prev]);
-    setLastImportAnalysis({ record, analysis });
-    setTab("history");
-  };
-
-  const handleDeleteImport = async (id) => {
-    await base44.entities.PerformanceImport.delete(id);
-    setImports(prev => prev.filter(i => i.id !== id));
-  };
 
   const handleMetricSaved = async () => {
     const updated = await base44.entities.PerformanceMetric.list("-game_date", 100);
@@ -64,8 +103,56 @@ export default function PerformanceAnalytics() {
   const avgPlayGrade = metrics.filter(m => m.play_grade).length
     ? Math.round(metrics.filter(m => m.play_grade).reduce((s, m) => s + m.play_grade, 0) / metrics.filter(m => m.play_grade).length)
     : null;
-  const topSpeedRecord = metrics.filter(m => m.top_speed_mph).sort((a, b) => b.top_speed_mph - a.top_speed_mph)[0];
-  const recentImport = imports[0];
+
+  const areaTotals = AREA_ORDER.map((area) => {
+    const totalSeconds = usageRecords.reduce((sum, record) => {
+      const areaKey = normalizeAreaKey(record);
+      if (areaKey !== area.key) return sum;
+      return sum + getUsageDurationSeconds(record);
+    }, 0);
+    return {
+      ...area,
+      totalSeconds,
+      totalMinutes: Math.round(totalSeconds / 60),
+      totalHours: (totalSeconds / 3600).toFixed(1),
+    };
+  });
+
+  const totalTrackedSeconds = areaTotals.reduce((sum, area) => sum + area.totalSeconds, 0);
+
+  const playerAreaRows = {};
+  for (const record of usageRecords) {
+    const areaKey = normalizeAreaKey(record);
+    if (!areaKey) continue;
+    const duration = getUsageDurationSeconds(record);
+    if (!duration) continue;
+
+    const playerName =
+      record.player_name ||
+      record.user_name ||
+      [record.first_name, record.last_name].filter(Boolean).join(" ") ||
+      "Unknown Player";
+
+    if (!playerAreaRows[playerName]) {
+      playerAreaRows[playerName] = {
+        playerName,
+        totals: {},
+      };
+    }
+
+    playerAreaRows[playerName].totals[areaKey] = (playerAreaRows[playerName].totals[areaKey] || 0) + duration;
+  }
+
+  const playerUsageRows = Object.values(playerAreaRows)
+    .map((row) => {
+      const totalSeconds = Object.values(row.totals).reduce((sum, secs) => sum + secs, 0);
+      return {
+        ...row,
+        totalSeconds,
+      };
+    })
+    .sort((a, b) => b.totalSeconds - a.totalSeconds)
+    .slice(0, 20);
 
   return (
     <div className="bg-[#0a0a0a] min-h-full">
@@ -79,7 +166,7 @@ export default function PerformanceAnalytics() {
             </div>
             <div>
               <h1 className="text-white font-black text-xl capitalize">{activeSport.replace(/_/g," ")} <span style={{ color: "var(--color-primary,#f97316)" }}>Analytics</span></h1>
-              <p className="text-gray-500 text-xs">Hudl · ODK · Catapult · GPS · Film Data</p>
+              <p className="text-gray-500 text-xs">Coach dashboard for player metrics and player area engagement</p>
             </div>
           </div>
           {tab === "metrics" && (
@@ -111,10 +198,16 @@ export default function PerformanceAnalytics() {
             {/* KPI cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: "Total Imports", value: imports.length, icon: Database, color: "#3b82f6", sub: recentImport ? `Last: ${recentImport.source.toUpperCase()}` : "No imports yet" },
                 { label: "Metrics Logged", value: metrics.length, icon: Activity, color: "var(--color-primary,#f97316)", sub: `${[...new Set(metrics.map(m => m.player_name))].length} players tracked` },
+                { label: "Roster Players", value: players.length, icon: Users, color: "#3b82f6", sub: "Players available in analytics" },
                 { label: "Avg Play Grade", value: avgPlayGrade != null ? avgPlayGrade : "—", icon: BarChart2, color: avgPlayGrade >= 75 ? "#22c55e" : avgPlayGrade >= 55 ? "#f59e0b" : "#ef4444", sub: "Team film grade" },
-                { label: "Top Speed", value: topSpeedRecord ? `${topSpeedRecord.top_speed_mph} mph` : "—", icon: TrendingUp, color: "#22c55e", sub: topSpeedRecord ? topSpeedRecord.player_name : "No GPS data yet" },
+                {
+                  label: "Tracked Usage",
+                  value: totalTrackedSeconds ? `${(totalTrackedSeconds / 3600).toFixed(1)}h` : "—",
+                  icon: Clock,
+                  color: "#22c55e",
+                  sub: totalTrackedSeconds ? `${Math.round(totalTrackedSeconds / 60)} total minutes` : "No player usage yet",
+                },
               ].map((card, i) => (
                 <div key={i} className="bg-[#141414] border border-gray-800 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-3">
@@ -128,68 +221,57 @@ export default function PerformanceAnalytics() {
                 </div>
               ))}
             </div>
-
-            {/* Integration guide */}
             <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
-              <h2 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
-                <Film className="w-4 h-4" style={{ color: "var(--color-primary,#f97316)" }} />
-                Supported Integrations
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {[
-                  { name: "Hudl Assist", color: "#e8401b", how: "Export → Athlete Data → Download CSV", supports: ["Game film tags", "Athlete grades", "Play-by-play data", "Team tendencies"] },
-                  { name: "ODK / XPS", color: "#1b6fe8", how: "Reports → Export → CSV/Excel format", supports: ["Play-by-play breakdowns", "Formation data", "Down & distance stats", "Tendency reports"] },
-                  { name: "MaxPreps", color: "#d4080a", how: "Stats page → Export → Download CSV", supports: ["Season stats", "Game-by-game data", "Player leaderboards"] },
-                  { name: "Catapult GPS", color: "#00c48c", how: "Cloud Portal → Export → CSV/Excel", supports: ["GPS tracking", "Load metrics", "Speed & distance", "Sprint counts"] },
-                  { name: "Sportscode", color: "#7c3aed", how: "Export Capture → CSV or XML format", supports: ["Video tags", "Code windows", "Statistical breakdowns"] },
-                  { name: "Generic CSV", color: "#6b7280", how: "Any spreadsheet exported as .csv", supports: ["Custom data", "Manual entries", "Any format with headers"] },
-                ].map(src => (
-                  <div key={src.name} className="bg-[#1a1a1a] border border-gray-800 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: src.color }} />
-                      <p className="text-white text-sm font-semibold">{src.name}</p>
-                    </div>
-                    <p className="text-gray-600 text-xs mb-2 leading-relaxed"><span className="text-gray-500 font-medium">How to export:</span> {src.how}</p>
-                    <ul className="space-y-0.5">
-                      {src.supports.map((s, i) => (
-                        <li key={i} className="text-gray-500 text-xs flex items-center gap-1.5">
-                          <span style={{ color: src.color }}>✓</span> {s}
-                        </li>
-                      ))}
-                    </ul>
+              <h2 className="text-white font-bold text-sm mb-4">Player Area Engagement (Coaches)</h2>
+              <p className="text-gray-500 text-xs mb-4">
+                Time tracked for player activity in NxLab-film, Game Plan, Practice Plan, Playbook, My S&amp;C, Recruiting, and Analytics.
+              </p>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                {areaTotals.map((area) => (
+                  <div key={area.key} className="bg-[#1a1a1a] border border-gray-800 rounded-lg p-3">
+                    <p className="text-gray-500 text-xs">{area.label}</p>
+                    <p className="text-white text-lg font-black mt-1">{area.totalMinutes}m</p>
+                    <p className="text-gray-600 text-xs">{area.totalHours}h total</p>
                   </div>
                 ))}
               </div>
-            </div>
 
-            {/* Recent imports & metrics */}
-            {imports.length > 0 && (
-              <div className="bg-[#141414] border border-gray-800 rounded-xl p-4">
-                <h3 className="text-white font-semibold text-sm mb-3">Recent Imports</h3>
-                <div className="space-y-2">
-                  {imports.slice(0, 5).map(imp => (
-                    <div key={imp.id} className="flex items-center gap-3 py-2 border-b border-gray-800 last:border-0">
-                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: imp.source === "hudl" ? "#e8401b" : imp.source === "odk" ? "#1b6fe8" : imp.source === "catapult" ? "#00c48c" : "#6b7280" }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm truncate">{imp.title}</p>
-                        <p className="text-gray-500 text-xs">{imp.source.toUpperCase()} · {imp.import_type.replace(/_/g," ")} {imp.opponent ? `· vs ${imp.opponent}` : ""}</p>
-                      </div>
-                      <span className="text-gray-600 text-xs flex-shrink-0">{imp.record_count || 0} records</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-gray-500 border-b border-gray-800">
+                      <th className="text-left py-2 pr-2">Player</th>
+                      {AREA_ORDER.map((area) => (
+                        <th key={area.key} className="text-right py-2 px-2 whitespace-nowrap">{area.label}</th>
+                      ))}
+                      <th className="text-right py-2 pl-2">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {playerUsageRows.length === 0 && (
+                      <tr>
+                        <td colSpan={AREA_ORDER.length + 2} className="py-4 text-center text-gray-500">
+                          No player area usage tracked yet.
+                        </td>
+                      </tr>
+                    )}
+
+                    {playerUsageRows.map((row) => (
+                      <tr key={row.playerName} className="border-b border-gray-900 last:border-0">
+                        <td className="py-2 pr-2 text-white whitespace-nowrap">{row.playerName}</td>
+                        {AREA_ORDER.map((area) => {
+                          const mins = Math.round((row.totals[area.key] || 0) / 60);
+                          return (
+                            <td key={area.key} className="py-2 px-2 text-right text-gray-300">{mins ? `${mins}m` : "-"}</td>
+                          );
+                        })}
+                        <td className="py-2 pl-2 text-right text-white font-semibold">{Math.round(row.totalSeconds / 60)}m</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </div>
-        )}
-
-        {/* IMPORT TAB */}
-        {tab === "import" && (
-          <div className="max-w-2xl">
-            <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
-              <h2 className="text-white font-bold text-sm mb-1">Import External Data</h2>
-              <p className="text-gray-500 text-xs mb-5">Upload exports from Hudl, ODK, Catapult, or any CSV — AI will parse and analyze the data automatically.</p>
-              <DataImportPanel onImported={handleImported} />
             </div>
           </div>
         )}
@@ -201,21 +283,6 @@ export default function PerformanceAnalytics() {
               <AddMetricForm players={players} onSaved={handleMetricSaved} onClose={() => setShowAddMetric(false)} />
             )}
             <PerformanceMetricsPanel metrics={metrics} players={players} />
-          </div>
-        )}
-
-        {/* HISTORY TAB */}
-        {tab === "history" && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-white font-bold text-sm">{imports.length} Import{imports.length !== 1 ? "s" : ""}</h2>
-              <button onClick={() => setTab("import")}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-white font-medium"
-                style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
-                <Upload className="w-3.5 h-3.5" /> New Import
-              </button>
-            </div>
-            <ImportHistory imports={imports} onDelete={handleDeleteImport} />
           </div>
         )}
       </div>

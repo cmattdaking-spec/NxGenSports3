@@ -31,6 +31,72 @@ function AcademicEligibilityContent() {
   // Granular permission gate
   const ALWAYS_ACADEMIC = ["head_coach","associate_head_coach","athletic_director"];
   const hasAcademicAccess = user && (ALWAYS_ACADEMIC.includes(user.coaching_role) || user.can_view_academic === true || user.role === "admin");
+  const isPlayer = user?.user_type === "player" || user?.coaching_role === "player";
+
+  // Players see only their own eligibility record
+  if (user && isPlayer) {
+    if (loading) return (
+      <div className="bg-[#0a0a0a] min-h-full flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-t-[var(--color-primary,#f97316)] border-gray-700 rounded-full animate-spin" />
+      </div>
+    );
+    const myRecord = players.find(p => p.player_id === user.player_id);
+    const myDoc = myRecord ? docs.find(d => d.player_id === myRecord.id) : null;
+    const isEligible = myRecord ? myRecord.academic_eligible !== false : null;
+    return (
+      <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6 space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: "var(--color-primary,#3b82f6)22" }}>
+            <GraduationCap className="w-5 h-5" style={{ color: "var(--color-primary,#3b82f6)" }} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-white">My <span style={{ color: "var(--color-primary,#3b82f6)" }}>Eligibility</span></h1>
+            <p className="text-gray-500 text-sm">Your academic eligibility status</p>
+          </div>
+        </div>
+        {!myRecord ? (
+          <div className="bg-[#141414] border border-gray-800 rounded-2xl p-8 text-center">
+            <GraduationCap className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-400 text-sm">Your eligibility record hasn't been set up yet.</p>
+            <p className="text-gray-600 text-xs mt-1">Contact your Head Coach or Athletic Director.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className={`bg-[#141414] border rounded-2xl p-6 flex items-center gap-4 ${isEligible ? "border-green-500/30" : "border-red-500/30"}`}>
+              {isEligible ? <CheckCircle className="w-10 h-10 text-green-400 flex-shrink-0" /> : <XCircle className="w-10 h-10 text-red-400 flex-shrink-0" />}
+              <div>
+                <p className="text-white font-bold text-lg">{myRecord.first_name} {myRecord.last_name}</p>
+                <p className={`text-sm font-semibold ${isEligible ? "text-green-400" : "text-red-400"}`}>
+                  {isEligible ? "Academically Eligible" : "Academically Ineligible"}
+                </p>
+                {myRecord.gpa != null && <p className="text-gray-500 text-xs mt-0.5">GPA: {myRecord.gpa.toFixed(2)}</p>}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className={`bg-[#141414] border rounded-xl p-4 ${myDoc?.physical_on_file ? "border-green-500/20" : "border-yellow-500/20"}`}>
+                <p className="text-gray-500 text-xs mb-1">Physical on File</p>
+                {myDoc?.physical_on_file
+                  ? <span className="text-green-400 text-sm font-semibold flex items-center gap-1"><CheckCircle className="w-4 h-4" /> On File</span>
+                  : <span className="text-yellow-400 text-sm font-semibold flex items-center gap-1"><AlertCircle className="w-4 h-4" /> Missing</span>}
+              </div>
+              <div className={`bg-[#141414] border rounded-xl p-4 ${myDoc?.waiver_signed ? "border-green-500/20" : "border-yellow-500/20"}`}>
+                <p className="text-gray-500 text-xs mb-1">Waiver Signed</p>
+                {myDoc?.waiver_signed
+                  ? <span className="text-green-400 text-sm font-semibold flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Signed</span>
+                  : <span className="text-yellow-400 text-sm font-semibold flex items-center gap-1"><AlertCircle className="w-4 h-4" /> Pending</span>}
+              </div>
+            </div>
+            {!isEligible && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                <p className="text-red-300 text-sm font-semibold mb-1">You are currently ineligible to participate.</p>
+                <p className="text-gray-500 text-xs">Contact your Athletic Director or Head Coach for details on restoring eligibility.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (user && !hasAcademicAccess) return (
     <div className="bg-[#0a0a0a] min-h-full flex items-center justify-center">

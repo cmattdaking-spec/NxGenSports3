@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { getSportConfig } from "@/components/SportConfig";
 import { UserPlus, X, Building2, AlertTriangle } from "lucide-react";
@@ -38,40 +38,105 @@ export default function InviteForm({ user, onClose, onInvited }) {
 
   const [form, setForm] = useState({
     email: "",
-    full_name: "",
+    first_name: "",
+    last_name: "",
     coaching_role: STAFF_ROLES[0]?.value || "head_coach",
     positions: [],
     phases: [],
     sports: user?.assigned_sports?.length ? [...user.assigned_sports] : [defaultSport],
+    child_player_id: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState({ text: "", type: "" });
+  const [generatedPlayerId, setGeneratedPlayerId] = useState(null);
+  const [players, setPlayers] = useState([]);
+  const [playersLoading, setPlayersLoading] = useState(false);
 
   // Only show sports this school subscribes to
   const availableSports = user?.assigned_sports?.length ? user.assigned_sports : Object.keys(SPORT_LABELS);
   const showPositions = ["position_coach", "offensive_coordinator", "defensive_coordinator"].includes(form.coaching_role);
+  const selectedPlayer = players.find(player => player.id === form.child_player_id);
+
+  useEffect(() => {
+    if (inviteType !== "parent" || players.length > 0 || playersLoading) return;
+
+    let mounted = true;
+    setPlayersLoading(true);
+    base44.entities.Player.list("-created_date")
+      .then(list => {
+        if (!mounted) return;
+        const sortedPlayers = [...list].sort((a, b) => {
+          const nameA = `${a.first_name || ""} ${a.last_name || ""}`.trim().toLowerCase();
+          const nameB = `${b.first_name || ""} ${b.last_name || ""}`.trim().toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+        setPlayers(sortedPlayers);
+      })
+      .catch(() => {
+        if (mounted) {
+          setMsg({ text: "Unable to load players for parent invites.", type: "error" });
+        }
+      })
+      .finally(() => {
+        if (mounted) {
+          setPlayersLoading(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [inviteType, players.length, playersLoading]);
 
   const handleInvite = async () => {
     if (!form.email.trim()) return;
+    if (!form.first_name.trim() || !form.last_name.trim()) {
+      setMsg({ text: "First and last name are required for all invites.", type: "error" });
+      return;
+    }
+    if (inviteType === "parent" && !form.child_player_id) {
+      setMsg({ text: "Select the athlete this parent belongs to.", type: "error" });
+      return;
+    }
+
+    const effectiveSports = inviteType === "parent"
+      ? [selectedPlayer?.sport || defaultSport].filter(Boolean)
+      : form.sports;
+
+    if (effectiveSports.length === 0) {
+      setMsg({ text: "At least one sport must be assigned to this invite.", type: "error" });
+      return;
+    }
+
     setSubmitting(true);
     setMsg({ text: "", type: "" });
+    setGeneratedPlayerId(null);
     try {
       const response = await base44.functions.invoke("sendInvite", {
         email: form.email.trim(),
         team_id: user?.team_id,
+        school_id: user?.school_id,
         school_name: user?.school_name,
         school_code: user?.school_code,
-        coaching_role: form.coaching_role,
-        assigned_positions: form.positions,
-        assigned_phases: form.phases,
-        assigned_sports: form.sports,
+        first_name: form.first_name.trim(),
+        last_name: form.last_name.trim(),
+        coaching_role: inviteType === "staff" ? form.coaching_role : undefined,
+        assigned_positions: inviteType === "staff" ? form.positions : [],
+        assigned_phases: inviteType === "staff" ? form.phases : [],
+        assigned_sports: effectiveSports,
         invite_type: inviteType,
-        poc_name: form.full_name.trim(),
+        child_player_id: inviteType === "parent" ? form.child_player_id : null,
       });
       if (response.data?.error) throw new Error(response.data.error);
-      setMsg({ text: `Invitation sent to ${form.email}`, type: "success" });
-      onInvited?.();
-      setTimeout(() => { setMsg({ text: "", type: "" }); onClose(); }, 2500);
+      if (inviteType === "player" && response.data?.player_id) {
+        setGeneratedPlayerId(response.data.player_id);
+        setMsg({ text: `Invitation sent to ${form.email}`, type: "success" });
+        onInvited?.();
+      } else {
+        setMsg({ text: `Invitation sent to ${form.email}`, type: "success" });
+        onInvited?.();
+        setTimeout(() => { setMsg({ text: "", type: "" }); onClose(); }, 2500);
+      }
     } catch (err) {
       setMsg({ text: `Error: ${err.message}`, type: "error" });
     }
@@ -106,7 +171,7 @@ export default function InviteForm({ user, onClose, onInvited }) {
 
       {/* Invite type */}
       <div className="flex gap-2">
-        {[{ id: "staff", label: "Staff Member" }, { id: "player", label: "Player" }].map(t => (
+        {[{ id: "staff", label: "Staff Member" }, { id: "player", label: "Player" }, { id: "parent", label: "Parent" }].map(t => (
           <button key={t.id} onClick={() => setInviteType(t.id)}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${inviteType === t.id ? "text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}
             style={inviteType === t.id ? { backgroundColor: "var(--color-primary,#3b82f6)" } : {}}>
@@ -117,12 +182,18 @@ export default function InviteForm({ user, onClose, onInvited }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
-          <label className="text-gray-400 text-xs mb-1 block">Full Name <span className="text-gray-600">(optional)</span></label>
-          <input type="text" value={form.full_name} onChange={e => setForm(p => ({ ...p, full_name: e.target.value }))}
-            placeholder="Name"
+          <label className="text-gray-400 text-xs mb-1 block">First Name <span className="text-red-400">*</span></label>
+          <input type="text" value={form.first_name} onChange={e => setForm(p => ({ ...p, first_name: e.target.value }))}
+            placeholder="First name"
             className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm placeholder-gray-500 outline-none" />
         </div>
         <div>
+          <label className="text-gray-400 text-xs mb-1 block">Last Name <span className="text-red-400">*</span></label>
+          <input type="text" value={form.last_name} onChange={e => setForm(p => ({ ...p, last_name: e.target.value }))}
+            placeholder="Last name"
+            className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm placeholder-gray-500 outline-none" />
+        </div>
+        <div className="md:col-span-2">
           <label className="text-gray-400 text-xs mb-1 block">Email Address <span className="text-red-400">*</span></label>
           <input type="email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
             onKeyDown={e => e.key === "Enter" && handleInvite()}
@@ -140,19 +211,50 @@ export default function InviteForm({ user, onClose, onInvited }) {
         )}
       </div>
 
-      {/* Sports */}
-      <div>
-        <label className="text-gray-400 text-xs mb-2 block">Assigned Sport(s) <span className="text-red-400">*</span></label>
-        <div className="flex flex-wrap gap-1.5">
-          {availableSports.map(s => (
-            <button key={s} onClick={() => toggleSport(s)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${form.sports.includes(s) ? "text-white" : "bg-gray-800 text-gray-500 hover:text-gray-300"}`}
-              style={form.sports.includes(s) ? { backgroundColor: "var(--color-primary,#3b82f6)" } : {}}>
-              {SPORT_LABELS[s] || s}
-            </button>
-          ))}
+      {inviteType === "parent" && (
+        <div>
+          <label className="text-gray-400 text-xs mb-1 block">Athlete <span className="text-red-400">*</span></label>
+          <select value={form.child_player_id} onChange={e => setForm(p => ({ ...p, child_player_id: e.target.value }))}
+            className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm outline-none">
+            <option value="">{playersLoading ? "Loading athletes..." : "Select athlete"}</option>
+            {players.map(player => (
+              <option key={player.id} value={player.id}>
+                {`${player.first_name || ""} ${player.last_name || ""}`.trim() || player.id}
+                {player.position ? ` · ${player.position}` : ""}
+              </option>
+            ))}
+          </select>
+          {selectedPlayer && (
+            <p className="text-gray-500 text-xs mt-1">
+              This parent will be linked to {selectedPlayer.first_name} {selectedPlayer.last_name}
+              {selectedPlayer.sport ? ` in ${SPORT_LABELS[selectedPlayer.sport] || selectedPlayer.sport}.` : "."}
+            </p>
+          )}
         </div>
-      </div>
+      )}
+
+      {/* Sports */}
+      {inviteType !== "parent" ? (
+        <div>
+          <label className="text-gray-400 text-xs mb-2 block">Assigned Sport(s) <span className="text-red-400">*</span></label>
+          <div className="flex flex-wrap gap-1.5">
+            {availableSports.map(s => (
+              <button key={s} onClick={() => toggleSport(s)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${form.sports.includes(s) ? "text-white" : "bg-gray-800 text-gray-500 hover:text-gray-300"}`}
+                style={form.sports.includes(s) ? { backgroundColor: "var(--color-primary,#3b82f6)" } : {}}>
+                {SPORT_LABELS[s] || s}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : selectedPlayer?.sport ? (
+        <div>
+          <label className="text-gray-400 text-xs mb-2 block">Assigned Sport</label>
+          <div className="inline-flex px-3 py-1 rounded-lg text-xs font-medium text-white" style={{ backgroundColor: "var(--color-primary,#3b82f6)" }}>
+            {SPORT_LABELS[selectedPlayer.sport] || selectedPlayer.sport}
+          </div>
+        </div>
+      ) : null}
 
       {/* Positions (staff only) */}
       {inviteType === "staff" && showPositions && (
@@ -189,16 +291,26 @@ export default function InviteForm({ user, onClose, onInvited }) {
       <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2.5 flex items-start gap-2">
         <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
         <p className="text-yellow-300 text-xs">
-          The recipient will receive an email invitation to join <strong>{user?.school_name || "your school"}</strong> and will be prompted to set up their account.
+          The recipient will receive an email invitation to join <strong>{user?.school_name || "your school"}</strong>. Their school and team will be connected automatically when they finish registration.
         </p>
       </div>
 
-      {msg.text && (
+      {generatedPlayerId && (
+        <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4">
+          <p className="text-cyan-300 text-xs font-semibold mb-1">Player ID Generated</p>
+          <p className="text-white font-mono text-2xl font-black tracking-widest">{generatedPlayerId}</p>
+          <p className="text-gray-400 text-xs mt-1">Share this ID internally if you also create a player user account. Parent invites now link directly to a rostered athlete from this form.</p>
+          <button onClick={() => { setGeneratedPlayerId(null); setMsg({ text: "", type: "" }); onClose(); }}
+            className="mt-3 text-xs text-gray-500 hover:text-white underline">Done</button>
+        </div>
+      )}
+
+      {msg.text && !generatedPlayerId && (
         <p className={`text-sm ${msg.type === "success" ? "text-green-400" : "text-red-400"}`}>{msg.text}</p>
       )}
 
       <div className="flex gap-2">
-        <button onClick={handleInvite} disabled={submitting || !form.email.trim() || form.sports.length === 0}
+        <button onClick={handleInvite} disabled={submitting || !form.email.trim() || !form.first_name.trim() || !form.last_name.trim() || (inviteType === "parent" ? !form.child_player_id : form.sports.length === 0)}
           className="px-5 py-2 rounded-xl text-white text-sm font-semibold disabled:opacity-50 transition-all"
           style={{ backgroundColor: "var(--color-primary,#3b82f6)" }}>
           {submitting ? "Sending..." : "Send Invitation"}
