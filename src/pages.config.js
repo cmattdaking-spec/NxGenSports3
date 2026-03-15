@@ -59,6 +59,7 @@ import Login from './pages/Login.jsx';
 import Messages from './pages/Messages.jsx';
 import NxAnnouncement from './pages/NxAnnouncement.jsx';
 import NxLab from './pages/NxLab.jsx';
+import NxPlay from './pages/NxPlay.jsx';
 import PerformanceAnalytics from './pages/PerformanceAnalytics.jsx';
 import Playbook from './pages/Playbook.jsx';
 import PlayerDevelopment from './pages/PlayerDevelopment.jsx';
@@ -90,6 +91,7 @@ export const PAGES = {
     "Messages": Messages,
     "NxAnnouncement": NxAnnouncement,
     "NxLab": NxLab,
+    "NxPlay": NxPlay,
     "PerformanceAnalytics": PerformanceAnalytics,
     "Playbook": Playbook,
     "PlayerDevelopment": PlayerDevelopment,
