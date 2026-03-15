@@ -95,7 +95,12 @@ const scopedEntities = new Proxy(rawBase44.entities, {
 });
 
 // Client with centralized read scoping so each role sees only its school/team records.
-export const base44 = {
-  ...rawBase44,
-  entities: scopedEntities
-};
+// Use a proxy instead of object spread so SDK getters like asServiceRole are not eagerly evaluated.
+export const base44 = new Proxy(rawBase44, {
+  get(target, prop, receiver) {
+    if (prop === 'entities') {
+      return scopedEntities;
+    }
+    return Reflect.get(target, prop, receiver);
+  }
+});
