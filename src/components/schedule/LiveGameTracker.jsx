@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, X, Zap, Clock, Flag, CheckCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PLAY_TYPES = ["Run", "Pass Complete", "Pass Incomplete", "Sack", "Penalty", "Punt", "Kickoff", "Field Goal", "Touchdown", "Turnover", "Timeout", "Other"];
 
-export default function LiveGameTracker({ opponent, onClose }) {
+export default function LiveGameTracker({ opponent, onClose, playTypes = PLAY_TYPES, segmentLabel = "Quarter", segmentShort = "Q", eventLabel = "Play" }) {
   const [gameRecord, setGameRecord] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -134,12 +135,12 @@ export default function LiveGameTracker({ opponent, onClose }) {
 
             {/* Quarter & Status */}
             <div className="text-center">
-              <p className="text-gray-400 text-sm font-semibold">{isFinal ? "FINAL" : `Q${gameRecord?.quarter || 1}`}</p>
+              <p className="text-gray-400 text-sm font-semibold">{isFinal ? "FINAL" : `${segmentShort}${gameRecord?.quarter || 1}`}</p>
               {isLive && (
                 <div className="flex items-center gap-2 mt-2">
                   <button onClick={() => update({ quarter: Math.max(1, (gameRecord.quarter || 1) - 1) })}
                     className="text-xs text-gray-500 hover:text-white">◀</button>
-                  <span className="text-gray-500 text-xs">Quarter</span>
+                  <span className="text-gray-500 text-xs">{segmentLabel}</span>
                   <button onClick={() => update({ quarter: Math.min(4, (gameRecord.quarter || 1) + 1) })}
                     className="text-xs text-gray-500 hover:text-white">▶</button>
                 </div>
@@ -188,18 +189,26 @@ export default function LiveGameTracker({ opponent, onClose }) {
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
                 <label className="text-gray-400 text-xs mb-1 block">Team</label>
-                <select value={playForm.team} onChange={e => setPlayForm(f => ({ ...f, team: e.target.value }))}
-                  className="w-full bg-[#111] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm">
-                  <option value="us">Us</option>
-                  <option value="them">{opponent.name}</option>
-                </select>
+                <Select value={playForm.team} onValueChange={value => setPlayForm(f => ({ ...f, team: value }))}>
+                  <SelectTrigger className="w-full bg-[#111] border-gray-700 text-white rounded-lg text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="us">Us</SelectItem>
+                    <SelectItem value="them">{opponent.name}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
-                <label className="text-gray-400 text-xs mb-1 block">Play Type</label>
-                <select value={playForm.play_type} onChange={e => setPlayForm(f => ({ ...f, play_type: e.target.value }))}
-                  className="w-full bg-[#111] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm">
-                  {PLAY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
+                <label className="text-gray-400 text-xs mb-1 block">{eventLabel} Type</label>
+                <Select value={playForm.play_type} onValueChange={value => setPlayForm(f => ({ ...f, play_type: value }))}>
+                  <SelectTrigger className="w-full bg-[#111] border-gray-700 text-white rounded-lg text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {playTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="col-span-2">
                 <label className="text-gray-400 text-xs mb-1 block">Description *</label>
@@ -241,7 +250,7 @@ export default function LiveGameTracker({ opponent, onClose }) {
                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${play.team === "us" ? "bg-teal-500/20 text-teal-400" : "bg-red-500/20 text-red-400"}`}>
                       {play.team === "us" ? "Us" : opponent.name}
                     </span>
-                    <span className="text-gray-500 text-xs">Q{play.quarter}</span>
+                    <span className="text-gray-500 text-xs">{segmentShort}{play.quarter}</span>
                     <span className="text-gray-600 text-xs bg-gray-800 px-1.5 py-0.5 rounded">{play.play_type}</span>
                     {play.yards !== undefined && <span className="text-gray-400 text-xs ml-auto">{play.yards > 0 ? `+${play.yards}` : play.yards} yds</span>}
                   </div>

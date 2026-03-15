@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { UserPlus, Pencil, Trash2, X, Check } from "lucide-react";
 import PendingInvites from "@/components/usermgmt/PendingInvites";
 import InviteForm from "@/components/usermgmt/InviteForm";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SPORT_LABELS = {
   football:"Football", girls_flag_football:"Girls Flag Football",
@@ -114,18 +115,26 @@ export default function ADStaffTab({ staff, onRefresh }) {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-gray-500 text-xs mb-1 block">Role</label>
-                    <select value={editData.coaching_role} onChange={e => setEditData({...editData, coaching_role: e.target.value})}
-                      className="w-full bg-[#111] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none capitalize">
-                      {COACHING_ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
-                    </select>
+                    <Select value={editData.coaching_role} onValueChange={value => setEditData({ ...editData, coaching_role: value })}>
+                      <SelectTrigger className="w-full bg-[#111] border-gray-700 rounded-lg text-white text-xs h-8 capitalize">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COACHING_ROLES.map(r => <SelectItem key={r} value={r}>{r.replace(/_/g, " ")}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label className="text-gray-500 text-xs mb-1 block">Platform Access</label>
-                    <select value={editData.role} onChange={e => setEditData({...editData, role: e.target.value})}
-                      className="w-full bg-[#111] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none">
-                      <option value="user">User</option>
-                      <option value="admin">Admin</option>
-                    </select>
+                    <Select value={editData.role} onValueChange={value => setEditData({ ...editData, role: value })}>
+                      <SelectTrigger className="w-full bg-[#111] border-gray-700 rounded-lg text-white text-xs h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useSport } from "@/components/SportContext";
+import { useSportConfig } from "@/components/SportConfig";
 import LiveGameTracker from "@/components/schedule/LiveGameTracker";
 import LoadingScreen from "@/components/LoadingScreen";
 import { Activity, Clock3, Gamepad2, Radio, Send, Trophy } from "lucide-react";
@@ -25,6 +26,40 @@ const COACH_ROLES = [
   "trainer",
 ];
 
+const SPORT_GAME_TERMS = {
+  football: { segmentLabel: "Quarter", segmentShort: "Q", eventLabel: "Play" },
+  basketball: { segmentLabel: "Quarter", segmentShort: "Q", eventLabel: "Possession" },
+  baseball: { segmentLabel: "Inning", segmentShort: "INN", eventLabel: "At-Bat" },
+  soccer: { segmentLabel: "Half", segmentShort: "H", eventLabel: "Sequence" },
+  volleyball: { segmentLabel: "Set", segmentShort: "SET", eventLabel: "Rally" },
+  boxing: { segmentLabel: "Round", segmentShort: "R", eventLabel: "Exchange" },
+  golf: { segmentLabel: "Hole", segmentShort: "H", eventLabel: "Shot" },
+  tennis: { segmentLabel: "Set", segmentShort: "SET", eventLabel: "Point" },
+  wrestling: { segmentLabel: "Period", segmentShort: "P", eventLabel: "Sequence" },
+  cross_country: { segmentLabel: "Phase", segmentShort: "PH", eventLabel: "Split" },
+  track: { segmentLabel: "Heat", segmentShort: "H", eventLabel: "Split" },
+  lacrosse: { segmentLabel: "Quarter", segmentShort: "Q", eventLabel: "Possession" },
+};
+
+function getSportPlayTypes(sportFamily, termPlay) {
+  const base = {
+    football: ["Run", "Pass Complete", "Pass Incomplete", "Sack", "Penalty", "Punt", "Kickoff", "Field Goal", "Touchdown", "Turnover", "Timeout", "Other"],
+    basketball: ["Make", "Miss", "Assist", "Turnover", "Foul", "Steal", "Block", "Rebound", "Timeout", "Other"],
+    baseball: ["Single", "Double", "Triple", "Home Run", "Strikeout", "Walk", "Error", "Stolen Base", "Out", "Other"],
+    soccer: ["Goal", "Shot", "Corner", "Foul", "Card", "Save", "Substitution", "Offside", "Other"],
+    volleyball: ["Ace", "Kill", "Block", "Dig", "Serve Error", "Attack Error", "Timeout", "Other"],
+    boxing: ["Jab", "Combination", "Knockdown", "Warning", "Standing Count", "Round Win", "Other"],
+    golf: ["Birdie", "Par", "Bogey", "Double Bogey", "Penalty", "Chip-In", "Putt", "Other"],
+    tennis: ["Ace", "Winner", "Unforced Error", "Double Fault", "Break Point", "Hold", "Other"],
+    wrestling: ["Takedown", "Escape", "Reversal", "Near Fall", "Penalty", "Stall", "Other"],
+    cross_country: ["Split", "Pass", "Pack Move", "Finish", "Other"],
+    track: ["Split", "Exchange", "Jump", "Throw", "Finish", "Other"],
+    lacrosse: ["Goal", "Assist", "Save", "Ground Ball", "Turnover", "Penalty", "Faceoff", "Other"],
+  };
+
+  return base[sportFamily] || [termPlay || "Play", "Update", "Other"];
+}
+
 function formatClock(value) {
   if (!value) return "Now";
   const ts = new Date(value);
@@ -34,6 +69,9 @@ function formatClock(value) {
 
 export default function NxPlay() {
   const { activeSport } = useSport();
+  const cfg = useSportConfig(activeSport);
+  const sportTerms = SPORT_GAME_TERMS[cfg.sportFamily] || SPORT_GAME_TERMS.football;
+  const playTypeOptions = getSportPlayTypes(cfg.sportFamily, cfg.termPlay);
   const [user, setUser] = useState(null);
   const [opponents, setOpponents] = useState([]);
   const [parentLinkedPlayerIds, setParentLinkedPlayerIds] = useState([]);
@@ -227,9 +265,9 @@ export default function NxPlay() {
       kind: "play",
       createdAt: play.posted_at || "",
       actor: play.posted_by || "Game Tracker",
-      title: `${play.team === "us" ? "Us" : selectedOpponent?.name || "Opponent"} · ${play.play_type || "Play"}`,
+      title: `${play.team === "us" ? "Us" : selectedOpponent?.name || "Opponent"} · ${play.play_type || sportTerms.eventLabel}`,
       body: play.description || "",
-      detail: `Q${play.quarter || gameRecord.quarter || 1}${play.result ? ` · ${play.result}` : ""}`,
+      detail: `${sportTerms.segmentShort}${play.quarter || gameRecord.quarter || 1}${play.result ? ` · ${play.result}` : ""}`,
       yards: play.yards,
     }));
 
@@ -283,7 +321,7 @@ export default function NxPlay() {
           <h1 className="text-2xl font-black text-white">
             Nx<span style={{ color: "var(--color-primary,#f97316)" }}>Play</span>
           </h1>
-          <p className="text-sm text-gray-500">Real-time game tracker and live updates across all profiles</p>
+          <p className="text-sm text-gray-500">{cfg.brand} live hub: sport-specific tracking and real-time updates</p>
         </div>
         {isCoach && selectedOpponent && (
           <button
@@ -328,7 +366,7 @@ export default function NxPlay() {
                   <p className="text-xs text-gray-500 uppercase">Us</p>
                   <p className="text-3xl font-black text-white">{gameRecord.our_score || 0}</p>
                 </div>
-                <div className="text-center text-gray-500 text-xs">Q{gameRecord.quarter || 1}</div>
+                <div className="text-center text-gray-500 text-xs">{sportTerms.segmentShort}{gameRecord.quarter || 1}</div>
                 <div className="text-center">
                   <p className="text-xs text-gray-500 uppercase truncate">{selectedOpponent.name}</p>
                   <p className="text-3xl font-black text-red-400">{gameRecord.their_score || 0}</p>
@@ -352,7 +390,7 @@ export default function NxPlay() {
                   rows={3}
                   value={updateForm.content}
                   onChange={(e) => setUpdateForm((f) => ({ ...f, content: e.target.value }))}
-                  placeholder={isParent ? "Share a parent update in real-time..." : "Post a live game update..."}
+                  placeholder={isParent ? `Share a parent ${cfg.termPlay.toLowerCase()} update in real-time...` : `Post a live ${cfg.termPlay.toLowerCase()} update...`}
                   className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none resize-none"
                 />
                 <button
@@ -429,7 +467,16 @@ export default function NxPlay() {
         </div>
       )}
 
-      {liveTracker && <LiveGameTracker opponent={liveTracker} onClose={() => setLiveTracker(null)} />}
+      {liveTracker && (
+        <LiveGameTracker
+          opponent={liveTracker}
+          playTypes={playTypeOptions}
+          segmentLabel={sportTerms.segmentLabel}
+          segmentShort={sportTerms.segmentShort}
+          eventLabel={sportTerms.eventLabel}
+          onClose={() => setLiveTracker(null)}
+        />
+      )}
     </div>
   );
 }

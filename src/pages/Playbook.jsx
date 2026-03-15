@@ -7,6 +7,7 @@ import PlayDiagramViewer from "@/components/playbook/PlayDiagramViewer";
 import NxPlayAI from "@/components/playbook/NxPlayAI";
 import { useSportConfig } from "@/components/SportConfig";
 import { SportContext } from "@/components/SportContext";
+import { useOptimisticList } from "@/components/hooks/useOptimisticList";
 
 const CAN_CREATE = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 const CAN_USE_AI = ["admin","head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
@@ -14,7 +15,7 @@ const CAN_USE_AI = ["admin","head_coach","associate_head_coach","offensive_coord
 export default function Playbook() {
   const { activeSport } = useContext(SportContext);
   const cfg = useSportConfig(activeSport);
-  const [plays, setPlays] = useState([]);
+  const { items: plays, setItems: setPlays, addOptimistic, updateOptimistic, removeOptimistic } = useOptimisticList([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [search, setSearch] = useState("");
@@ -71,23 +72,36 @@ export default function Playbook() {
   const save = async () => {
     setShowForm(false);
     if (editing) {
-      setPlays(prev => prev.map(p => p.id === editing.id ? { ...p, ...form } : p));
-      await base44.entities.Play.update(editing.id, form);
+      const previous = plays.find(p => p.id === editing.id);
+      updateOptimistic(editing.id, form);
+      try {
+        await base44.entities.Play.update(editing.id, form);
+      } catch {
+        if (previous) {
+          updateOptimistic(editing.id, previous);
+        }
+      }
     } else {
-      const tempId = `temp_${Date.now()}`;
-      const tempPlay = { ...form, id: tempId };
-      setPlays(prev => [...prev, tempPlay]);
-      const newPlay = await base44.entities.Play.create(form);
-      setPlays(prev => prev.map(p => p.id === tempId ? newPlay : p));
-      setDesignerPlay(newPlay);
-      setShowDesigner(true);
+      const tempId = addOptimistic(form);
+      try {
+        const newPlay = await base44.entities.Play.create(form);
+        updateOptimistic(tempId, newPlay);
+        setDesignerPlay(newPlay);
+        setShowDesigner(true);
+      } catch {
+        removeOptimistic(tempId);
+      }
     }
   };
 
   const remove = async (id) => {
     if (confirm("Delete play?")) {
-      setPlays(prev => prev.filter(p => p.id !== id));
-      await base44.entities.Play.delete(id);
+      removeOptimistic(id);
+      try {
+        await base44.entities.Play.delete(id);
+      } catch {
+        load();
+      }
     }
   };
 

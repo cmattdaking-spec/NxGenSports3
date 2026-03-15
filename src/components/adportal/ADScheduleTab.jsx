@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Pencil, Trash2, X, Check, Calendar, Dumbbell, Trophy } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SPORT_LABELS = {
   football:"Football", basketball:"Basketball", baseball:"Baseball", softball:"Softball",
@@ -67,11 +68,15 @@ export default function ADScheduleTab({ opponents, practicePlans, onRefresh }) {
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <h2 className="text-white font-bold text-lg">Full Schedule ({filtered.length} events)</h2>
         <div className="flex gap-2 flex-wrap">
-          <select value={sportFilter} onChange={e => setSportFilter(e.target.value)}
-            className="bg-[#141414] border border-gray-700 rounded-xl px-3 py-1.5 text-white text-sm outline-none">
-            <option value="all">All Sports</option>
-            {ALL_SPORTS.map(s => <option key={s} value={s}>{SPORT_LABELS[s]}</option>)}
-          </select>
+          <Select value={sportFilter} onValueChange={setSportFilter}>
+            <SelectTrigger className="bg-[#141414] border-gray-700 rounded-xl text-white text-sm min-w-36">
+              <SelectValue placeholder="All Sports" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sports</SelectItem>
+              {ALL_SPORTS.map(s => <SelectItem key={s} value={s}>{SPORT_LABELS[s]}</SelectItem>)}
+            </SelectContent>
+          </Select>
           <button onClick={() => { setShowAdd(true); setAddType("practice"); setForm({...BLANK_PRACTICE}); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-400 text-sm font-medium hover:bg-purple-500/30 transition-all">
             <Plus className="w-4 h-4" /> Practice
@@ -95,10 +100,14 @@ export default function ADScheduleTab({ opponents, practicePlans, onRefresh }) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Sport</label>
-                  <select value={form.sport} onChange={e => setForm({...form, sport: e.target.value})}
-                    className="w-full bg-[#111] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm outline-none">
-                    {ALL_SPORTS.map(s => <option key={s} value={s}>{SPORT_LABELS[s]}</option>)}
-                  </select>
+                  <Select value={form.sport} onValueChange={value => setForm({ ...form, sport: value })}>
+                    <SelectTrigger className="w-full bg-[#111] border-gray-700 rounded-xl text-white text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ALL_SPORTS.map(s => <SelectItem key={s} value={s}>{SPORT_LABELS[s]}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="text-gray-400 text-xs mb-1 block">Date</label>
@@ -115,12 +124,16 @@ export default function ADScheduleTab({ opponents, practicePlans, onRefresh }) {
                   </div>
                   <div>
                     <label className="text-gray-400 text-xs mb-1 block">Location</label>
-                    <select value={form.location} onChange={e => setForm({...form, location: e.target.value})}
-                      className="w-full bg-[#111] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm outline-none">
-                      <option value="home">Home</option>
-                      <option value="away">Away</option>
-                      <option value="neutral">Neutral</option>
-                    </select>
+                    <Select value={form.location} onValueChange={value => setForm({ ...form, location: value })}>
+                      <SelectTrigger className="w-full bg-[#111] border-gray-700 rounded-xl text-white text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="home">Home</SelectItem>
+                        <SelectItem value="away">Away</SelectItem>
+                        <SelectItem value="neutral">Neutral</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </>
               ) : (
