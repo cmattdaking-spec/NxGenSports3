@@ -55,12 +55,16 @@ const normalizeAreaKey = (record) => {
   return null;
 };
 
+const sumField = (arr, key) => arr.reduce((sum, row) => sum + (Number(row?.[key]) || 0), 0);
+
 export default function PerformanceAnalytics() {
-  const { activeSport } = useSport();
+  const { activeSport, user } = useSport();
+  const isParent = user?.user_type === "parent" || !!user?.parent_role;
   const [tab, setTab] = useState("dashboard");
   const [metrics, setMetrics] = useState([]);
   const [players, setPlayers] = useState([]);
   const [usageRecords, setUsageRecords] = useState([]);
+  const [playerStats, setPlayerStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddMetric, setShowAddMetric] = useState(false);
 
@@ -82,14 +86,22 @@ export default function PerformanceAnalytics() {
     Promise.all([
       base44.entities.PerformanceMetric.filter({ sport: activeSport }, "-game_date", 100),
       base44.entities.Player.filter({ sport: activeSport }, "-created_date", 200),
+      base44.entities.PlayerStat.list("-week", 600),
       loadUsageRecords(),
-    ]).then(([met, pls, usage]) => {
+    ]).then(([met, pls, stats, usage]) => {
       setMetrics(met);
       setPlayers(pls);
+      setPlayerStats(stats || []);
       setUsageRecords(usage);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [activeSport]);
+
+  useEffect(() => {
+    if (isParent && tab !== "dashboard") {
+      setTab("dashboard");
+    }
+  }, [isParent, tab]);
 
   const handleMetricSaved = async () => {
     const updated = await base44.entities.PerformanceMetric.list("-game_date", 100);
@@ -99,10 +111,38 @@ export default function PerformanceAnalytics() {
 
   if (loading) return <LoadingScreen />;
 
+  const tabs = isParent
+    ? [{ id: "dashboard", label: "Game Stats", icon: BarChart2 }]
+    : TABS;
+
   // Dashboard summary stats
   const avgPlayGrade = metrics.filter(m => m.play_grade).length
     ? Math.round(metrics.filter(m => m.play_grade).reduce((s, m) => s + m.play_grade, 0) / metrics.filter(m => m.play_grade).length)
     : null;
+
+  const scopedStats = playerStats.filter(s => players.some(p => p.id === s.player_id));
+  const uniqueGames = new Set(scopedStats.map(s => `${s.week || ""}_${s.opponent || ""}`)).size;
+  const teamOffYards = sumField(scopedStats, "passing_yards") + sumField(scopedStats, "rushing_yards") + sumField(scopedStats, "receiving_yards");
+  const teamTDs = sumField(scopedStats, "touchdowns");
+
+  const playerGameRows = players.map((player) => {
+    const rows = scopedStats.filter(s => s.player_id === player.id);
+    const gamesPlayed = new Set(rows.map(r => `${r.week || ""}_${r.opponent || ""}`)).size;
+    const avgGrade = rows.length ? (sumField(rows, "grade") / rows.length).toFixed(1) : "-";
+    return {
+      id: player.id,
+      name: `${player.first_name || ""} ${player.last_name || ""}`.trim() || "Unknown",
+      position: player.position || "-",
+      gamesPlayed,
+      passingYards: sumField(rows, "passing_yards"),
+      rushingYards: sumField(rows, "rushing_yards"),
+      receivingYards: sumField(rows, "receiving_yards"),
+      touchdowns: sumField(rows, "touchdowns"),
+      tackles: sumField(rows, "tackles"),
+      sacks: sumField(rows, "sacks"),
+      avgGrade,
+    };
+  }).filter(row => row.gamesPlayed > 0).sort((a, b) => b.gamesPlayed - a.gamesPlayed);
 
   const areaTotals = AREA_ORDER.map((area) => {
     const totalSeconds = usageRecords.reduce((sum, record) => {
@@ -166,10 +206,10 @@ export default function PerformanceAnalytics() {
             </div>
             <div>
               <h1 className="text-white font-black text-xl capitalize">{activeSport.replace(/_/g," ")} <span style={{ color: "var(--color-primary,#f97316)" }}>Analytics</span></h1>
-              <p className="text-gray-500 text-xs">Coach dashboard for player metrics and player area engagement</p>
+              <p className="text-gray-500 text-xs">{isParent ? "Team and player game stats" : "Coach dashboard for player metrics and player area engagement"}</p>
             </div>
           </div>
-          {tab === "metrics" && (
+          {!isParent && tab === "metrics" && (
             <button onClick={() => setShowAddMetric(v => !v)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-white font-medium"
               style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
@@ -180,7 +220,7 @@ export default function PerformanceAnalytics() {
 
         {/* Tabs */}
         <div className="flex gap-1 mt-4">
-          {TABS.map(t => (
+          {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${tab === t.id ? "text-white" : "text-gray-500 hover:text-gray-300 hover:bg-white/5"}`}
               style={tab === t.id ? { backgroundColor: "var(--color-primary,#f97316)", color: "#fff" } : {}}>
@@ -195,6 +235,73 @@ export default function PerformanceAnalytics() {
         {/* DASHBOARD TAB */}
         {tab === "dashboard" && (
           <div className="space-y-6">
+            {isParent ? (
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    { label: "Games Tracked", value: uniqueGames, icon: BarChart2, color: "#3b82f6", sub: "By week/opponent" },
+                    { label: "Players With Stats", value: playerGameRows.length, icon: Users, color: "var(--color-primary,#f97316)", sub: "Roster players with game stats" },
+                    { label: "Team TDs", value: teamTDs, icon: TrendingUp, color: "#22c55e", sub: "Total touchdowns" },
+                    { label: "Team Offensive Yards", value: teamOffYards.toLocaleString(), icon: Activity, color: "#f59e0b", sub: "Pass + rush + receiving" },
+                  ].map((card, i) => (
+                    <div key={i} className="bg-[#141414] border border-gray-800 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-gray-500 text-xs">{card.label}</p>
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: card.color + "22" }}>
+                          <card.icon className="w-3.5 h-3.5" style={{ color: card.color }} />
+                        </div>
+                      </div>
+                      <p className="text-white text-2xl font-black">{card.value}</p>
+                      <p className="text-gray-600 text-xs mt-1">{card.sub}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
+                  <h2 className="text-white font-bold text-sm mb-4">Player Game Stats</h2>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="text-gray-500 border-b border-gray-800">
+                          <th className="text-left py-2 pr-2">Player</th>
+                          <th className="text-left py-2 px-2">Pos</th>
+                          <th className="text-right py-2 px-2">GP</th>
+                          <th className="text-right py-2 px-2">Pass</th>
+                          <th className="text-right py-2 px-2">Rush</th>
+                          <th className="text-right py-2 px-2">Rec</th>
+                          <th className="text-right py-2 px-2">TD</th>
+                          <th className="text-right py-2 px-2">Tkl</th>
+                          <th className="text-right py-2 px-2">Sack</th>
+                          <th className="text-right py-2 pl-2">Avg Grade</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {playerGameRows.length === 0 && (
+                          <tr>
+                            <td colSpan={10} className="py-4 text-center text-gray-500">No game stats available yet.</td>
+                          </tr>
+                        )}
+                        {playerGameRows.map((row) => (
+                          <tr key={row.id} className="border-b border-gray-900 last:border-0">
+                            <td className="py-2 pr-2 text-white whitespace-nowrap">{row.name}</td>
+                            <td className="py-2 px-2 text-gray-300">{row.position}</td>
+                            <td className="py-2 px-2 text-right text-gray-300">{row.gamesPlayed}</td>
+                            <td className="py-2 px-2 text-right text-gray-300">{row.passingYards}</td>
+                            <td className="py-2 px-2 text-right text-gray-300">{row.rushingYards}</td>
+                            <td className="py-2 px-2 text-right text-gray-300">{row.receivingYards}</td>
+                            <td className="py-2 px-2 text-right text-white font-semibold">{row.touchdowns}</td>
+                            <td className="py-2 px-2 text-right text-gray-300">{row.tackles}</td>
+                            <td className="py-2 px-2 text-right text-gray-300">{row.sacks}</td>
+                            <td className="py-2 pl-2 text-right text-white">{row.avgGrade}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
             {/* KPI cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
@@ -273,11 +380,13 @@ export default function PerformanceAnalytics() {
                 </table>
               </div>
             </div>
+              </>
+            )}
           </div>
         )}
 
         {/* METRICS TAB */}
-        {tab === "metrics" && (
+        {!isParent && tab === "metrics" && (
           <div className="space-y-4">
             {showAddMetric && (
               <AddMetricForm players={players} onSaved={handleMetricSaved} onClose={() => setShowAddMetric(false)} />
