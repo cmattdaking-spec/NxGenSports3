@@ -476,6 +476,18 @@ export default function Layout({ children, currentPageName }) {
   const isMobileTabPage = mobileTabPages.includes(currentPageName);
   const showMobileBack = location.pathname.split("/").filter(Boolean).length > 1;
 
+  const titleMap = {
+    ...Object.fromEntries(navItems.map(i => [i.page, i.label])),
+    ...Object.fromEntries(playerNavItems.map(i => [i.page, i.label])),
+    ...Object.fromEntries(parentNavItems.map(i => [i.page, i.label])),
+    ADPortal: "AD Portal",
+    NxAnnouncement: "Announcements",
+    Messages: "NxMessages",
+    GameSchedule: "Schedule",
+  };
+
+  const mobilePageTitle = titleMap[currentPageName] || currentPageName.replace(/([A-Z])/g, " $1").trim();
+
   useEffect(() => {
     if (!isMobileTabPage) return;
     setMobileTabCache(prev => {
@@ -526,16 +538,22 @@ export default function Layout({ children, currentPageName }) {
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[#111111] border-b border-gray-800 safe-area-top">
           {showMobileBack ? (
-            <button onClick={() => navigate(-1)} className="text-gray-400 w-12 h-12 flex items-center justify-center" aria-label="Go back">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
+            <div className="flex items-center min-w-0 gap-2 flex-1">
+              <button onClick={() => navigate(-1)} className="text-gray-400 w-12 h-12 flex items-center justify-center" aria-label="Go back">
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <span className="text-white font-semibold text-base truncate">{mobilePageTitle}</span>
+            </div>
           ) : (
-            <button onClick={() => setMobileOpen(true)} className="text-gray-400 w-12 h-12 flex items-center justify-center" aria-label="Open menu">
-              <Menu className="w-5 h-5" />
-            </button>
+            <>
+              <button onClick={() => setMobileOpen(true)} className="text-gray-400 w-12 h-12 flex items-center justify-center" aria-label="Open menu">
+                <Menu className="w-5 h-5" />
+              </button>
+              <span className="text-white font-black text-lg">{brandPrefix}<span style={{ color: "var(--color-primary, #3b82f6)" }}>{brandSuffix}</span></span>
+              <div className="w-8" />
+            </>
           )}
-          <span className="text-white font-black text-lg">{brandPrefix}<span style={{ color: "var(--color-primary, #3b82f6)" }}>{brandSuffix}</span></span>
-          <div className="w-8" />
+          {showMobileBack && <div className="w-8" />}
         </header>
 
         {/* Mobile Bottom Tab Bar */}
