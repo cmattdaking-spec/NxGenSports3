@@ -7,6 +7,61 @@ export default function NxHighlight({ session, tags, players, onClose }) {
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [loading, setLoading] = useState(false);
   const [highlights, setHighlights] = useState(null);
+  const [sharing, setSharing] = useState(false);
+
+  const sessionVideoUrl = session?.video_url || "";
+
+  const buildClipLink = (seconds) => {
+    if (!sessionVideoUrl) return "";
+    const ts = Math.max(0, Math.floor(seconds || 0));
+    if (sessionVideoUrl.includes("youtube.com/watch") || sessionVideoUrl.includes("youtu.be/")) {
+      const sep = sessionVideoUrl.includes("?") ? "&" : "?";
+      return `${sessionVideoUrl}${sep}t=${ts}s`;
+    }
+    if (sessionVideoUrl.includes("vimeo.com/")) {
+      return `${sessionVideoUrl}#t=${ts}s`;
+    }
+    return `${sessionVideoUrl}#t=${ts}`;
+  };
+
+  const shareText = async (title, text) => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text });
+        return true;
+      }
+    } catch {
+      return false;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const shareClip = async (clip) => {
+    const link = buildClipLink(clip.timestamp_seconds);
+    const text = `${clip.description}\n${link || ""}`.trim();
+    setSharing(true);
+    await shareText("NxHighlight Clip", text);
+    setSharing(false);
+  };
+
+  const shareAllHighlights = async () => {
+    if (!highlights?.highlight_clips?.length) return;
+    const headline = `${highlights.player_name || highlights.team_name || "Team"} Highlights`;
+    const lines = highlights.highlight_clips.map((clip, idx) => {
+      const link = buildClipLink(clip.timestamp_seconds);
+      return `${idx + 1}. ${clip.timestamp_label} - ${clip.description}${link ? `\n${link}` : ""}`;
+    });
+    const text = `${headline}\n\n${lines.join("\n\n")}`;
+    setSharing(true);
+    await shareText("NxHighlight Reel", text);
+    setSharing(false);
+  };
 
   const generate = async () => {
     if (!tags.length) return;
@@ -196,9 +251,17 @@ Return a JSON object with:
               {/* Highlight Clips */}
               {highlights.highlight_clips?.length > 0 && (
                 <div>
-                  <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">
-                    Highlight Clips ({highlights.highlight_clips.length})
-                  </p>
+                  <div className="flex items-center justify-between mb-2 gap-2">
+                    <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                      Highlight Clips ({highlights.highlight_clips.length})
+                    </p>
+                    <button
+                      onClick={shareAllHighlights}
+                      disabled={sharing}
+                      className="text-xs px-2.5 py-1 rounded-lg border border-yellow-400/40 text-yellow-400 hover:bg-yellow-400/10 disabled:opacity-50">
+                      {sharing ? "Sharing..." : "Share Reel"}
+                    </button>
+                  </div>
                   <div className="space-y-2">
                     {highlights.highlight_clips.map((clip, i) => (
                       <div key={i} className="bg-[#1e1e1e] rounded-xl px-4 py-3 flex items-center gap-3 border border-gray-800">
@@ -211,6 +274,14 @@ Return a JSON object with:
                         <div className="flex-1 min-w-0">
                           <span className="text-xs bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded capitalize mr-1">{clip.play_type}</span>
                           <p className="text-gray-200 text-sm mt-1">{clip.description}</p>
+                          {sessionVideoUrl && (
+                            <button
+                              onClick={() => shareClip(clip)}
+                              disabled={sharing}
+                              className="mt-2 text-xs px-2 py-1 rounded border border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 disabled:opacity-50">
+                              {sharing ? "Sharing..." : "Share Clip"}
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
