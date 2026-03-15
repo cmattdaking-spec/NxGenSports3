@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useSport } from "@/components/SportContext";
-import { FileText, Plus, Edit, Trash2, Eye, Brain, Zap } from "lucide-react";
+import { FileText, Plus, Edit, Trash2, Eye, Brain } from "lucide-react";
 import LoadingScreen from "../../components/LoadingScreen";
 
 export default function ScoutingReport() {
@@ -9,6 +9,7 @@ export default function ScoutingReport() {
   const [reports, setReports] = useState([]);
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reportsEntityAvailable, setReportsEntityAvailable] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ game_id: "", report: "", ai_generated: false });
@@ -19,17 +20,36 @@ export default function ScoutingReport() {
     loadData();
   }, [activeSport]);
 
+  const loadGames = async () => {
+    try {
+      const gameList = await base44.entities.Game.list("-date");
+      return (gameList || []).filter(g => g.sport === activeSport);
+    } catch {
+      const oppList = await base44.entities.Opponent.list("-game_date");
+      return (oppList || [])
+        .filter(o => o.sport === activeSport)
+        .map(o => ({ id: o.id, opponent_name: o.name, date: o.game_date, sport: o.sport }));
+    }
+  };
+
   const loadData = async () => {
-    const [rep, gam] = await Promise.all([
-      base44.entities.ScoutingReport.list("-created_date"),
-      base44.entities.Game.list("-date")
-    ]);
-    setReports(rep.filter(r => r.sport === activeSport));
-    setGames(gam.filter(g => g.sport === activeSport));
+    setLoading(true);
+    const gam = await loadGames();
+    setGames(gam);
+    try {
+      const rep = await base44.entities.ScoutingReport.list("-created_date");
+      setReports(rep.filter(r => r.sport === activeSport));
+      setReportsEntityAvailable(true);
+    } catch {
+      // Fallback mode when schema is not available in this app.
+      setReports([]);
+      setReportsEntityAvailable(false);
+    }
     setLoading(false);
   };
 
   const save = async () => {
+    if (!reportsEntityAvailable) return;
     if (editing) {
       await base44.entities.ScoutingReport.update(editing.id, form);
     } else {
@@ -44,10 +64,14 @@ export default function ScoutingReport() {
   const generateAI = async () => {
     setAiLoading(true);
     const game = games.find(g => g.id === form.game_id);
-    if (!game) return;
+    if (!game) {
+      setAiLoading(false);
+      return;
+    }
     const prompt = `Generate a detailed scouting report for our team's performance in the game against ${game.opponent_name} on ${game.date}. Sport: ${activeSport}. Include strengths, weaknesses, key plays, and recommendations.`;
     const res = await base44.integrations.Core.InvokeLLM({ prompt });
-    const response = typeof res === 'object' && res !== null && 'response' in res ? res.response : res;
+    const responseRaw = typeof res === "object" && res !== null && "response" in res ? res.response : res;
+    const response = typeof responseRaw === "string" ? responseRaw : JSON.stringify(responseRaw, null, 2);
     setForm({ ...form, report: response, ai_generated: true });
     setAiLoading(false);
   };
@@ -58,10 +82,20 @@ export default function ScoutingReport() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white">Scouting Reports</h1>
-        <button onClick={() => setShowForm(true)} className="bg-orange-500 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+        <button onClick={() => setShowForm(true)} disabled={!reportsEntityAvailable} className="bg-orange-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg flex items-center gap-2">
           <Plus className="w-4 h-4" /> New Report
         </button>
       </div>
+
+      {!reportsEntityAvailable && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 flex items-start gap-3">
+          <FileText className="w-4 h-4 text-yellow-400 mt-0.5" />
+          <div>
+            <p className="text-yellow-300 text-sm font-semibold">Scouting reports are unavailable in this deployment.</p>
+            <p className="text-yellow-200/80 text-xs mt-1">The ScoutingReport schema is missing, so create/edit/delete actions are disabled to prevent runtime errors.</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4">
         {reports.map(r => {
@@ -75,8 +109,8 @@ export default function ScoutingReport() {
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => setViewing(r)} className="text-blue-400"><Eye className="w-4 h-4" /></button>
-                  <button onClick={() => { setEditing(r); setForm(r); setShowForm(true); }} className="text-yellow-400"><Edit className="w-4 h-4" /></button>
-                  <button onClick={() => { base44.entities.ScoutingReport.delete(r.id); loadData(); }} className="text-red-400"><Trash2 className="w-4 h-4" /></button>
+                  <button onClick={() => { setEditing(r); setForm(r); setShowForm(true); }} disabled={!reportsEntityAvailable} className="text-yellow-400 disabled:opacity-50"><Edit className="w-4 h-4" /></button>
+                  <button onClick={() => { if (!reportsEntityAvailable) return; base44.entities.ScoutingReport.delete(r.id); loadData(); }} disabled={!reportsEntityAvailable} className="text-red-400 disabled:opacity-50"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
             </div>
