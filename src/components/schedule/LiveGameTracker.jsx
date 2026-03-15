@@ -6,12 +6,14 @@ const PLAY_TYPES = ["Run", "Pass Complete", "Pass Incomplete", "Sack", "Penalty"
 
 export default function LiveGameTracker({ opponent, onClose }) {
   const [gameRecord, setGameRecord] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPlayForm, setShowPlayForm] = useState(false);
   const [playForm, setPlayForm] = useState({ team: "us", play_type: "Run", description: "", yards: "", result: "" });
 
   useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
     base44.entities.GameRecord.filter({ opponent_id: opponent.id }).then(records => {
       if (records.length > 0) {
         setGameRecord(records[0]);
@@ -35,9 +37,28 @@ export default function LiveGameTracker({ opponent, onClose }) {
   const update = async (data) => {
     if (!gameRecord) return;
     setSaving(true);
-    const updated = await base44.entities.GameRecord.update(gameRecord.id, data);
+    await base44.entities.GameRecord.update(gameRecord.id, data);
     setGameRecord(prev => ({ ...prev, ...data }));
     setSaving(false);
+  };
+
+  const addLiveUpdate = async (payload) => {
+    if (!gameRecord) return;
+    const entry = {
+      id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      type: payload.type || "play",
+      content: payload.content || "Game update",
+      source: "game_tracker",
+      posted_at: new Date().toISOString(),
+      posted_by: user?.full_name || user?.email || "Coach",
+      team: payload.team,
+      quarter: gameRecord.quarter || 1,
+      play_type: payload.play_type,
+      result: payload.result,
+    };
+
+    const updates = [entry, ...(gameRecord.live_updates || [])];
+    await update({ live_updates: updates });
   };
 
   const startGame = () => update({ status: "live", quarter: 1 });
@@ -58,10 +79,19 @@ export default function LiveGameTracker({ opponent, onClose }) {
       play_type: playForm.play_type,
       description: playForm.description,
       yards: playForm.yards ? Number(playForm.yards) : undefined,
-      result: playForm.result
+      result: playForm.result,
+      posted_at: new Date().toISOString(),
+      posted_by: user?.full_name || user?.email || "Coach",
     };
     const updatedPlays = [...(gameRecord.plays || []), newPlay];
     await update({ plays: updatedPlays });
+    await addLiveUpdate({
+      type: "play",
+      content: `${playForm.team === "us" ? "Us" : opponent.name}: ${playForm.description}`,
+      team: playForm.team,
+      play_type: playForm.play_type,
+      result: playForm.result,
+    });
     setPlayForm({ team: "us", play_type: "Run", description: "", yards: "", result: "" });
     setShowPlayForm(false);
   };

@@ -116,6 +116,7 @@ const PLAYER_USAGE_ENTITY_CANDIDATES = [
 const navItems = [
   { label: "Dashboard",      page: "Dashboard",            icon: Home,           roles: null },
   { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays,   roles: null },
+  { label: "NxPlay",         page: "NxPlay",               icon: Gamepad2,       roles: null },
   { label: "Eligibility",    page: "AcademicEligibility",  icon: GraduationCap,  roles: null },
   { label: "Roster",         page: "Roster",               icon: Users,          roles: null },
   { label: "Health",         page: "PlayerHealth",         icon: Activity,       roles: null },
@@ -136,6 +137,7 @@ const playerNavItems = [
   { label: "Home",           page: "NxAnnouncement",       icon: Home },
   { label: "Announcements",  page: "NxAnnouncement",       icon: MessageSquare },
   { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays },
+  { label: "NxPlay",         page: "NxPlay",               icon: Gamepad2 },
   { label: "Game Plan",      page: "GamePlan",             icon: Target },
   { label: "Practice",       page: "Practice",             icon: ClipboardList },
   { label: "Eligibility",    page: "AcademicEligibility",  icon: GraduationCap },
@@ -148,6 +150,7 @@ const parentNavItems = [
   { label: "Home",           page: "NxAnnouncement",       icon: Home },
   { label: "Announcements",  page: "NxAnnouncement",       icon: MessageSquare },
   { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays },
+  { label: "NxPlay",         page: "NxPlay",               icon: Gamepad2 },
   { label: "Roster",         page: "Roster",               icon: Users },
   { label: "Eligibility",    page: "AcademicEligibility",  icon: GraduationCap },
   { label: "Health",         page: "PlayerHealth",         icon: Activity },
