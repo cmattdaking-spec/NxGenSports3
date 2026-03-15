@@ -2,19 +2,21 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useSport } from "@/components/SportContext";
 import { getSportConfig } from "@/components/SportConfig";
-import { BarChart2, Activity, GraduationCap, TrendingUp, AlertTriangle, Brain } from "lucide-react";
+import { BarChart2, Activity, GraduationCap, TrendingUp, AlertTriangle, Brain, FileText } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell
 } from "recharts";
 import LoadingScreen from "../components/LoadingScreen";
 import AIProgramReport from "../components/reports/AIProgramReport";
+import ScoutingReport from "../components/reports/ScoutingReport";
 
 const TABS = [
   { id: "ai_report",   label: "AI Report",           icon: Brain },
   { id: "performance", label: "Performance Trends",  icon: TrendingUp },
   { id: "health",      label: "Health & Injuries",   icon: Activity },
   { id: "academic",    label: "Academic Compliance", icon: GraduationCap },
+  { id: "scouting",    label: "Scouting Reports",    icon: FileText },
 ];
 
 const AVAIL_COLORS = { full: "#22c55e", limited: "#f59e0b", out: "#ef4444", day_to_day: "#f97316" };
@@ -281,6 +283,11 @@ export default function Reports() {
             </div>
           )}
         </div>
+      )}
+
+      {/* ── Scouting Reports ── */}
+      {tab === "scouting" && (
+        <ScoutingReport />
       )}
     </div>
   );

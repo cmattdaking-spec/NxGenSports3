@@ -4,7 +4,7 @@ import { SportContext } from "@/components/SportContext";
 import { base44 } from "@/api/base44Client";
 import {
   Target, Plus, Edit, Trash2, X, ChevronDown, ChevronUp,
-  Calendar, MapPin, Shield, Zap, BookOpen, Brain, CheckCircle, Clock
+  Calendar, MapPin, Shield, Zap, BookOpen, Brain, CheckCircle, Clock, Lock
 } from "lucide-react";
 import NxPlanAI from "../components/gameplan/NxPlanAI";
 import LoadingScreen from "../components/LoadingScreen";
@@ -80,6 +80,24 @@ export default function GamePlan() {
     .filter(s => s.items?.length > 0);
 
   if (loading) return <LoadingScreen />;
+
+  const isAD = user?.coaching_role === "athletic_director";
+
+  if (isAD) {
+    return (
+      <div className="bg-[#0a0a0a] min-h-full flex items-center justify-center">
+        <div className="text-center text-gray-500 max-w-sm px-4">
+          <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-6 h-6 text-red-400" />
+          </div>
+          <p className="text-white font-bold text-lg">Game Plan Access Restricted</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Game plans are managed by coaching staff. Athletic Directors can review outcomes via reports.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#0a0a0a] min-h-full">

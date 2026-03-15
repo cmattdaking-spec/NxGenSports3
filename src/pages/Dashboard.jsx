@@ -10,6 +10,7 @@ import {
   ArrowRight, Shield, Sparkles, X, ChevronRight,
   Star, Lock, Building2 } from
 "lucide-react";
+import SocialShareBar from "@/components/SocialShareBar";
 
 const SPORT_NAMES = {
   nxgensports: "NxGenSports",
@@ -186,6 +187,21 @@ export default function Dashboard() {
                 <span className="text-purple-400 text-xs font-semibold">Nx AI</span>
               </div>
             </div>
+
+            {/* Right: Status + Social */}
+            <div className="flex flex-col items-start md:items-end gap-2">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 bg-[#141414] border border-gray-800 rounded-lg px-3 py-1.5">
+                  <Lock className="w-3 h-3 text-green-400" />
+                  <span className="text-green-400 text-xs font-semibold">Secure</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-[#141414] border border-gray-800 rounded-lg px-3 py-1.5">
+                  <Shield className="w-3 h-3" style={{ color: "var(--color-primary,#f97316)" }} />
+                  <span className="text-xs font-semibold" style={{ color: "var(--color-primary,#f97316)" }}>Account Isolated</span>
+                </div>
+              </div>
+              <SocialShareBar label="Share your program" />
+            </div>
           </div>
         </div>
       </div>
@@ -194,7 +210,7 @@ export default function Dashboard() {
 
         {/* Nx AI Suggestions */}
         {!aiDismissed && (aiLoading || aiSuggestions.length > 0) &&
-        <div className="bg-[#141414] border rounded-xl p-4" style={{ borderColor: "var(--color-primary,#f97316)33" }}>
+          <div className="bg-[#141414] border rounded-xl p-4" style={{ borderColor: "var(--color-primary,#f97316)33" }}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4" style={{ color: "var(--color-primary,#f97316)" }} />
@@ -204,28 +220,34 @@ export default function Dashboard() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            {aiLoading ?
-          <div className="flex items-center gap-2 text-gray-500 text-sm">
+            {aiLoading ? (
+              <div className="flex items-center gap-2 text-gray-500 text-sm">
                 <div className="w-3 h-3 rounded-full border border-gray-500 border-t-transparent animate-spin" />
                 Nx is analyzing your team data...
-              </div> :
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                {aiSuggestions.map((s, i) =>
-            <Link key={i} to={createPageUrl(s.page || "Dashboard")}
-            className="flex items-center gap-2 p-3 bg-[#1a1a1a] rounded-lg border border-transparent transition-all group"
-            style={{ "--hover-border": "var(--color-primary,#f97316)44" }}
-            onMouseEnter={(e) => e.currentTarget.style.borderColor = "var(--color-primary,#f97316)44"}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = "transparent"}>
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--color-primary,#f97316)22" }}>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                {aiSuggestions.map((s, i) => (
+                  <Link
+                    key={i}
+                    to={createPageUrl(s.page || "Dashboard")}
+                    className="flex items-center gap-2 p-3 bg-[#1a1a1a] rounded-lg border border-transparent transition-all group"
+                    style={{ "--hover-border": "var(--color-primary,#f97316)44" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--color-primary,#f97316)44"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "transparent"; }}
+                  >
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: "var(--color-primary,#f97316)22" }}
+                    >
                       <Zap className="w-3 h-3" style={{ color: "var(--color-primary,#f97316)" }} />
                     </div>
                     <span className="text-gray-300 text-xs flex-1">{s.text}</span>
                     <ChevronRight className="w-3 h-3 text-gray-600 group-hover:text-gray-400 flex-shrink-0" />
                   </Link>
-            )}
+                ))}
               </div>
-          }
+            )}
           </div>
         }
 

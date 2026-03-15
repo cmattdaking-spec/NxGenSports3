@@ -104,7 +104,8 @@ const navItems = [
   { label: "Health",         page: "PlayerHealth",         icon: Activity,       roles: null },
   { label: "NxMessages",     page: "Messages",             icon: MessageSquare,  roles: null },
   { label: "NxAnnouncement", page: "NxAnnouncement",       icon: MessageSquare,  roles: null },
-  { label: "NxLab",          page: "NxLab",                icon: Clapperboard,   roles: null, hideSports: ["boys_track","girls_track","boys_cross_country","girls_cross_country","track","cross_country"] },
+  // NxLab (film, scouting, playbook, game plans) is restricted to coaching staff — not Athletic Directors.
+  { label: "NxLab",          page: "NxLab",                icon: Clapperboard,   roles: COORD_ONLY, hideSports: ["boys_track","girls_track","boys_cross_country","girls_cross_country","track","cross_country"] },
   { label: "S&C",            page: "StrengthConditioning", icon: Dumbbell,       roles: null },
   { label: "Recruiting",     page: "Recruiting",           icon: Star,           roles: COORD_ONLY },
   { label: "Analytics",      page: "PerformanceAnalytics", icon: BarChart2,      roles: null },
@@ -115,7 +116,11 @@ const navItems = [
 
 // Player nav
 const playerNavItems = [
+  { label: "Home",           page: "PlayerPortal",         icon: Home },
   { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays },
+  { label: "Roster",         page: "Roster",               icon: Users },
+  { label: "Eligibility",    page: "AcademicEligibility",  icon: GraduationCap },
+  { label: "Health",         page: "PlayerHealth",         icon: Activity },
   { label: "NxLab",          page: "NxLab",                icon: Clapperboard },
   { label: "My S&C",         page: "StrengthConditioning", icon: Dumbbell },
   { label: "Recruiting",     page: "Recruiting",           icon: Star },
@@ -126,7 +131,10 @@ const playerNavItems = [
 
 // Parent nav
 const parentNavItems = [
+  { label: "Home",           page: "ParentPortal",         icon: Home },
   { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays },
+  { label: "Roster",         page: "Roster",               icon: Users },
+  { label: "My Player Health", page: "PlayerHealth",       icon: Activity },
   { label: "NxMessages",     page: "Messages",             icon: MessageSquare },
   { label: "Announcements",  page: "NxAnnouncement",       icon: MessageSquare },
 ];
@@ -214,12 +222,18 @@ export default function Layout({ children, currentPageName }) {
   const isHeadCoach = coachingRole === "head_coach";
   const isSuperAdmin = user?.role === "super_admin";
   const canEditAll = isAD || isHeadCoach;
+
+  const userType = user?.user_type || "coach";
+  const isPlayer = userType === "player";
+  const isParent = userType === "parent" || user?.parent_role;
+
   const brandName = SPORT_NAMES[activeSport] || "NxDown";
   const [brandPrefix, brandSuffix] = brandName.startsWith("Nx") ? ["Nx", brandName.slice(2)] : [brandName, ""];
   useMobileMeta(brandName);
 
   const switchSport = async (sport) => {
-    if (user?.primary_sport && !isAD) return; // locked to primary sport
+    const canMultiSport = isAD || isHeadCoach || isPlayer || isParent;
+    if (user?.primary_sport && !canMultiSport) return;
     if (sport === "nxgensports") {
       setActiveSport("nxgensports");
       setShowSportPicker(false);
@@ -230,10 +244,6 @@ export default function Layout({ children, currentPageName }) {
     setShowSportPicker(false);
     if (user) await base44.auth.updateMe({ active_sport: sport });
   };
-
-  const userType = user?.user_type || "coach";
-  const isPlayer = userType === "player";
-  const isParent = userType === "parent" || user?.parent_role;
 
   const filteredNav = user?.role === "super_admin"
     ? [{ label: "Teams", page: "UserManagement", icon: UserCog, roles: null }]
@@ -338,10 +348,16 @@ export default function Layout({ children, currentPageName }) {
     </div>
   );
 
-  // Redirect root — ADs go to ADPortal, everyone else to Dashboard
+  // Redirect root — ADs go to ADPortal, players/parents to their portal, everyone else to Dashboard
   const location = useLocation();
   if (location.pathname === "/" || location.pathname === "") {
     const isAthlDir = effectiveRole === "athletic_director" || user?.role === "admin" && user?.coaching_role === "athletic_director";
+    if (isPlayer) {
+      return <Navigate to={createPageUrl("PlayerPortal")} replace />;
+    }
+    if (isParent) {
+      return <Navigate to={createPageUrl("ParentPortal")} replace />;
+    }
     if (isAD && !isHeadCoach) {
       return <Navigate to={createPageUrl("ADPortal")} replace />;
     }
@@ -389,13 +405,9 @@ export default function Layout({ children, currentPageName }) {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[#111111] border-b border-gray-800 safe-area-top">
-          {currentPageName !== "Dashboard" && currentPageName !== "ADPortal" ? (
-            <button onClick={() => navigate(-1)} className="text-gray-400 p-1 flex items-center gap-1">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          ) : (
-            <div className="w-8" />
-          )}
+          <button onClick={() => setMobileOpen(true)} className="text-gray-400 p-1">
+            <Menu className="w-5 h-5" />
+          </button>
           <span className="text-white font-black text-lg">{brandPrefix}<span style={{ color: "var(--color-primary, #3b82f6)" }}>{brandSuffix}</span></span>
           <div className="w-8" />
         </header>

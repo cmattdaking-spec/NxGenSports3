@@ -3,12 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --background: 10 10 10;
+  /* NxGenSports brand system */
+  --nx-primary: #00F2FF;   /* Electric Cyan */
+  --nx-secondary: #E8E8E8; /* Brushed Silver */
+  --nx-bg: #121212;        /* Charcoal Base */
+
+  /* App-wide color tokens */
+  --color-primary: var(--nx-primary);
+  --color-secondary: var(--nx-secondary);
+
+  --background: 18 18 18;
   --foreground: 255 255 255;
 }
 
 body {
-  background-color: #0a0a0a;
+  background-color: var(--nx-bg);
   color: #ffffff;
   font-family: 'Inter', sans-serif;
   /* Mobile: prevent text resize on orientation change */

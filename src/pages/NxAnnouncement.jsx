@@ -9,7 +9,7 @@ const TYPE_CONFIG = {
   all:          { label: "Everyone",       color: "bg-orange-500/20 text-orange-400", icon: Megaphone },
 };
 
-const CAN_POST = ["admin","head_coach","associate_head_coach","athletic_director","team_rep"];
+const CAN_POST = ["admin","head_coach","associate_head_coach","athletic_director","team_rep","parent"];
 
 export default function NxAnnouncement() {
   const [user, setUser] = useState(null);

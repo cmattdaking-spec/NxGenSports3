@@ -47,30 +47,33 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import ADPortal from './pages/ADPortal';
-import AcademicEligibility from './pages/AcademicEligibility';
-import Dashboard from './pages/Dashboard';
-import DepthChart from './pages/DepthChart';
-import FilmRoom from './pages/FilmRoom';
-import GamePlan from './pages/GamePlan';
-import GameSchedule from './pages/GameSchedule';
-import InGameAssistant from './pages/InGameAssistant';
-import Messages from './pages/Messages';
-import NxAnnouncement from './pages/NxAnnouncement';
-import NxLab from './pages/NxLab';
-import PerformanceAnalytics from './pages/PerformanceAnalytics';
-import Playbook from './pages/Playbook';
-import PlayerDevelopment from './pages/PlayerDevelopment';
-import PlayerHealth from './pages/PlayerHealth';
-import Playlists from './pages/Playlists';
-import Practice from './pages/Practice';
-import Recruiting from './pages/Recruiting';
-import Reports from './pages/Reports';
-import Roster from './pages/Roster';
-import Scouting from './pages/Scouting';
-import Settings from './pages/Settings';
-import StrengthConditioning from './pages/StrengthConditioning';
-import UserManagement from './pages/UserManagement';
+import ADPortal from './pages/ADPortal.jsx';
+import AcademicEligibility from './pages/AcademicEligibility.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import DepthChart from './pages/DepthChart.jsx';
+import FilmRoom from './pages/FilmRoom.jsx';
+import GamePlan from './pages/GamePlan.jsx';
+import GameSchedule from './pages/GameSchedule.jsx';
+import InGameAssistant from './pages/InGameAssistant.jsx';
+import Login from './pages/Login.jsx';
+import Messages from './pages/Messages.jsx';
+import NxAnnouncement from './pages/NxAnnouncement.jsx';
+import NxLab from './pages/NxLab.jsx';
+import PerformanceAnalytics from './pages/PerformanceAnalytics.jsx';
+import Playbook from './pages/Playbook.jsx';
+import PlayerDevelopment from './pages/PlayerDevelopment.jsx';
+import PlayerHealth from './pages/PlayerHealth.jsx';
+import Playlists from './pages/Playlists.jsx';
+import Practice from './pages/Practice.jsx';
+import Recruiting from './pages/Recruiting.jsx';
+import Reports from './pages/Reports.jsx';
+import Roster from './pages/Roster.jsx';
+import Scouting from './pages/Scouting.jsx';
+import Settings from './pages/Settings.jsx';
+import StrengthConditioning from './pages/StrengthConditioning.jsx';
+import UserManagement from './pages/UserManagement.jsx';
+import PlayerPortal from './pages/PlayerPortal.jsx';
+import ParentPortal from './pages/ParentPortal.jsx';
 import __Layout from './Layout.jsx';
 
 
@@ -83,6 +86,7 @@ export const PAGES = {
     "GamePlan": GamePlan,
     "GameSchedule": GameSchedule,
     "InGameAssistant": InGameAssistant,
+    "Login": Login,
     "Messages": Messages,
     "NxAnnouncement": NxAnnouncement,
     "NxLab": NxLab,
@@ -99,10 +103,13 @@ export const PAGES = {
     "Settings": Settings,
     "StrengthConditioning": StrengthConditioning,
     "UserManagement": UserManagement,
+    "PlayerPortal": PlayerPortal,
+    "ParentPortal": ParentPortal,
 }
 
 export const pagesConfig = {
-    mainPage: "FilmRoom",
+    // Default landing page; Layout further routes ADs to ADPortal.
+    mainPage: "Dashboard",
     Pages: PAGES,
     Layout: __Layout,
 };

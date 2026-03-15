@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import { base44 } from "@/api/base44Client";
-import { Zap, Edit, X, Flame, AlertTriangle } from "lucide-react";
+import { Zap, Edit, X, Flame, AlertTriangle, Lock } from "lucide-react";
 import { useTeamLanguage, POSITION_DEFS } from "@/components/playbook/useTeamLanguage";
 import { useSportConfig } from "@/components/SportConfig";
 import { SportContext } from "@/components/SportContext";
@@ -115,6 +115,24 @@ export default function DepthChart() {
       return matchesPos && p.status !== "injured";
     });
   };
+
+  const isAD = user?.coaching_role === "athletic_director";
+
+  if (isAD) {
+    return (
+      <div className="bg-[#0a0a0a] min-h-full flex items-center justify-center">
+        <div className="text-center text-gray-500 max-w-sm px-4">
+          <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-6 h-6 text-red-400" />
+          </div>
+          <p className="text-white font-bold text-lg">Depth Chart Access Restricted</p>
+          <p className="text-gray-500 text-sm mt-1">
+            Depth charts are managed by coaching staff. Athletic Directors have oversight via reports only.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
