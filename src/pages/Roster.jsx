@@ -67,20 +67,29 @@ export default function Roster() {
 
   const save = async () => {
     setShowForm(false);
+    const scopedPlayerPayload = {
+      ...form,
+      sport: activeSport,
+      team_id: ctxUser?.team_id || form.team_id || null,
+      school_id: ctxUser?.school_id || form.school_id || null,
+      school_name: ctxUser?.school_name || form.school_name || null,
+      school_code: ctxUser?.school_code || form.school_code || null,
+    };
+
     if (editing) {
       const previous = players.find(p => p.id === editing.id);
-      updateOptimistic(editing.id, form);
+      updateOptimistic(editing.id, scopedPlayerPayload);
       try {
-        await base44.entities.Player.update(editing.id, form);
+        await base44.entities.Player.update(editing.id, scopedPlayerPayload);
       } catch {
         if (previous) {
           updateOptimistic(editing.id, previous);
         }
       }
     } else {
-      const tempId = addOptimistic({ ...form, sport: activeSport });
+      const tempId = addOptimistic(scopedPlayerPayload);
       try {
-        const created = await base44.entities.Player.create({ ...form, sport: activeSport });
+        const created = await base44.entities.Player.create(scopedPlayerPayload);
         updateOptimistic(tempId, created);
       } catch {
         removeOptimistic(tempId);
