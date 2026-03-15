@@ -177,6 +177,8 @@ export default function FilmRoom() {
 
   const isAD = user?.coaching_role === "athletic_director";
   const isPlayer = user?.user_type === "player" || user?.coaching_role === "player";
+  const isParent = user?.user_type === "parent" || !!user?.parent_role;
+  const isReadOnlyUser = isPlayer || isParent;
 
   if (isAD) {
     return (
@@ -208,8 +210,8 @@ export default function FilmRoom() {
           sessions={sessions} activeId={activeSession?.id}
           onSelect={s => { loadSession(s, user); setSidebarOpen(false); }}
           onCreate={createSession} onDelete={deleteSession}
-          canAddSession={!isPlayer}
-          canDeleteSession={!isPlayer}
+          canAddSession={!isReadOnlyUser}
+          canDeleteSession={!isReadOnlyUser}
         />
       </aside>
 
@@ -248,7 +250,7 @@ export default function FilmRoom() {
               </div>
 
               {/* Annotate button — coaching staff only */}
-              {!isPlayer && (
+              {!isReadOnlyUser && (
                 <button onClick={() => setShowAnnotation(v => !v)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${showAnnotation ? "text-white border-transparent" : "border-gray-700 text-gray-400 hover:text-white"}`}
                   style={showAnnotation ? { backgroundColor: "#7c3aed" } : {}}>
@@ -258,7 +260,7 @@ export default function FilmRoom() {
               )}
 
               {/* AI Analysis button — coaching staff only */}
-              {!isPlayer && (
+              {!isReadOnlyUser && (
                 <button onClick={() => setShowAIAnalysis(v => !v)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${showAIAnalysis ? "text-white border-transparent" : "border-gray-700 text-gray-400 hover:text-white"}`}
                   style={showAIAnalysis ? { backgroundColor: "var(--color-primary,#f97316)" } : { borderColor: "var(--color-primary,#f97316)4d", color: "var(--color-primary,#f97316)" }}>
@@ -268,7 +270,7 @@ export default function FilmRoom() {
               )}
 
               {/* Breakdown — coaching staff only */}
-              {!isPlayer && (
+              {!isReadOnlyUser && (
                 <button onClick={getAIBreakdown} disabled={aiLoading || !tags.length}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border disabled:opacity-40"
                   style={{ color: "var(--color-primary,#f97316)", borderColor: "var(--color-primary,#f97316)4d", backgroundColor: "var(--color-primary,#f97316)1a" }}>
@@ -285,7 +287,7 @@ export default function FilmRoom() {
               </button>
 
               {/* Tag Play — coaching staff only */}
-              {!isPlayer && (
+              {!isReadOnlyUser && (
                 <button onClick={() => setShowTagForm(f => !f)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
                   style={{ backgroundColor: "var(--color-primary,#f97316)" }}>

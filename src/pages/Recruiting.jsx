@@ -45,6 +45,12 @@ export default function Recruiting() {
   const [newAward, setNewAward] = useState("");
 
   const canEdit = user && (user.role === "admin" || ["head_coach","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach","trainer"].includes(user.coaching_role));
+  const isParent = user?.user_type === "parent" || !!user?.parent_role;
+  const linkedPlayerIds = [
+    user?.linked_player_id,
+    ...(Array.isArray(user?.linked_player_ids) ? user.linked_player_ids : []),
+    ...(Array.isArray(user?.child_ids) ? user.child_ids : []),
+  ].filter(Boolean);
 
   useEffect(() => {
     Promise.all([
@@ -116,7 +122,11 @@ export default function Recruiting() {
     setNewAward("");
   };
 
-  const filtered = profiles.filter(p => {
+  const scopedProfiles = isParent
+    ? profiles.filter(p => linkedPlayerIds.includes(p.player_id) || linkedPlayerIds.includes(p.id))
+    : profiles;
+
+  const filtered = scopedProfiles.filter(p => {
     const name = `${p.first_name} ${p.last_name}`.toLowerCase();
     const matchSearch = !search || name.includes(search.toLowerCase()) || p.position?.toLowerCase().includes(search.toLowerCase());
     const matchPos = filterPos === "all" || p.position === filterPos;
@@ -152,7 +162,7 @@ export default function Recruiting() {
 
         {/* Tabs */}
         <div className="flex gap-1 mt-4 bg-[#141414] border border-gray-800 rounded-lg p-1 w-fit">
-          {[{ id: "board", label: "Recruit Board" }, { id: "stats", label: "Stats Comparison" }, { id: "scout", label: "NxScout AI" }].map(t => (
+          {[{ id: "board", label: "Recruit Board" }, { id: "stats", label: "Stats Comparison" }, ...(!isParent ? [{ id: "scout", label: "NxScout AI" }] : [])].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === t.id ? "text-white" : "text-gray-400 hover:text-white"}`}
               style={tab === t.id ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { CalendarDays, Activity, MessageSquare, Megaphone } from "lucide-react";
+import { CalendarDays, Activity, MessageSquare, Megaphone, Users, GraduationCap, Clapperboard, Star, BarChart2 } from "lucide-react";
 
 export default function ParentPortal() {
   const [user, setUser] = useState(null);
@@ -89,22 +89,35 @@ export default function ParentPortal() {
         </Link>
 
         <Link
-          to={createPageUrl("PlayerHealth")}
+          to={createPageUrl("Roster")}
           className="bg-[#141414] border border-gray-800 rounded-2xl p-4 hover:border-gray-700 transition-all"
         >
           <div className="flex items-center gap-2 mb-2">
-            <Activity className="w-4 h-4 text-[var(--color-primary,#00F2FF)]" />
+            <Users className="w-4 h-4 text-[var(--color-primary,#00F2FF)]" />
             <span className="text-sm font-semibold text-white">
-              Player Health
+              Team Roster
             </span>
           </div>
           <p className="text-gray-500 text-sm">
-            View trainer updates and availability for your athlete.
+            View roster in read-only mode.
+          </p>
+        </Link>
+
+        <Link
+          to={createPageUrl("AcademicEligibility")}
+          className="bg-[#141414] border border-gray-800 rounded-2xl p-4 hover:border-gray-700 transition-all"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <GraduationCap className="w-4 h-4 text-[var(--color-primary,#00F2FF)]" />
+            <span className="text-sm font-semibold text-white">Eligibility</span>
+          </div>
+          <p className="text-gray-500 text-sm">
+            See eligibility for your linked player(s).
           </p>
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Link
           to={createPageUrl("GameSchedule")}
           className="bg-[#141414] border border-gray-800 rounded-xl p-3 flex items-center gap-2 hover:border-gray-700 transition-all"
@@ -118,8 +131,22 @@ export default function ParentPortal() {
         >
           <Activity className="w-4 h-4 text-[var(--color-primary,#00F2FF)]" />
           <span className="text-xs text-white font-medium">
-            My Player&apos;s Health
+            Health
           </span>
+        </Link>
+        <Link
+          to={createPageUrl("FilmRoom")}
+          className="bg-[#141414] border border-gray-800 rounded-xl p-3 flex items-center gap-2 hover:border-gray-700 transition-all"
+        >
+          <Clapperboard className="w-4 h-4 text-[var(--color-primary,#00F2FF)]" />
+          <span className="text-xs text-white font-medium">Film</span>
+        </Link>
+        <Link
+          to={createPageUrl("Recruiting")}
+          className="bg-[#141414] border border-gray-800 rounded-xl p-3 flex items-center gap-2 hover:border-gray-700 transition-all"
+        >
+          <Star className="w-4 h-4 text-[var(--color-primary,#00F2FF)]" />
+          <span className="text-xs text-white font-medium">Recruiting</span>
         </Link>
         <Link
           to={createPageUrl("Messages")}
@@ -129,11 +156,11 @@ export default function ParentPortal() {
           <span className="text-xs text-white font-medium">NxMessages</span>
         </Link>
         <Link
-          to={createPageUrl("NxAnnouncement")}
+          to={createPageUrl("PerformanceAnalytics")}
           className="bg-[#141414] border border-gray-800 rounded-xl p-3 flex items-center gap-2 hover:border-gray-700 transition-all"
         >
-          <Megaphone className="w-4 h-4 text-[var(--color-primary,#00F2FF)]" />
-          <span className="text-xs text-white font-medium">Announcements</span>
+          <BarChart2 className="w-4 h-4 text-[var(--color-primary,#00F2FF)]" />
+          <span className="text-xs text-white font-medium">Analytics</span>
         </Link>
       </div>
     </div>

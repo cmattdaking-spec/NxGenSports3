@@ -36,8 +36,6 @@ const getAllowedUsers = (allUsers, currentUser) => {
     // Parents can message other parents, their own player, and the coaches of the teams their player is on
     if (myType === "parent") {
       if (theirType === "coach" || theirType === "admin") return true;
-      if (theirType === "parent") return true; // Allow all parents, as per original
-      if (theirType === "player" && currentUser?.child_ids?.includes(u.id)) return true;
       return false;
     }
     // Coaches can message Parents, Players, other coaches, and the Athletic Director
