@@ -40,6 +40,7 @@ export default function NxPlay() {
   const [parentTeamIds, setParentTeamIds] = useState([]);
   const [selectedOpponentId, setSelectedOpponentId] = useState("");
   const [gameRecord, setGameRecord] = useState(null);
+  const [gameLoadError, setGameLoadError] = useState("");
   const [liveTracker, setLiveTracker] = useState(null);
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
@@ -126,41 +127,51 @@ export default function NxPlay() {
   };
 
   const loadSelectedGame = async (currentUser = user) => {
-    if (!selectedOpponentId) {
+    try {
+      setGameLoadError("");
+
+      if (!selectedOpponentId) {
+        setGameRecord(null);
+        return;
+      }
+
+      const opponent = opponents.find(o => o.id === selectedOpponentId);
+      if (!opponent) {
+        setGameRecord(null);
+        return;
+      }
+
+      const currentIsParent = currentUser?.user_type === "parent" || currentUser?.parent_role;
+      const parentAllowed = !currentIsParent || parentTeamIds.includes(opponent.team_id || currentUser?.team_id);
+      if (!parentAllowed) {
+        setGameRecord(null);
+        return;
+      }
+
+      const records = await base44.entities.GameRecord.filter({ opponent_id: opponent.id });
+      if (records?.length > 0) {
+        setGameRecord(records[0]);
+        return;
+      }
+
+      const userCanCreate = COACH_ROLES.includes(currentUser?.coaching_role || currentUser?.role || "");
+      if (!userCanCreate) {
+        setGameRecord(null);
+        setGameLoadError("Live tracker has not been started for this game yet.");
+        return;
+      }
+
+      const created = await ensureGameRecord(opponent);
+      setGameRecord(created);
+    } catch (error) {
       setGameRecord(null);
-      return;
+      const msg = String(error?.message || "");
+      if (msg.toLowerCase().includes("permission denied")) {
+        setGameLoadError("You do not have permission to create a live game record. Ask a coach to start Game Tracker.");
+      } else {
+        setGameLoadError("Unable to load live game tracking right now.");
+      }
     }
-
-    const opponent = opponents.find(o => o.id === selectedOpponentId);
-    if (!opponent) {
-      setGameRecord(null);
-      return;
-    }
-
-    const currentIsParent = currentUser?.user_type === "parent" || currentUser?.parent_role;
-    const parentAllowed = !currentIsParent || parentTeamIds.includes(opponent.team_id || currentUser?.team_id);
-    if (!parentAllowed) {
-      setGameRecord(null);
-      return;
-    }
-
-    const records = await base44.entities.GameRecord.filter({ opponent_id: opponent.id });
-    if (records?.length > 0) {
-      setGameRecord(records[0]);
-      return;
-    }
-
-    const userCanCreate =
-      currentUser?.user_type === "parent" ||
-      COACH_ROLES.includes(currentUser?.coaching_role || currentUser?.role || "");
-
-    if (!userCanCreate) {
-      setGameRecord(null);
-      return;
-    }
-
-    const created = await ensureGameRecord(opponent);
-    setGameRecord(created);
   };
 
   useEffect(() => {
@@ -408,7 +419,7 @@ export default function NxPlay() {
 
       {selectedOpponent && !gameRecord && (
         <div className="bg-[#141414] border border-gray-800 rounded-xl p-8 text-center text-gray-500">
-          Live game record is not available yet for this matchup.
+          {gameLoadError || "Live game record is not available yet for this matchup."}
         </div>
       )}
 
