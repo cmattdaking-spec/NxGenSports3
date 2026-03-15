@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Pencil, X, Check } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SPORT_LABELS = {
   football:"Football", basketball:"Basketball", baseball:"Baseball", softball:"Softball",
@@ -51,19 +52,27 @@ export default function ADHealthTab({ healthRecords, players, onRefresh }) {
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <h2 className="text-white font-bold text-lg">Health Status</h2>
         <div className="flex gap-2 flex-wrap">
-          <select value={availFilter} onChange={e => setAvailFilter(e.target.value)}
-            className="bg-[#141414] border border-gray-700 rounded-xl px-3 py-1.5 text-white text-sm outline-none">
-            <option value="all">All Status</option>
-            <option value="out">Out</option>
-            <option value="limited">Limited</option>
-            <option value="day_to_day">Day-to-Day</option>
-            <option value="full">Full</option>
-          </select>
-          <select value={sportFilter} onChange={e => setSportFilter(e.target.value)}
-            className="bg-[#141414] border border-gray-700 rounded-xl px-3 py-1.5 text-white text-sm outline-none">
-            <option value="all">All Sports</option>
-            {sports.map(s => <option key={s} value={s}>{SPORT_LABELS[s] || s}</option>)}
-          </select>
+          <Select value={availFilter} onValueChange={setAvailFilter}>
+            <SelectTrigger className="bg-[#141414] border-gray-700 rounded-xl text-white text-sm min-w-32">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="out">Out</SelectItem>
+              <SelectItem value="limited">Limited</SelectItem>
+              <SelectItem value="day_to_day">Day-to-Day</SelectItem>
+              <SelectItem value="full">Full</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sportFilter} onValueChange={setSportFilter}>
+            <SelectTrigger className="bg-[#141414] border-gray-700 rounded-xl text-white text-sm min-w-36">
+              <SelectValue placeholder="All Sports" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sports</SelectItem>
+              {sports.map(s => <SelectItem key={s} value={s}>{SPORT_LABELS[s] || s}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -94,13 +103,17 @@ export default function ADHealthTab({ healthRecords, players, onRefresh }) {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-gray-500 text-xs mb-1 block">Availability</label>
-                        <select value={editData.availability} onChange={e => setEditData({...editData, availability: e.target.value})}
-                          className="w-full bg-[#111] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none">
-                          <option value="full">Full</option>
-                          <option value="limited">Limited</option>
-                          <option value="day_to_day">Day-to-Day</option>
-                          <option value="out">Out</option>
-                        </select>
+                        <Select value={editData.availability} onValueChange={value => setEditData({ ...editData, availability: value })}>
+                          <SelectTrigger className="w-full bg-[#111] border-gray-700 rounded-lg text-white text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="full">Full</SelectItem>
+                            <SelectItem value="limited">Limited</SelectItem>
+                            <SelectItem value="day_to_day">Day-to-Day</SelectItem>
+                            <SelectItem value="out">Out</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <label className="text-gray-500 text-xs mb-1 block">Est. Return</label>

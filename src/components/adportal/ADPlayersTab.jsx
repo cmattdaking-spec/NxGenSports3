@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Pencil, X, Check, ChevronDown, ChevronRight, FileText } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SPORT_LABELS = {
   football:"Football", basketball:"Basketball", baseball:"Baseball", softball:"Softball",
@@ -69,23 +70,31 @@ function PlayerRow({ player, docs, onSavePlayer, onSaveDocs }) {
             <div>
               <label className="text-gray-500 text-xs mb-1 block">Status</label>
               {editingPlayer ? (
-                <select value={pData.status} onChange={e => setPData({...pData, status: e.target.value})}
-                  className="w-full bg-[#111] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none">
-                  <option value="active">Active</option>
-                  <option value="injured">Injured</option>
-                  <option value="suspended">Suspended</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+                <Select value={pData.status} onValueChange={value => setPData({ ...pData, status: value })}>
+                  <SelectTrigger className="w-full bg-[#111] border-gray-700 rounded-lg text-white text-xs h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="injured">Injured</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
               ) : <p className="text-white text-sm capitalize">{player.status}</p>}
             </div>
             <div>
               <label className="text-gray-500 text-xs mb-1 block">Academic Eligible</label>
               {editingPlayer ? (
-                <select value={pData.academic_eligible ? "yes" : "no"} onChange={e => setPData({...pData, academic_eligible: e.target.value === "yes"})}
-                  className="w-full bg-[#111] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none">
-                  <option value="yes">Eligible</option>
-                  <option value="no">Ineligible</option>
-                </select>
+                <Select value={pData.academic_eligible ? "yes" : "no"} onValueChange={value => setPData({ ...pData, academic_eligible: value === "yes" })}>
+                  <SelectTrigger className="w-full bg-[#111] border-gray-700 rounded-lg text-white text-xs h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Eligible</SelectItem>
+                    <SelectItem value="no">Ineligible</SelectItem>
+                  </SelectContent>
+                </Select>
               ) : <p className={`text-sm ${player.academic_eligible !== false ? "text-green-400" : "text-red-400"}`}>{player.academic_eligible !== false ? "Eligible" : "Ineligible"}</p>}
             </div>
             <div>
@@ -159,11 +168,15 @@ export default function ADPlayersTab({ players, documents, onRefresh }) {
         <div className="flex gap-2 flex-wrap">
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search player…"
             className="bg-[#141414] border border-gray-700 rounded-xl px-3 py-1.5 text-white text-sm outline-none w-40" />
-          <select value={sportFilter} onChange={e => setSportFilter(e.target.value)}
-            className="bg-[#141414] border border-gray-700 rounded-xl px-3 py-1.5 text-white text-sm outline-none">
-            <option value="all">All Sports</option>
-            {sports.map(s => <option key={s} value={s}>{SPORT_LABELS[s] || s}</option>)}
-          </select>
+          <Select value={sportFilter} onValueChange={setSportFilter}>
+            <SelectTrigger className="bg-[#141414] border-gray-700 rounded-xl text-white text-sm min-w-36">
+              <SelectValue placeholder="All Sports" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sports</SelectItem>
+              {sports.map(s => <SelectItem key={s} value={s}>{SPORT_LABELS[s] || s}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

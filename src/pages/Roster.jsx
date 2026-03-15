@@ -7,6 +7,7 @@ import PlayerCard from "../components/roster/PlayerCard";
 import PlayerForm from "../components/roster/PlayerForm";
 import { useSport } from "@/components/SportContext";
 import { getSportConfig } from "@/components/SportConfig";
+import { useOptimisticList } from "@/components/hooks/useOptimisticList";
 const YEARS = ["Freshman","Sophomore","Junior","Senior","Grad"];
 const CAN_EDIT = ["admin","head_coach","athletic_director","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 
@@ -15,7 +16,7 @@ export default function Roster() {
   const cfg = getSportConfig(activeSport);
   const POSITIONS = Object.values(cfg.positions).flat().filter((v, i, a) => a.indexOf(v) === i);
   const UNITS = cfg.units;
-  const [players, setPlayers] = useState([]);
+  const { items: players, setItems: setPlayers, addOptimistic, updateOptimistic, removeOptimistic } = useOptimisticList([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -67,20 +68,34 @@ export default function Roster() {
   const save = async () => {
     setShowForm(false);
     if (editing) {
-      setPlayers(prev => prev.map(p => p.id === editing.id ? { ...p, ...form } : p));
-      await base44.entities.Player.update(editing.id, form);
+      const previous = players.find(p => p.id === editing.id);
+      updateOptimistic(editing.id, form);
+      try {
+        await base44.entities.Player.update(editing.id, form);
+      } catch {
+        if (previous) {
+          updateOptimistic(editing.id, previous);
+        }
+      }
     } else {
-      const tempId = `temp_${Date.now()}`;
-      setPlayers(prev => [...prev, { ...form, id: tempId, sport: activeSport }]);
-      const created = await base44.entities.Player.create({ ...form, sport: activeSport });
-      setPlayers(prev => prev.map(p => p.id === tempId ? created : p));
+      const tempId = addOptimistic({ ...form, sport: activeSport });
+      try {
+        const created = await base44.entities.Player.create({ ...form, sport: activeSport });
+        updateOptimistic(tempId, created);
+      } catch {
+        removeOptimistic(tempId);
+      }
     }
   };
 
   const remove = async (id) => {
     if (confirm("Remove this player from the roster?")) {
-      setPlayers(prev => prev.filter(p => p.id !== id));
-      await base44.entities.Player.delete(id);
+      removeOptimistic(id);
+      try {
+        await base44.entities.Player.delete(id);
+      } catch {
+        load();
+      }
     }
   };
 

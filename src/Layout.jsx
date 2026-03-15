@@ -187,6 +187,7 @@ function useMobileMeta(brandName) {
 
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const scrollPositions = useRef({});
@@ -201,6 +202,7 @@ export default function Layout({ children, currentPageName }) {
   const trackedStartRef = useRef(null);
   const usageEntityRef = useRef(null);
   const disableUsageTrackingRef = useRef(false);
+  const [mobileTabCache, setMobileTabCache] = useState({});
 
   useEffect(() => {
     if (currentPageName !== prevPage) {
@@ -456,7 +458,6 @@ export default function Layout({ children, currentPageName }) {
   );
 
   // Redirect root — ADs go to ADPortal, players/parents to their portal, everyone else to Dashboard
-  const location = useLocation();
   if (location.pathname === "/" || location.pathname === "") {
     const isAthlDir = effectiveRole === "athletic_director" || user?.role === "admin" && user?.coaching_role === "athletic_director";
     if (isPlayer) {
@@ -470,6 +471,30 @@ export default function Layout({ children, currentPageName }) {
     }
     return <Navigate to="/Dashboard" replace />;
   }
+
+  const mobileTabPages = [isAD ? "ADPortal" : "Dashboard", "NxLab", "Messages", "Settings"];
+  const isMobileTabPage = mobileTabPages.includes(currentPageName);
+  const showMobileBack = location.pathname.split("/").filter(Boolean).length > 1;
+
+  const titleMap = {
+    ...Object.fromEntries(navItems.map(i => [i.page, i.label])),
+    ...Object.fromEntries(playerNavItems.map(i => [i.page, i.label])),
+    ...Object.fromEntries(parentNavItems.map(i => [i.page, i.label])),
+    ADPortal: "AD Portal",
+    NxAnnouncement: "Announcements",
+    Messages: "NxMessages",
+    GameSchedule: "Schedule",
+  };
+
+  const mobilePageTitle = titleMap[currentPageName] || currentPageName.replace(/([A-Z])/g, " $1").trim();
+
+  useEffect(() => {
+    if (!isMobileTabPage) return;
+    setMobileTabCache(prev => {
+      if (prev[currentPageName]) return prev;
+      return { ...prev, [currentPageName]: children };
+    });
+  }, [isMobileTabPage, currentPageName]);
 
   const sportContextValue = {
     activeSport,
@@ -512,11 +537,23 @@ export default function Layout({ children, currentPageName }) {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[#111111] border-b border-gray-800 safe-area-top">
-          <button onClick={() => setMobileOpen(true)} className="text-gray-400 p-1">
-            <Menu className="w-5 h-5" />
-          </button>
-          <span className="text-white font-black text-lg">{brandPrefix}<span style={{ color: "var(--color-primary, #3b82f6)" }}>{brandSuffix}</span></span>
-          <div className="w-8" />
+          {showMobileBack ? (
+            <div className="flex items-center min-w-0 gap-2 flex-1">
+              <button onClick={() => navigate(-1)} className="text-gray-400 w-12 h-12 flex items-center justify-center" aria-label="Go back">
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <span className="text-white font-semibold text-base truncate">{mobilePageTitle}</span>
+            </div>
+          ) : (
+            <>
+              <button onClick={() => setMobileOpen(true)} className="text-gray-400 w-12 h-12 flex items-center justify-center" aria-label="Open menu">
+                <Menu className="w-5 h-5" />
+              </button>
+              <span className="text-white font-black text-lg">{brandPrefix}<span style={{ color: "var(--color-primary, #3b82f6)" }}>{brandSuffix}</span></span>
+              <div className="w-8" />
+            </>
+          )}
+          {showMobileBack && <div className="w-8" />}
         </header>
 
         {/* Mobile Bottom Tab Bar */}
@@ -549,7 +586,7 @@ export default function Layout({ children, currentPageName }) {
                     if (next) next.scrollTop = scrollPositions.current[page] || 0;
                   });
                 }}
-                className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-all"
+                className="flex-1 flex flex-col items-center justify-center min-h-[56px] py-2 gap-0.5 transition-all"
                 style={active ? { color: "var(--color-primary,#3b82f6)" } : { color: "#6b7280" }}>
                 <Icon className="w-5 h-5" />
                 <span className="text-[10px] font-medium">{label}</span>
@@ -577,9 +614,21 @@ export default function Layout({ children, currentPageName }) {
               </div>
             </div>
           )}
-          <div key={currentPageName} className="page-transition min-h-full">
-            {children}
-          </div>
+          {isMobileTabPage ? (
+            mobileTabPages.map((page) => {
+              if (!mobileTabCache[page]) return null;
+              const active = page === currentPageName;
+              return (
+                <section key={page} className={active ? "page-transition min-h-full block" : "min-h-full hidden"}>
+                  {mobileTabCache[page]}
+                </section>
+              );
+            })
+          ) : (
+            <div key={currentPageName} className="page-transition min-h-full">
+              {children}
+            </div>
+          )}
         </main>
       </div>
     </div>

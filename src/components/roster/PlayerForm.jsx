@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { getSportConfig } from "@/components/SportConfig";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const YEARS = ["Freshman","Sophomore","Junior","Senior","Grad"];
 const STATUSES = ["active","injured","suspended","inactive"];
@@ -66,28 +73,46 @@ export default function PlayerForm({ form, setForm, editing, onSave, onClose, ac
                 <I label="Last Name" required><input value={form.last_name || ""} onChange={e => setForm({...form, last_name: e.target.value})} className={inp} /></I>
                 <I label="Jersey #"><input value={form.number || ""} onChange={e => setForm({...form, number: e.target.value})} className={inp} /></I>
                 <I label="Year">
-                  <select value={form.year || ""} onChange={e => setForm({...form, year: e.target.value})} className={inp}>
-                    <option value="">Select...</option>
-                    {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                  </select>
+                  <Select value={form.year || undefined} onValueChange={(value) => setForm({ ...form, year: value })}>
+                    <SelectTrigger className={inp}>
+                      <SelectValue placeholder="Select..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </I>
                 <I label="Position" required>
-                  <select value={form.position || ""} onChange={e => setForm({...form, position: e.target.value})} className={inp}>
-                    <option value="">Select...</option>
-                    {POSITIONS.map(p => <option key={p} value={p}>{posLabel(p)}</option>)}
-                  </select>
+                  <Select value={form.position || undefined} onValueChange={(value) => setForm({ ...form, position: value })}>
+                    <SelectTrigger className={inp}>
+                      <SelectValue placeholder="Select..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {POSITIONS.map(p => <SelectItem key={p} value={p}>{posLabel(p)}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </I>
                 <I label="Unit" required>
-                  <select value={form.unit || UNITS[0]} onChange={e => setForm({...form, unit: e.target.value})} className={inp}>
-                    {UNITS.map(u => <option key={u} value={u}>{cfg.unitLabels[u] || u.replace("_"," ")}</option>)}
-                  </select>
+                  <Select value={form.unit || UNITS[0]} onValueChange={(value) => setForm({ ...form, unit: value })}>
+                    <SelectTrigger className={inp}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {UNITS.map(u => <SelectItem key={u} value={u}>{cfg.unitLabels[u] || u.replace("_"," ")}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </I>
                 <I label="Height"><input value={form.height || ""} onChange={e => setForm({...form, height: e.target.value})} placeholder='6&apos;2"' className={inp} /></I>
                 <I label="Weight (lbs)"><input type="number" value={form.weight || ""} onChange={e => setForm({...form, weight: +e.target.value})} className={inp} /></I>
                 <I label="Status">
-                  <select value={form.status || "active"} onChange={e => setForm({...form, status: e.target.value})} className={inp}>
-                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  <Select value={form.status || "active"} onValueChange={(value) => setForm({ ...form, status: value })}>
+                    <SelectTrigger className={inp}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </I>
                 <I label="Overall Rating (0-100)"><input type="number" min="0" max="100" value={form.overall_rating || ""} onChange={e => setForm({...form, overall_rating: +e.target.value})} className={inp} /></I>
                 <I label="Graduation Year"><input type="number" value={form.graduation_year || ""} onChange={e => setForm({...form, graduation_year: +e.target.value})} placeholder="2025" className={inp} /></I>
@@ -131,10 +156,18 @@ export default function PlayerForm({ form, setForm, editing, onSave, onClose, ac
               <I label="SAT Score"><input type="number" value={form.sat_score || ""} onChange={e => setForm({...form, sat_score: +e.target.value})} placeholder="400–1600" className={inp} /></I>
               <I label="ACT Score"><input type="number" value={form.act_score || ""} onChange={e => setForm({...form, act_score: +e.target.value})} placeholder="1–36" className={inp} /></I>
               <I label="Academic Eligible">
-                <select value={form.academic_eligible !== false ? "yes" : "no"} onChange={e => setForm({...form, academic_eligible: e.target.value === "yes"})} className={inp}>
-                  <option value="yes">Yes ✓</option>
-                  <option value="no">No ✗</option>
-                </select>
+                <Select
+                  value={form.academic_eligible !== false ? "yes" : "no"}
+                  onValueChange={(value) => setForm({ ...form, academic_eligible: value === "yes" })}
+                >
+                  <SelectTrigger className={inp}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes ✓</SelectItem>
+                    <SelectItem value="no">No ✗</SelectItem>
+                  </SelectContent>
+                </Select>
               </I>
             </div>
           )}
