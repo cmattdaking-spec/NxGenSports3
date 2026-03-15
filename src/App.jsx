@@ -10,10 +10,51 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { base44 } from '@/api/base44Client';
 import Login from './pages/Login';
 import ProfileVerify from './pages/ProfileVerify.jsx';
+import { isValidComponent, validatePages } from '@/lib/componentUtils';
 
 const { Pages, Layout, mainPage } = pagesConfig;
+
+// Validate all pages on startup and log any issues to the console
+validatePages(Pages);
+
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
-const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
+
+// Fallback component rendered when a page component is missing or invalid
+function FallbackPage({ pageName }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#121212]">
+      <div className="max-w-md w-full rounded-2xl border border-yellow-500/20 bg-[#141414] p-8 text-center">
+        <p className="text-xs font-semibold uppercase tracking-widest text-yellow-400">Page Error</p>
+        <h1 className="mt-3 text-2xl font-black text-white">Page Not Available</h1>
+        <p className="mt-3 text-sm leading-relaxed text-gray-400">
+          {pageName
+            ? `The page "${pageName}" could not be loaded because it is not a valid component.`
+            : 'This page could not be loaded because it is not a valid component.'}
+        </p>
+        <p className="mt-4 text-xs text-gray-500">Check the browser console for more details.</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Returns the page component for the given key, or a FallbackPage if invalid.
+ */
+function getSafePage(key) {
+  const component = Pages[key];
+  if (isValidComponent(component)) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[App] Rendering page: "${key}"`, component);
+    }
+    return component;
+  }
+  console.error(`[App] Page "${key}" is not a valid React component. Falling back to FallbackPage.`, component);
+  return () => <FallbackPage pageName={key} />;
+}
+
+const MainPage = isValidComponent(Pages[mainPageKey])
+  ? Pages[mainPageKey]
+  : () => <FallbackPage pageName={mainPageKey} />;
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -123,17 +164,20 @@ const AuthenticatedApp = () => {
           <MainPage />
         </LayoutWrapper>
       } />
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
-          }
-        />
-      ))}
+      {Object.entries(Pages).map(([path]) => {
+        const Page = getSafePage(path);
+        return (
+          <Route
+            key={path}
+            path={`/${path}`}
+            element={
+              <LayoutWrapper currentPageName={path}>
+                <Page />
+              </LayoutWrapper>
+            }
+          />
+        );
+      })}
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
