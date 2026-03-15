@@ -104,6 +104,8 @@ export default function GameSchedule() {
     setScoutModal(opponent);
   };
 
+  const isPlayer = user?.user_type === "player" || user?.coaching_role === "player";
+
   if (loading) return <LoadingScreen />;
 
   const monthName = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -122,10 +124,12 @@ export default function GameSchedule() {
           <h1 className="text-2xl font-black text-white capitalize">{activeSport.replace(/_/g," ")} <span style={{ color: "var(--color-primary,#f97316)" }}>Schedule</span></h1>
           <p className="text-gray-500 text-sm">{opponents.length} games scheduled</p>
         </div>
-        <Link to={createPageUrl("Scouting")}
-          className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
-          <Target className="w-4 h-4" /> Scouting
-        </Link>
+        {!isPlayer && (
+          <Link to={createPageUrl("Scouting")}
+            className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+            <Target className="w-4 h-4" /> Scouting
+          </Link>
+        )}
       </div>
 
       {/* Calendar */}
@@ -217,9 +221,11 @@ export default function GameSchedule() {
         <div className="text-center py-20">
           <Calendar className="w-12 h-12 text-gray-700 mx-auto mb-3" />
           <p className="text-gray-500 mb-3">No games scheduled yet.</p>
-          <Link to={createPageUrl("Scouting")} className="text-sm px-4 py-2 rounded-lg text-white" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
-            Add Opponents
-          </Link>
+          {!isPlayer && (
+            <Link to={createPageUrl("Scouting")} className="text-sm px-4 py-2 rounded-lg text-white" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+              Add Opponents
+            </Link>
+          )}
         </div>
       )}
 

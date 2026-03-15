@@ -6,6 +6,13 @@ import {
   Search, Megaphone, ChevronDown, ChevronUp, Shield
 } from "lucide-react";
 
+const MESSAGE_RESET_AT = new Date("2026-03-14T00:00:00.000Z");
+
+const isAfterMessageReset = (isoDate) => {
+  if (!isoDate) return false;
+  return new Date(isoDate) >= MESSAGE_RESET_AT;
+};
+
 // ─── SECURITY HELPERS ──────────────────────────────────────────────────────
 // Returns true only if user is a participant in this conversation
 const canAccessConvo = (convo, userEmail) => convo?.participants?.includes(userEmail);
@@ -19,17 +26,16 @@ const getAllowedUsers = (allUsers, currentUser) => {
     if (u.email === myEmail) return false;
     const theirType = u.user_type || "coach";
 
-    // Players can message their coaches, the athletic director, and their parent only
+    // Players can message their coaches, the athletic director, and teammates
     if (myType === "player") {
       if (theirType === "coach" || theirType === "admin") return true;
       if (theirType === "parent" && u.id === currentUser?.parent_id) return true;
+      if (theirType === "player") return true; // teammates on same team
       return false;
     }
     // Parents can message other parents, their own player, and the coaches of the teams their player is on
     if (myType === "parent") {
       if (theirType === "coach" || theirType === "admin") return true;
-      if (theirType === "parent") return true; // Allow all parents, as per original
-      if (theirType === "player" && currentUser?.child_ids?.includes(u.id)) return true;
       return false;
     }
     // Coaches can message Parents, Players, other coaches, and the Athletic Director
@@ -75,7 +81,7 @@ export default function Messages() {
   useEffect(() => {
     if (!activeConvo) return;
     const unsub = base44.entities.Message.subscribe((event) => {
-      if (event.data?.conversation_id === activeConvo.id) {
+      if (event.data?.conversation_id === activeConvo.id && isAfterMessageReset(event.data?.created_date)) {
         if (event.type === "create") setMessages(prev => prev.find(m => m.id === event.id) ? prev : [...prev, event.data]);
       }
     });
@@ -85,7 +91,7 @@ export default function Messages() {
   const loadConversations = async (u) => {
     const all = await base44.entities.Conversation.list("-updated_date");
     // Only show conversations this user is a participant of
-    const mine = all.filter(c => canAccessConvo(c, u?.email));
+    const mine = all.filter(c => canAccessConvo(c, u?.email) && isAfterMessageReset(c.updated_date || c.created_date));
     setConversations(mine);
     setLoading(false);
   };
@@ -95,7 +101,7 @@ export default function Messages() {
     if (!canAccessConvo(convo, user?.email)) return;
     setActiveConvo(convo);
     const msgs = await base44.entities.Message.filter({ conversation_id: convo.id }, "created_date");
-    setMessages(msgs);
+    setMessages(msgs.filter(msg => isAfterMessageReset(msg.created_date)));
   };
 
   const sendMessage = async (attachmentUrl = null, attachmentName = null) => {
@@ -228,7 +234,7 @@ export default function Messages() {
           </div>
           <p className="text-gray-500 text-xs">
             {myType === "coach" || myType === "admin" ? "Message coaches across all organizations, players & parents" :
-             myType === "player" ? "Message your coaches" :
+             myType === "player" ? "Message your teammates & coaches" :
              "Message coaches & other parents"}
           </p>
         </div>

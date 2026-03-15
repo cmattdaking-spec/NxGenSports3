@@ -56,11 +56,18 @@ export default function PlayerHealth() {
   useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); load(); }, [activeSport]);
 
   const canEdit = user && user.coaching_role !== "athletic_director" && user.role !== "athletic_director";
+  const isParent = user?.user_type === "parent" || !!user?.parent_role;
+  const linkedPlayerIds = [
+    user?.linked_player_id,
+    ...(Array.isArray(user?.linked_player_ids) ? user.linked_player_ids : []),
+    ...(Array.isArray(user?.child_ids) ? user.child_ids : []),
+  ].filter(Boolean);
+  const canEditFinal = canEdit && !isParent;
   const canSeeLoadAlerts = user && (LOAD_ALERT_ROLES.includes(user.coaching_role) || user.role === "admin");
 
   // Granular permission gate — trainers + HC/AD always get access; others need explicit grant
   const ALWAYS_MEDICAL = ["head_coach","associate_head_coach","athletic_director","trainer","strength_conditioning_coordinator"];
-  const hasMedicalAccess = user && (ALWAYS_MEDICAL.includes(user.coaching_role) || user.can_view_medical === true || user.role === "admin");
+  const hasMedicalAccess = user && (isParent || ALWAYS_MEDICAL.includes(user.coaching_role) || user.can_view_medical === true || user.role === "admin");
 
   if (user && !hasMedicalAccess) return (
     <div className="bg-[#0a0a0a] min-h-full flex items-center justify-center">
@@ -159,10 +166,22 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
     setRiskLoading(false);
   };
 
-  const filtered = records.filter(r => filterAvail === "all" || r.availability === filterAvail);
+  const visiblePlayers = isParent
+    ? players.filter(p => linkedPlayerIds.includes(p.id) || linkedPlayerIds.includes(p.player_id))
+    : players;
+
+  const visibleRecords = isParent
+    ? records.filter(r => linkedPlayerIds.includes(r.player_id))
+    : records;
+
+  const visibleStats = isParent
+    ? stats.filter(s => linkedPlayerIds.includes(s.player_id))
+    : stats;
+
+  const filtered = visibleRecords.filter(r => filterAvail === "all" || r.availability === filterAvail);
 
   const latestByPlayer = {};
-  records.forEach(r => {
+  visibleRecords.forEach(r => {
     if (!latestByPlayer[r.player_id] || new Date(r.date) > new Date(latestByPlayer[r.player_id].date))
       latestByPlayer[r.player_id] = r;
   });
@@ -178,7 +197,10 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
     <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6">
       {/* Tabs */}
       <div className="flex gap-1 mb-5 bg-[#141414] border border-gray-800 rounded-lg p-1 w-fit">
-        {[{ id: "health", label: "Health Records" }, { id: "dashboard", label: "Trainer Dashboard" }, { id: "performance", label: "Performance" }, { id: "medical", label: "Medical / Concussion" }].map(t => (
+        {[
+          { id: "health", label: "Health Records" },
+          ...(isParent ? [] : [{ id: "dashboard", label: "Trainer Dashboard" }, { id: "performance", label: "Performance" }, { id: "medical", label: "Medical / Concussion" }]),
+        ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${tab === t.id ? "text-white" : "text-gray-400 hover:text-white"}`}
             style={tab === t.id ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
@@ -187,7 +209,7 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
         ))}
       </div>
 
-      {tab === "medical" && <MedicalTab players={players} />}
+      {tab === "medical" && <MedicalTab players={visiblePlayers} />}
 
       {tab === "performance" && (
         <div className="mt-2">
@@ -195,7 +217,7 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
             <h1 className="text-2xl font-black text-white">Player <span style={{ color: "var(--color-primary,#f97316)" }}>Performance</span></h1>
             <p className="text-gray-500 text-sm">Metrics over time, training load vs performance, health correlations</p>
           </div>
-          <PerformanceTab stats={stats} records={records} players={players} />
+          <PerformanceTab stats={visibleStats} records={visibleRecords} players={visiblePlayers} />
         </div>
       )}
 
@@ -205,7 +227,7 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
             <h1 className="text-2xl font-black text-white">Trainer <span style={{ color: "var(--color-primary,#f97316)" }}>Dashboard</span></h1>
             <p className="text-gray-500 text-sm">Health analytics and load management overview</p>
           </div>
-          <TrainerDashboard records={records} players={players} workouts={workouts} />
+          <TrainerDashboard records={visibleRecords} players={visiblePlayers} workouts={workouts} />
         </div>
       )}
 
@@ -216,12 +238,12 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
           <p className="text-gray-500 text-sm">{records.length} health records</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={generateInjuryRiskReport} disabled={riskLoading}
+          {!isParent && <button onClick={generateInjuryRiskReport} disabled={riskLoading}
             className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 px-3 py-2 rounded-lg text-sm font-medium transition-all">
             <Brain className={`w-4 h-4 ${riskLoading ? "animate-pulse" : ""}`} />
             <span className="hidden md:inline">{riskLoading ? "Analyzing..." : "Nx Risk Analysis"}</span>
-          </button>
-          {canEdit && (
+          </button>}
+          {canEditFinal && (
             <button onClick={openAdd} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
               <Plus className="w-4 h-4" /> Log Health
             </button>
@@ -230,7 +252,7 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
       </div>
 
       {/* S&C Load Alerts - HC/Trainer only */}
-      {canSeeLoadAlerts && loadAlerts.length > 0 && (
+      {canSeeLoadAlerts && !isParent && loadAlerts.length > 0 && (
         <div className="mb-5 space-y-2">
           {loadAlerts.map((alert, i) => (
             <div key={i} className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 flex items-start gap-3">
@@ -311,7 +333,7 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      {canEdit && (
+                      {canEditFinal && (
                         <div className="flex items-center gap-2 justify-end">
                           <button onClick={() => openEdit(r)} className="text-gray-500 transition-colors" onMouseEnter={e => e.currentTarget.style.color="var(--color-primary,#f97316)"} onMouseLeave={e => e.currentTarget.style.color=""}><Edit className="w-4 h-4" /></button>
                           <button onClick={() => remove(r.id)} className="text-gray-500 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
@@ -327,7 +349,7 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
       </div>
 
       {/* Nx Injury Risk Modal */}
-      {showRiskModal && (
+      {!isParent && showRiskModal && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
           <div className="bg-[#141414] border border-red-500/30 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-gray-800">
@@ -466,7 +488,7 @@ Provide a detailed risk analysis for each at-risk player, load management recomm
                       <SelectValue placeholder="Select player..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {players.map(p => <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name} ({p.position})</SelectItem>)}
+                      {visiblePlayers.map(p => <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name} ({p.position})</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>

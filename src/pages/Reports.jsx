@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useSport } from "@/components/SportContext";
 import { getSportConfig } from "@/components/SportConfig";
-import { BarChart2, Activity, GraduationCap, TrendingUp, AlertTriangle, Brain, FileText } from "lucide-react";
+import { BarChart2, Activity, GraduationCap, TrendingUp, AlertTriangle, Brain } from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell
@@ -16,7 +16,7 @@ const TABS = [
   { id: "performance", label: "Performance Trends",  icon: TrendingUp },
   { id: "health",      label: "Health & Injuries",   icon: Activity },
   { id: "academic",    label: "Academic Compliance", icon: GraduationCap },
-  { id: "scouting",    label: "Scouting Reports",    icon: FileText },
+  { id: "scouting",    label: "Scouting Reports",    icon: BarChart2 },
 ];
 
 const AVAIL_COLORS = { full: "#22c55e", limited: "#f59e0b", out: "#ef4444", day_to_day: "#f97316" };
@@ -50,7 +50,7 @@ export default function Reports() {
   const filteredMetrics = selectedPlayer === "all" ? metrics : metrics.filter(m => m.player_name === selectedPlayer);
   const trendData = filteredMetrics
     .filter(m => m.game_date)
-    .sort((a, b) => new Date(a.game_date) - new Date(b.game_date))
+    .sort((a, b) => new Date(a.game_date).getTime() - new Date(b.game_date).getTime())
     .map(m => ({ date: m.game_date?.slice(5), grade: m.play_grade, speed: m.top_speed_mph, snaps: m.snap_count }));
 
   // ── Health data ───────────────────────────────────────────────────────────

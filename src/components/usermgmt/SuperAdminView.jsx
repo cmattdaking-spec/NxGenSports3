@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   Plus, Building2, X, ChevronDown, ChevronUp,
-  Search, Shield, AlertTriangle, RefreshCw, Trash2,
-  MapPin, Calendar, Users, Mail, Phone, Edit2, Check
+  Search, AlertTriangle, RefreshCw, Trash2,
+  MapPin, Calendar, Users, Mail, Phone, Edit2, Check, Ban, PauseCircle, PlayCircle
 } from "lucide-react";
 
 const SPORT_LABELS = {
@@ -32,7 +32,42 @@ const SUBSCRIPTION_TERMS = [
 const POC_ROLES = [
   { value: "head_coach", label: "Head Coach" },
   { value: "athletic_director", label: "Athletic Director" },
+  { value: "associate_head_coach", label: "Associate Head Coach" },
+  { value: "offensive_coordinator", label: "Offensive Coordinator" },
+  { value: "defensive_coordinator", label: "Defensive Coordinator" },
+  { value: "special_teams_coordinator", label: "Special Teams Coordinator" },
+  { value: "strength_conditioning_coordinator", label: "Strength & Conditioning Coordinator" },
+  { value: "position_coach", label: "Position Coach" },
+  { value: "trainer", label: "Trainer" },
 ];
+
+const ADMIN_PLATFORM_ROLES = [
+  "head_coach",
+  "athletic_director",
+  "associate_head_coach",
+  "offensive_coordinator",
+  "defensive_coordinator",
+  "special_teams_coordinator",
+  "strength_conditioning_coordinator",
+];
+
+const SCHOOL_STATUS_META = {
+  active: { label: "Active", badge: "bg-green-500/15 text-green-400", icon: PlayCircle },
+  suspended: { label: "Suspended", badge: "bg-yellow-500/15 text-yellow-400", icon: PauseCircle },
+  deactivated: { label: "Deactivated", badge: "bg-red-500/15 text-red-400", icon: Ban },
+};
+
+function getPlatformRoleForCoachingRole(role) {
+  return ADMIN_PLATFORM_ROLES.includes(role) ? "admin" : "user";
+}
+
+function splitFullName(fullName) {
+  const parts = (fullName || "").trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] || "",
+    lastName: parts.length > 1 ? parts.slice(1).join(" ") : "",
+  };
+}
 
 function generateSchoolCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -46,6 +81,7 @@ const EMPTY_FORM = {
   logo_url: "", primary_color: "#f97316", secondary_color: "",
   subscribed_sports: ["boys_football"], subscription_term: "annual",
   subscription_start: "", subscription_end: "",
+  status: "active",
   location_city: "", location_state: "",
   poc_name: "", poc_role: "head_coach", poc_email: "", poc_phone: "",
 };
@@ -72,7 +108,9 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [teamSearch, setTeamSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [deletingId, setDeletingId] = useState(null);
+  const [reinvitingId, setReinvitingId] = useState(null);
 
   const loadSchools = () => {
     setSchoolsLoading(true);
@@ -113,12 +151,53 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
       : [...p[target], s]
   }));
 
-  const filteredSchools = schools.filter(s =>
-    s.school_name?.toLowerCase().includes(teamSearch.toLowerCase()) ||
-    s.team_id?.toLowerCase().includes(teamSearch.toLowerCase()) ||
-    s.location_city?.toLowerCase().includes(teamSearch.toLowerCase()) ||
-    s.location_state?.toLowerCase().includes(teamSearch.toLowerCase())
-  );
+  const filteredSchools = schools.filter(s => {
+    const matchesSearch =
+      s.school_name?.toLowerCase().includes(teamSearch.toLowerCase()) ||
+      s.team_id?.toLowerCase().includes(teamSearch.toLowerCase()) ||
+      s.location_city?.toLowerCase().includes(teamSearch.toLowerCase()) ||
+      s.location_state?.toLowerCase().includes(teamSearch.toLowerCase());
+    const matchesStatus = statusFilter === "all" || (s.status || "active") === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const createPointOfContactInvite = async (school) => {
+    const { firstName, lastName } = splitFullName(school.poc_name);
+    const platformRole = getPlatformRoleForCoachingRole(school.poc_role);
+    const pendingInvites = await base44.entities.Invite.filter(
+      { team_id: school.team_id, email: school.poc_email, status: "pending" },
+      "-created_date",
+      50
+    );
+
+    await Promise.all(pendingInvites.map(invite => base44.entities.Invite.update(invite.id, { status: "expired" })));
+
+    await base44.entities.Invite.create({
+      email: school.poc_email.trim(),
+      team_id: school.team_id,
+      school_id: school.id,
+      school_name: school.school_name,
+      school_code: school.school_code,
+      coaching_role: school.poc_role,
+      assigned_sports: school.subscribed_sports || [],
+      assigned_positions: [],
+      assigned_phases: [],
+      status: "pending",
+      first_name: firstName,
+      last_name: lastName,
+      invited_by: "super_admin",
+      invite_type: "school_setup",
+      poc_name: school.poc_name,
+      poc_phone: school.poc_phone || "",
+      mascot: school.mascot || "",
+      subscribed_sports: school.subscribed_sports || [],
+      subscription_term: school.subscription_term,
+      location_city: school.location_city || "",
+      location_state: school.location_state || "",
+    });
+
+    await base44.users.inviteUser(school.poc_email.trim(), platformRole);
+  };
 
   const handleSubmit = async () => {
     if (!form.poc_email.trim() || !form.school_name.trim() || !form.poc_name.trim()) return;
@@ -127,6 +206,8 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
     try {
       const teamId = form.team_id.trim() || form.school_name.trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
       const schoolCode = generateSchoolCode();
+      const { firstName, lastName } = splitFullName(form.poc_name);
+      const platformRole = getPlatformRoleForCoachingRole(form.poc_role);
 
       const schoolData = {
         team_id: teamId,
@@ -140,6 +221,7 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         subscription_term: form.subscription_term,
         subscription_start: form.subscription_start || undefined,
         subscription_end: form.subscription_end || undefined,
+        status: form.status || "active",
         location_city: form.location_city.trim(),
         location_state: form.location_state.trim(),
         poc_name: form.poc_name.trim(),
@@ -161,6 +243,8 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
           assigned_positions: [],
           assigned_phases: [],
           status: "pending",
+          first_name: firstName,
+          last_name: lastName,
           invited_by: "super_admin",
           invite_type: "school_setup",
           poc_name: form.poc_name.trim(),
@@ -174,7 +258,7 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         base44.entities.School.create(schoolData),
       ]);
 
-      await base44.users.inviteUser(form.poc_email.trim(), "admin");
+      await base44.users.inviteUser(form.poc_email.trim(), platformRole);
       setMsg({ text: `School "${form.school_name}" created! Invite sent to ${form.poc_email}`, type: "success" });
       setForm(EMPTY_FORM);
       setShowAddSchool(false);
@@ -201,6 +285,7 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
       subscription_term: school.subscription_term || "annual",
       subscription_start: school.subscription_start || "",
       subscription_end: school.subscription_end || "",
+      status: school.status || "active",
       poc_name: school.poc_name || "",
       poc_role: school.poc_role || "head_coach",
       poc_email: school.poc_email || "",
@@ -214,13 +299,47 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
     setEditingId(null);
   };
 
+  const expirePendingInvitesForSchool = async (school) => {
+    const pendingInvites = await base44.entities.Invite.filter({ team_id: school.team_id, status: "pending" }, "-created_date", 200);
+    await Promise.all(pendingInvites.map(invite => base44.entities.Invite.update(invite.id, { status: "expired" })));
+  };
+
+  const updateSchoolStatus = async (school, nextStatus) => {
+    setSchools(prev => prev.map(s => s.id === school.id ? { ...s, status: nextStatus } : s));
+    try {
+      await base44.entities.School.update(school.id, { status: nextStatus });
+      if (nextStatus !== "active") {
+        await expirePendingInvitesForSchool(school);
+      }
+      setMsg({ text: `${school.school_name} marked ${nextStatus}.`, type: "success" });
+    } catch (err) {
+      setSchools(prev => prev.map(s => s.id === school.id ? { ...s, status: school.status || "active" } : s));
+      setMsg({ text: `Error: ${err.message}`, type: "error" });
+    }
+    setTimeout(() => setMsg({ text: "", type: "" }), 5000);
+  };
+
   const deleteSchool = async (school) => {
     if (!window.confirm(`Delete "${school.school_name}"? This removes the school record but does NOT delete user accounts.`)) return;
     setDeletingId(school.id);
+    await expirePendingInvitesForSchool(school);
     await base44.entities.School.delete(school.id);
     setSchools(prev => prev.filter(s => s.id !== school.id));
     setDeletingId(null);
     if (expandedId === school.id) setExpandedId(null);
+  };
+
+  const reinvitePointOfContact = async (school) => {
+    if (!school.poc_email?.trim()) return;
+    setReinvitingId(school.id);
+    try {
+      await createPointOfContactInvite(school);
+      setMsg({ text: `Point of contact re-invited for ${school.school_name}.`, type: "success" });
+    } catch (err) {
+      setMsg({ text: `Error: ${err.message}`, type: "error" });
+    }
+    setReinvitingId(null);
+    setTimeout(() => setMsg({ text: "", type: "" }), 5000);
   };
 
   // Only block on schools loading — user count/members are bonus info
@@ -260,15 +379,6 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         </div>
       </div>
 
-      {/* Super admin badge */}
-      <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-3 flex items-start gap-3">
-        <Shield className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-gray-400">
-          <span className="text-purple-400 font-semibold">Super Admin Mode — </span>
-          Create, edit, and remove school accounts. Each school is fully isolated with their own team data.
-        </p>
-      </div>
-
       {/* Feedback message */}
       {msg.text && (
         <div className={`rounded-xl p-3 text-sm ${msg.type === "success" ? "bg-green-500/10 border border-green-500/20 text-green-400" : "bg-red-500/10 border border-red-500/20 text-red-400"}`}>
@@ -290,11 +400,20 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
       )}
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-        <input type="text" value={teamSearch} onChange={e => setTeamSearch(e.target.value)}
-          placeholder="Search by name, ID, city, or state..."
-          className="w-full bg-[#141414] border border-gray-800 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm placeholder-gray-600 outline-none" />
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <input type="text" value={teamSearch} onChange={e => setTeamSearch(e.target.value)}
+            placeholder="Search by name, ID, city, or state..."
+            className="w-full bg-[#141414] border border-gray-800 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm placeholder-gray-600 outline-none" />
+        </div>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+          className="bg-[#141414] border border-gray-800 rounded-xl px-4 py-2.5 text-white text-sm outline-none md:w-52">
+          <option value="all">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+          <option value="deactivated">Deactivated</option>
+        </select>
       </div>
 
       {schoolsError && (
@@ -318,6 +437,8 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
           const isEditing = editingId === school.id;
           const memberCount = memberCountByTeam[school.team_id] || 0;
           const members = membersByTeam[school.team_id] || [];
+          const schoolStatus = school.status || "active";
+          const statusMeta = SCHOOL_STATUS_META[schoolStatus] || SCHOOL_STATUS_META.active;
 
           return (
             <div key={school.id} className="bg-[#141414] border border-gray-800 rounded-2xl overflow-hidden">
@@ -340,6 +461,7 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-white font-semibold text-sm">{school.school_name}</p>
                       {school.mascot && <span className="text-gray-500 text-xs">· {school.mascot}</span>}
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${statusMeta.badge}`}>{statusMeta.label}</span>
                       {school.subscription_term && (
                         <span className="text-xs bg-blue-500/15 text-blue-400 px-1.5 py-0.5 rounded capitalize">{school.subscription_term.replace("_", "-")}</span>
                       )}
@@ -393,10 +515,41 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
                     </div>
                   ) : (
                     <div className="p-5 space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                        {schoolStatus !== "active" && (
+                          <button onClick={() => updateSchoolStatus(school, "active")}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-500/15 text-green-400 hover:bg-green-500/20 transition-all">
+                            Activate School
+                          </button>
+                        )}
+                        {schoolStatus !== "suspended" && (
+                          <button onClick={() => updateSchoolStatus(school, "suspended")}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-yellow-500/15 text-yellow-400 hover:bg-yellow-500/20 transition-all">
+                            Suspend School
+                          </button>
+                        )}
+                        {schoolStatus !== "deactivated" && (
+                          <button onClick={() => updateSchoolStatus(school, "deactivated")}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/15 text-red-400 hover:bg-red-500/20 transition-all">
+                            Deactivate School
+                          </button>
+                        )}
+                        <button onClick={() => deleteSchool(school)} disabled={deletingId === school.id}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 text-gray-300 hover:bg-red-500/20 hover:text-red-400 transition-all disabled:opacity-40">
+                          Delete School
+                        </button>
+                      </div>
+
                       {/* POC */}
                       {(school.poc_name || school.poc_email) && (
                         <div>
-                          <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-2">Point of Contact</p>
+                          <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                            <p className="text-gray-500 text-xs font-semibold uppercase tracking-wider">Point of Contact</p>
+                            <button onClick={() => reinvitePointOfContact(school)} disabled={reinvitingId === school.id || !school.poc_email?.trim()}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/20 transition-all disabled:opacity-40">
+                              {reinvitingId === school.id ? "Sending..." : "Reinvite POC"}
+                            </button>
+                          </div>
                           <div className="flex flex-wrap gap-4">
                             {school.poc_name && <span className="text-white text-sm">{school.poc_name} <span className="text-gray-500">({school.poc_role?.replace("_"," ")})</span></span>}
                             {school.poc_email && <span className="text-gray-400 text-sm flex items-center gap-1"><Mail className="w-3 h-3" />{school.poc_email}</span>}
@@ -524,6 +677,13 @@ function SchoolForm({ form, setForm, onToggleSport, onSubmit, onCancel, submitti
           <Field label="Subscription End">
             <input type="date" value={form.subscription_end || ""} onChange={f("subscription_end")} className="field-input" />
           </Field>
+          <Field label="School Status">
+            <select value={form.status || "active"} onChange={f("status")} className="field-input">
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+              <option value="deactivated">Deactivated</option>
+            </select>
+          </Field>
         </div>
       </div>
 
@@ -566,7 +726,7 @@ function SchoolForm({ form, setForm, onToggleSport, onSubmit, onCancel, submitti
         <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2.5 flex items-start gap-2">
           <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
           <p className="text-yellow-300 text-xs">
-            An invitation will be sent to the point of contact. Once they accept, they can set up their account and invite their coaching staff. Only the subscribed sports will be visible to their team.
+            An invitation will be sent to the point of contact with platform access based on the role you assign here. Once they accept, they can set up their account and invite their coaching staff. Only the subscribed sports will be visible to their team.
           </p>
         </div>
       )}

@@ -30,7 +30,79 @@ function AcademicEligibilityContent() {
 
   // Granular permission gate
   const ALWAYS_ACADEMIC = ["head_coach","associate_head_coach","athletic_director"];
-  const hasAcademicAccess = user && (ALWAYS_ACADEMIC.includes(user.coaching_role) || user.can_view_academic === true || user.role === "admin");
+  const isParent = user?.user_type === "parent" || !!user?.parent_role;
+  const linkedPlayerIds = [
+    user?.linked_player_id,
+    ...(Array.isArray(user?.linked_player_ids) ? user.linked_player_ids : []),
+    ...(Array.isArray(user?.child_ids) ? user.child_ids : []),
+  ].filter(Boolean);
+  const hasAcademicAccess = user && (isParent || ALWAYS_ACADEMIC.includes(user.coaching_role) || user.can_view_academic === true || user.role === "admin");
+  const isPlayer = user?.user_type === "player" || user?.coaching_role === "player";
+
+  // Players see only their own eligibility record
+  if (user && isPlayer) {
+    if (loading) return (
+      <div className="bg-[#0a0a0a] min-h-full flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-t-[var(--color-primary,#f97316)] border-gray-700 rounded-full animate-spin" />
+      </div>
+    );
+    const myRecord = players.find(p => p.player_id === user.player_id);
+    const myDoc = myRecord ? docs.find(d => d.player_id === myRecord.id) : null;
+    const isEligible = myRecord ? myRecord.academic_eligible !== false : null;
+    return (
+      <div className="bg-[#0a0a0a] min-h-full p-4 md:p-6 space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: "var(--color-primary,#3b82f6)22" }}>
+            <GraduationCap className="w-5 h-5" style={{ color: "var(--color-primary,#3b82f6)" }} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-white">My <span style={{ color: "var(--color-primary,#3b82f6)" }}>Eligibility</span></h1>
+            <p className="text-gray-500 text-sm">Your academic eligibility status</p>
+          </div>
+        </div>
+        {!myRecord ? (
+          <div className="bg-[#141414] border border-gray-800 rounded-2xl p-8 text-center">
+            <GraduationCap className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-400 text-sm">Your eligibility record hasn't been set up yet.</p>
+            <p className="text-gray-600 text-xs mt-1">Contact your Head Coach or Athletic Director.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className={`bg-[#141414] border rounded-2xl p-6 flex items-center gap-4 ${isEligible ? "border-green-500/30" : "border-red-500/30"}`}>
+              {isEligible ? <CheckCircle className="w-10 h-10 text-green-400 flex-shrink-0" /> : <XCircle className="w-10 h-10 text-red-400 flex-shrink-0" />}
+              <div>
+                <p className="text-white font-bold text-lg">{myRecord.first_name} {myRecord.last_name}</p>
+                <p className={`text-sm font-semibold ${isEligible ? "text-green-400" : "text-red-400"}`}>
+                  {isEligible ? "Academically Eligible" : "Academically Ineligible"}
+                </p>
+                {myRecord.gpa != null && <p className="text-gray-500 text-xs mt-0.5">GPA: {myRecord.gpa.toFixed(2)}</p>}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className={`bg-[#141414] border rounded-xl p-4 ${myDoc?.physical_on_file ? "border-green-500/20" : "border-yellow-500/20"}`}>
+                <p className="text-gray-500 text-xs mb-1">Physical on File</p>
+                {myDoc?.physical_on_file
+                  ? <span className="text-green-400 text-sm font-semibold flex items-center gap-1"><CheckCircle className="w-4 h-4" /> On File</span>
+                  : <span className="text-yellow-400 text-sm font-semibold flex items-center gap-1"><AlertCircle className="w-4 h-4" /> Missing</span>}
+              </div>
+              <div className={`bg-[#141414] border rounded-xl p-4 ${myDoc?.waiver_signed ? "border-green-500/20" : "border-yellow-500/20"}`}>
+                <p className="text-gray-500 text-xs mb-1">Waiver Signed</p>
+                {myDoc?.waiver_signed
+                  ? <span className="text-green-400 text-sm font-semibold flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Signed</span>
+                  : <span className="text-yellow-400 text-sm font-semibold flex items-center gap-1"><AlertCircle className="w-4 h-4" /> Pending</span>}
+              </div>
+            </div>
+            {!isEligible && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                <p className="text-red-300 text-sm font-semibold mb-1">You are currently ineligible to participate.</p>
+                <p className="text-gray-500 text-xs">Contact your Athletic Director or Head Coach for details on restoring eligibility.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (user && !hasAcademicAccess) return (
     <div className="bg-[#0a0a0a] min-h-full flex items-center justify-center">
@@ -42,10 +114,17 @@ function AcademicEligibilityContent() {
     </div>
   );
 
+  const scopedPlayers = isParent
+    ? players.filter(p => linkedPlayerIds.includes(p.id) || linkedPlayerIds.includes(p.player_id))
+    : players;
+
+  const canEditEligibilityFinal = canEditEligibility && !isParent;
+  const canEditDocsFinal = canEditDocs && !isParent;
+
   const getDoc = (playerId) => docs.find(d => d.player_id === playerId);
 
   const toggleEligibility = async (player) => {
-    if (!canEditEligibility) return;
+    if (!canEditEligibilityFinal) return;
     setSaving(prev => ({ ...prev, [player.id]: true }));
     await base44.entities.Player.update(player.id, { academic_eligible: !player.academic_eligible });
     setPlayers(prev => prev.map(p => p.id === player.id ? { ...p, academic_eligible: !p.academic_eligible } : p));
@@ -53,7 +132,7 @@ function AcademicEligibilityContent() {
   };
 
   const toggleDocField = async (player, field, value) => {
-    if (!canEditDocs) return;
+    if (!canEditDocsFinal) return;
     const existing = getDoc(player.id);
     setSaving(prev => ({ ...prev, [`${player.id}_${field}`]: true }));
     const data = { player_id: player.id, player_name: `${player.first_name} ${player.last_name}`, [field]: value };
@@ -67,7 +146,7 @@ function AcademicEligibilityContent() {
     setSaving(prev => ({ ...prev, [`${player.id}_${field}`]: false }));
   };
 
-  const filtered = players.filter(p => {
+  const filtered = scopedPlayers.filter(p => {
     const name = `${p.first_name} ${p.last_name}`.toLowerCase();
     return name.includes(search.toLowerCase()) || p.position?.toLowerCase().includes(search.toLowerCase());
   });
@@ -75,8 +154,8 @@ function AcademicEligibilityContent() {
   const eligible = filtered.filter(p => p.academic_eligible !== false);
   const ineligible = filtered.filter(p => p.academic_eligible === false);
 
-  const physicalMissing = players.filter(p => !getDoc(p.id)?.physical_on_file).length;
-  const waiverMissing = players.filter(p => !getDoc(p.id)?.waiver_signed).length;
+  const physicalMissing = scopedPlayers.filter(p => !getDoc(p.id)?.physical_on_file).length;
+  const waiverMissing = scopedPlayers.filter(p => !getDoc(p.id)?.waiver_signed).length;
 
   if (loading) return (
     <div className="fixed inset-0 bg-[#0a0a0a] flex items-center justify-center z-50">
@@ -129,12 +208,12 @@ function AcademicEligibilityContent() {
       </div>
 
       {/* Permission banner */}
-      {!canEditEligibility && tab === "eligibility" && (
+      {!canEditEligibilityFinal && tab === "eligibility" && (
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 text-yellow-400 text-sm">
           View only — only Athletic Director or Head Coach can change eligibility status.
         </div>
       )}
-      {!canEditDocs && (tab === "physical" || tab === "waiver") && (
+      {!canEditDocsFinal && (tab === "physical" || tab === "waiver") && (
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 text-yellow-400 text-sm">
           View only — only Athletic Director or Head Coach can update physical/waiver status.
         </div>
@@ -164,7 +243,7 @@ function AcademicEligibilityContent() {
                     <th className="text-left text-gray-500 text-xs font-medium px-4 py-3">Year</th>
                     <th className="text-left text-gray-500 text-xs font-medium px-4 py-3">GPA</th>
                     <th className="text-center text-gray-500 text-xs font-medium px-4 py-3">Eligibility</th>
-                    {canEditEligibility && <th className="px-4 py-3 text-gray-500 text-xs font-medium text-center">Toggle</th>}
+                    {canEditEligibilityFinal && <th className="px-4 py-3 text-gray-500 text-xs font-medium text-center">Toggle</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -197,7 +276,7 @@ function AcademicEligibilityContent() {
                             </span>
                           )}
                         </td>
-                        {canEditEligibility && (
+                        {canEditEligibilityFinal && (
                           <td className="px-4 py-3 text-center">
                             <button onClick={() => toggleEligibility(p)} disabled={saving[p.id]}
                               className={`relative w-11 h-6 rounded-full transition-all duration-300 ${isEligible ? "bg-green-500" : "bg-gray-700"} disabled:opacity-50`}>
@@ -238,7 +317,7 @@ function AcademicEligibilityContent() {
                     <th className="text-center text-gray-500 text-xs font-medium px-4 py-3">Physical On File</th>
                     <th className="text-left text-gray-500 text-xs font-medium px-4 py-3">Physical Date</th>
                     <th className="text-left text-gray-500 text-xs font-medium px-4 py-3">Expiry</th>
-                    {canEditDocs && <th className="px-4 py-3 text-gray-500 text-xs font-medium text-center">Toggle</th>}
+                    {canEditDocsFinal && <th className="px-4 py-3 text-gray-500 text-xs font-medium text-center">Toggle</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -269,7 +348,7 @@ function AcademicEligibilityContent() {
                         </td>
                         <td className="px-4 py-3 text-gray-400 text-sm">{doc?.physical_date || "—"}</td>
                         <td className="px-4 py-3 text-gray-400 text-sm">{doc?.physical_expiry || "—"}</td>
-                        {canEditDocs && (
+                        {canEditDocsFinal && (
                           <td className="px-4 py-3 text-center">
                             <button onClick={() => toggleDocField(p, "physical_on_file", !hasPhysical)}
                               disabled={saving[`${p.id}_physical_on_file`]}
@@ -310,7 +389,7 @@ function AcademicEligibilityContent() {
                     <th className="text-left text-gray-500 text-xs font-medium px-4 py-3">Position</th>
                     <th className="text-center text-gray-500 text-xs font-medium px-4 py-3">Waiver Signed</th>
                     <th className="text-left text-gray-500 text-xs font-medium px-4 py-3">Date Signed</th>
-                    {canEditDocs && <th className="px-4 py-3 text-gray-500 text-xs font-medium text-center">Toggle</th>}
+                    {canEditDocsFinal && <th className="px-4 py-3 text-gray-500 text-xs font-medium text-center">Toggle</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -340,7 +419,7 @@ function AcademicEligibilityContent() {
                           )}
                         </td>
                         <td className="px-4 py-3 text-gray-400 text-sm">{doc?.waiver_date || "—"}</td>
-                        {canEditDocs && (
+                        {canEditDocsFinal && (
                           <td className="px-4 py-3 text-center">
                             <button onClick={() => toggleDocField(p, "waiver_signed", !hasSigned)}
                               disabled={saving[`${p.id}_waiver_signed`]}

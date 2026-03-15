@@ -7,8 +7,8 @@ import { getSportConfig } from "@/components/SportConfig";
 import {
   Users, BookOpen, Target, Activity, TrendingUp,
   ClipboardList, Crosshair, Zap, AlertTriangle,
-  ArrowRight, Shield, Sparkles, X, ChevronRight,
-  Star, Lock, Building2 } from
+  ArrowRight, Sparkles, X, ChevronRight,
+  Building2 } from
 "lucide-react";
 import SocialShareBar from "@/components/SocialShareBar";
 
@@ -172,34 +172,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Right: Badges */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 bg-[#141414] border border-gray-800 rounded-lg px-3 py-1.5">
-                <Lock className="w-3 h-3 text-green-400" />
-                <span className="text-green-400 text-xs font-semibold">Secure</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-[#141414] border border-gray-800 rounded-lg px-3 py-1.5">
-                <Shield className="w-3 h-3" style={{ color: "var(--color-primary,#f97316)" }} />
-                <span className="text-xs font-semibold" style={{ color: "var(--color-primary,#f97316)" }}>Account Isolated</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-[#141414] border border-gray-800 rounded-lg px-3 py-1.5">
-                <Sparkles className="w-3 h-3 text-purple-400" />
-                <span className="text-purple-400 text-xs font-semibold">Nx AI</span>
-              </div>
-            </div>
-
             {/* Right: Status + Social */}
             <div className="flex flex-col items-start md:items-end gap-2">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 bg-[#141414] border border-gray-800 rounded-lg px-3 py-1.5">
-                  <Lock className="w-3 h-3 text-green-400" />
-                  <span className="text-green-400 text-xs font-semibold">Secure</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-[#141414] border border-gray-800 rounded-lg px-3 py-1.5">
-                  <Shield className="w-3 h-3" style={{ color: "var(--color-primary,#f97316)" }} />
-                  <span className="text-xs font-semibold" style={{ color: "var(--color-primary,#f97316)" }}>Account Isolated</span>
-                </div>
-              </div>
               <SocialShareBar label="Share your program" />
             </div>
           </div>
@@ -365,21 +339,6 @@ export default function Dashboard() {
             <p className="text-gray-500 text-sm">No upcoming practices</p>
             }
           </div>
-        </div>
-
-        {/* Platform Feature Highlights */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {[
-          { icon: Shield, title: "Team Account Isolation", desc: "Your data is fully isolated per school. No cross-team data access.", color: "text-green-400", bg: "bg-green-500/10 border-green-500/20" },
-          { icon: Star, title: "Associate HC Program", desc: "Head Coach can designate 1 Associate HC with coordinator-level access.", color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20" },
-          { icon: Sparkles, title: "Nx AI Intelligence", desc: "Game plans, play variations, player development & in-game strategy.", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20" }].
-          map(({ icon: Icon, title, desc, color, bg }) =>
-          <div key={title} className={`border rounded-xl p-4 ${bg}`}>
-              <Icon className={`w-5 h-5 ${color} mb-2`} />
-              <p className={`font-semibold text-sm ${color}`}>{title}</p>
-              <p className="text-gray-500 text-xs mt-1">{desc}</p>
-            </div>
-          )}
         </div>
 
       </div>

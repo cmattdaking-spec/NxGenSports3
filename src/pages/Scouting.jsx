@@ -26,6 +26,8 @@ export default function Scouting() {
     load();
   }, []);
 
+  const isPlayer = user?.user_type === "player" || user?.coaching_role === "player";
+
   const { refreshing, pullDelta, handlers: pullHandlers } = usePullToRefresh(
     () => base44.entities.Opponent.list("-game_date").then(d => setOpponents(d))
   );
@@ -144,19 +146,23 @@ Generate a detailed JSON report with strategic insights.`,
               <ExternalLink className="w-3.5 h-3.5" /> Hudl
             </a>
           )}
-          <button onClick={() => { setDeepAnalysisTarget(opp.id); getDeepAnalysis(opp); }}
-            disabled={deepAnalysisLoading && deepAnalysisTarget === opp.id}
-            className="flex items-center gap-1 bg-teal-500/10 border border-teal-500/30 text-teal-400 px-2 py-1.5 rounded-lg text-xs hover:bg-teal-500/20 transition-all">
-            <Brain className={`w-3.5 h-3.5 ${deepAnalysisLoading && deepAnalysisTarget === opp.id ? "animate-pulse" : ""}`} />
-            <span className="hidden md:inline">{deepAnalysisLoading && deepAnalysisTarget === opp.id ? "Analyzing..." : "Nx Analysis"}</span>
-          </button>
-          <button onClick={() => getScoutReport(opp)} disabled={aiLoading && aiTarget === opp.id}
-            className="flex items-center gap-1 bg-orange-500/10 border border-orange-500/30 text-orange-400 px-2 py-1.5 rounded-lg text-xs hover:bg-orange-500/20 transition-all">
-            <Zap className={`w-3.5 h-3.5 ${aiLoading && aiTarget === opp.id ? "animate-pulse" : ""}`} />
-            <span className="hidden md:inline">{aiLoading && aiTarget === opp.id ? "Scouting..." : "Nx Scout"}</span>
-          </button>
-          <button onClick={() => openEdit(opp)} className="text-gray-500 hover:text-orange-500 p-1.5"><Edit className="w-4 h-4" /></button>
-          <button onClick={() => remove(opp.id)} className="text-gray-500 hover:text-red-400 p-1.5"><Trash2 className="w-4 h-4" /></button>
+          {!isPlayer && (
+            <button onClick={() => { setDeepAnalysisTarget(opp.id); getDeepAnalysis(opp); }}
+              disabled={deepAnalysisLoading && deepAnalysisTarget === opp.id}
+              className="flex items-center gap-1 bg-teal-500/10 border border-teal-500/30 text-teal-400 px-2 py-1.5 rounded-lg text-xs hover:bg-teal-500/20 transition-all">
+              <Brain className={`w-3.5 h-3.5 ${deepAnalysisLoading && deepAnalysisTarget === opp.id ? "animate-pulse" : ""}`} />
+              <span className="hidden md:inline">{deepAnalysisLoading && deepAnalysisTarget === opp.id ? "Analyzing..." : "Nx Analysis"}</span>
+            </button>
+          )}
+          {!isPlayer && (
+            <button onClick={() => getScoutReport(opp)} disabled={aiLoading && aiTarget === opp.id}
+              className="flex items-center gap-1 bg-orange-500/10 border border-orange-500/30 text-orange-400 px-2 py-1.5 rounded-lg text-xs hover:bg-orange-500/20 transition-all">
+              <Zap className={`w-3.5 h-3.5 ${aiLoading && aiTarget === opp.id ? "animate-pulse" : ""}`} />
+              <span className="hidden md:inline">{aiLoading && aiTarget === opp.id ? "Scouting..." : "Nx Scout"}</span>
+            </button>
+          )}
+          {!isPlayer && <button onClick={() => openEdit(opp)} className="text-gray-500 hover:text-orange-500 p-1.5"><Edit className="w-4 h-4" /></button>}
+          {!isPlayer && <button onClick={() => remove(opp.id)} className="text-gray-500 hover:text-red-400 p-1.5"><Trash2 className="w-4 h-4" /></button>}
           <button onClick={() => setExpanded(expanded === opp.id ? null : opp.id)} className="text-gray-500 hover:text-white p-1.5">
             {expanded === opp.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -193,15 +199,19 @@ Generate a detailed JSON report with strategic insights.`,
           {/* Linked Playbook Plays */}
           <div>
             <p className="text-gray-500 text-xs uppercase tracking-wider mb-2">Linked Game Plan Plays</p>
-            <PlayLinker
-              opponentId={opp.id}
-              opponentName={opp.name}
-              linkedPlays={opp.linked_play_ids || []}
-              onUpdate={async (ids) => {
-                await base44.entities.Opponent.update(opp.id, { linked_play_ids: ids });
-                load();
-              }}
-            />
+            {!isPlayer ? (
+              <PlayLinker
+                opponentId={opp.id}
+                opponentName={opp.name}
+                linkedPlays={opp.linked_play_ids || []}
+                onUpdate={async (ids) => {
+                  await base44.entities.Opponent.update(opp.id, { linked_play_ids: ids });
+                  load();
+                }}
+              />
+            ) : (
+              <p className="text-gray-600 text-xs">Coaching staff manage linked game plan plays.</p>
+            )}
           </div>
         </div>
       )}
@@ -236,9 +246,11 @@ Generate a detailed JSON report with strategic insights.`,
           <h1 className="text-2xl font-black text-white">Opponent <span style={{ color: "var(--color-primary,#f97316)" }}>Scouting</span></h1>
           <p className="text-gray-500 text-sm">{opponents.length} opponents · Powered by Nx Intelligence</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
-          <Plus className="w-4 h-4" /> Add Opponent
-        </button>
+        {!isPlayer && (
+          <button onClick={openAdd} className="flex items-center gap-2 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+            <Plus className="w-4 h-4" /> Add Opponent
+          </button>
+        )}
       </div>
 
       {opponents.length === 0 && (

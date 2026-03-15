@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { UserPlus, Pencil, Trash2, X, Check, ChevronDown } from "lucide-react";
+import { UserPlus, Pencil, Trash2, X, Check } from "lucide-react";
 import PendingInvites from "@/components/usermgmt/PendingInvites";
+import InviteForm from "@/components/usermgmt/InviteForm";
 
 const SPORT_LABELS = {
   football:"Football", girls_flag_football:"Girls Flag Football",
@@ -27,15 +28,17 @@ const COACHING_ROLES = [
 
 export default function ADStaffTab({ staff, onRefresh }) {
   const [teamId, setTeamId] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const [showInvite, setShowInvite] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(u => setTeamId(u?.team_id)).catch(() => {});
+    base44.auth.me().then(u => {
+      setCurrentUser(u);
+      setTeamId(u?.team_id);
+    }).catch(() => {});
   }, []);
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
-  const [inviteForm, setInviteForm] = useState({ email: "", coaching_role: "position_coach", assigned_sports: ["boys_football"] });
-  const [inviting, setInviting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
@@ -58,29 +61,6 @@ export default function ADStaffTab({ staff, onRefresh }) {
     onRefresh();
   };
 
-  const sendInvite = async () => {
-    if (!inviteForm.email) return;
-    setInviting(true);
-    const me = await base44.auth.me();
-    await base44.functions.invoke("sendInvite", {
-      email: inviteForm.email,
-      coaching_role: inviteForm.coaching_role,
-      team_id: me.team_id,
-      school_name: me.school_name,
-      school_code: me.school_code,
-      assigned_sports: inviteForm.assigned_sports,
-      invite_type: "staff",
-    });
-    setInviting(false);
-    setShowInvite(false);
-    setInviteForm({ email: "", coaching_role: "position_coach", assigned_sports: ["boys_football"] });
-    onRefresh();
-  };
-
-  const toggleSport = (sport, arr, setArr) => {
-    setArr(arr.includes(sport) ? arr.filter(s => s !== sport) : [...arr, sport]);
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -94,40 +74,15 @@ export default function ADStaffTab({ staff, onRefresh }) {
       {/* Invite Modal */}
       {showInvite && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={() => setShowInvite(false)}>
-          <div className="bg-[#1a1a1a] border border-gray-700 rounded-2xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-white font-bold text-lg">Invite Staff Member</h3>
-              <button onClick={() => setShowInvite(false)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="text-gray-400 text-xs mb-1 block">Email Address</label>
-                <input type="email" value={inviteForm.email} onChange={e => setInviteForm({...inviteForm, email: e.target.value})}
-                  className="w-full bg-[#111] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm focus:border-cyan-500 outline-none" placeholder="coach@school.edu" />
-              </div>
-              <div>
-                <label className="text-gray-400 text-xs mb-1 block">Role</label>
-                <select value={inviteForm.coaching_role} onChange={e => setInviteForm({...inviteForm, coaching_role: e.target.value})}
-                  className="w-full bg-[#111] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm focus:border-cyan-500 outline-none capitalize">
-                  {COACHING_ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-gray-400 text-xs mb-2 block">Assigned Sports</label>
-                <div className="flex flex-wrap gap-2">
-                  {ALL_SPORTS.map(s => (
-                    <button key={s} onClick={() => toggleSport(s, inviteForm.assigned_sports, arr => setInviteForm({...inviteForm, assigned_sports: arr}))}
-                      className={`px-2 py-1 rounded-lg text-xs transition-all ${inviteForm.assigned_sports.includes(s) ? "bg-cyan-500 text-black font-bold" : "bg-gray-800 text-gray-400 hover:bg-gray-700"}`}>
-                      {SPORT_LABELS[s]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <button onClick={sendInvite} disabled={inviting || !inviteForm.email}
-                className="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-sm transition-all disabled:opacity-50">
-                {inviting ? "Sending…" : "Send Invite"}
-              </button>
-            </div>
+          <div className="w-full max-w-2xl mx-4" onClick={e => e.stopPropagation()}>
+            <InviteForm
+              user={currentUser}
+              onClose={() => setShowInvite(false)}
+              onInvited={() => {
+                setShowInvite(false);
+                onRefresh();
+              }}
+            />
           </div>
         </div>
       )}

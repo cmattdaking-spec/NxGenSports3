@@ -15,6 +15,73 @@ const SPORT_OPTIONS = [
   { id: "wrestling", label: "Wrestling" },
 ];
 
+const LEGAL_UPDATED = "March 14, 2026";
+
+function LegalDisclosure() {
+  return (
+    <div className="space-y-2">
+      <details className="rounded-xl border border-gray-800 bg-[#151515] px-3 py-2">
+        <summary className="cursor-pointer list-none text-xs font-semibold text-[#E8E8E8]">
+          Terms & Conditions
+        </summary>
+        <div className="mt-2 space-y-2 text-[11px] leading-relaxed text-[#9CA3AF]">
+          <p>Last updated: {LEGAL_UPDATED}</p>
+          <p>
+            NxGenSports provides school-managed access to team operations, athlete development, communication,
+            scheduling, and performance data. You may use the platform only for legitimate school, team, athlete,
+            or family participation authorized by your program.
+          </p>
+          <p>
+            You are responsible for keeping your login credentials secure, using the platform lawfully, and keeping
+            profile information accurate. You may not attempt to access records outside your assigned school, sport,
+            team, or role, and you may not copy, scrape, resell, or misuse confidential athlete or staff data.
+          </p>
+          <p>
+            Schools and program administrators control role assignments, access approvals, and roster affiliations.
+            NxGenSports may suspend or remove access when an account is inactive, unauthorized, misassigned,
+            disruptive, or used in violation of school policy, law, or these terms.
+          </p>
+          <p>
+            The platform is provided on an as-available basis. While NxGenSports uses commercially reasonable
+            safeguards, users and schools remain responsible for reviewing critical information before acting on it,
+            especially for medical, eligibility, and competition decisions.
+          </p>
+        </div>
+      </details>
+
+      <details className="rounded-xl border border-gray-800 bg-[#151515] px-3 py-2">
+        <summary className="cursor-pointer list-none text-xs font-semibold text-[#E8E8E8]">
+          Privacy Policy
+        </summary>
+        <div className="mt-2 space-y-2 text-[11px] leading-relaxed text-[#9CA3AF]">
+          <p>Last updated: {LEGAL_UPDATED}</p>
+          <p>
+            NxGenSports collects account details, school and team affiliation data, athlete participation data,
+            communication records, and operational usage data needed to deliver the platform and enforce access
+            controls. Information is used to authenticate users, connect them to the correct program, support product
+            features, protect the service, and respond to support requests.
+          </p>
+          <p>
+            Data is shared with your school or program administrators based on your assigned role and with service
+            providers that help operate the platform. NxGenSports does not sell personal information. Access is limited
+            by school, sport, team, and role wherever the platform supports that restriction.
+          </p>
+          <p>
+            Users should submit only information that is necessary for program participation. Sensitive health,
+            academic, and athlete-performance information should be handled according to school policy and applicable
+            law. If you believe your account is linked to the wrong school or team, contact your administrator
+            immediately so access can be corrected.
+          </p>
+          <p>
+            To request profile corrections or report privacy concerns, contact your Athletic Director, Head Coach, or
+            NxGenSports support through your organization&apos;s normal support channel.
+          </p>
+        </div>
+      </details>
+    </div>
+  );
+}
+
 export default function Login() {
   const { navigateToLogin } = useAuth();
   const [isSignUpMode, setIsSignUpMode] = useState(false);
@@ -336,9 +403,11 @@ export default function Login() {
                 For access issues, contact your Athletic Director or NxGenSports support.
               </p>
               <p>
-                By continuing, you agree to the platform's privacy and security policies.
+                By continuing, you agree to the NxGenSports Terms & Conditions and Privacy Policy below.
               </p>
             </div>
+
+            <LegalDisclosure />
           </div>
         </div>
       </div>
@@ -430,9 +499,11 @@ export default function Login() {
               For access issues, contact your Athletic Director or NxGenSports support.
             </p>
             <p>
-              By continuing, you agree to the platform's privacy and security policies.
+              By continuing, you agree to the NxGenSports Terms & Conditions and Privacy Policy below.
             </p>
           </div>
+
+          <LegalDisclosure />
         </div>
       </div>
     </div>

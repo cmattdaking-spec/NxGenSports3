@@ -5,7 +5,7 @@ import SuperAdminView from "@/components/usermgmt/SuperAdminView";
 import InviteForm from "@/components/usermgmt/InviteForm";
 import PendingInvites from "@/components/usermgmt/PendingInvites";
 import {
-  Users, Shield, Mail, Edit2, Check, X, UserPlus, Lock, Star,
+  Users, Mail, Edit2, Check, X, UserPlus, Lock, Star,
   Search, Trash2, RefreshCw, Building2, Brain, ChevronDown, ChevronUp
 } from "lucide-react";
 
@@ -210,33 +210,6 @@ function UserManagementContent() {
           </button>
         </div>
       </div>
-
-      {/* Account isolation notice */}
-      <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3 flex items-start gap-3">
-        <Shield className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-gray-400">
-          <span className="text-blue-400 font-semibold">Account Isolation Active — </span>
-          All data is scoped to <span className="text-white">{user?.school_name || "your school"}</span>.
-          {isAD && <span className="text-yellow-400 ml-1">You can view and manage all sports as Athletic Director.</span>}
-        </p>
-      </div>
-
-      {/* AC Banner */}
-      {currentAC && (
-        <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-3 flex items-center gap-3">
-          <Star className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-          <p className="text-xs text-gray-300">
-            <span className="text-cyan-400 font-semibold">Associate Head Coach: </span>
-            {currentAC.full_name || currentAC.email} — coordinator-level access.
-          </p>
-          {isHeadCoach && (
-            <button onClick={() => toggleAC(currentAC)} disabled={acDesignating}
-              className="ml-auto text-xs text-gray-500 hover:text-red-400 px-2 py-1 rounded border border-gray-700 transition-colors">
-              Remove AC
-            </button>
-          )}
-        </div>
-      )}
 
       {/* Invite Form */}
       {showInvite && (

@@ -94,6 +94,23 @@ const SPORT_LABELS = {
   boys_lacrosse:      "Boys Lacrosse",      girls_lacrosse:     "Girls Lacrosse",
 };
 
+const PLAYER_USAGE_PAGE_MAP = {
+  NxLab: "nxlab_film",
+  GamePlan: "game_plan",
+  Practice: "practice_plan",
+  Playbook: "playbook",
+  StrengthConditioning: "my_sc",
+  Recruiting: "recruiting",
+  PerformanceAnalytics: "analytics",
+};
+
+const PLAYER_USAGE_ENTITY_CANDIDATES = [
+  "PlayerAreaUsage",
+  "PlayerUsageTime",
+  "PlayerEngagement",
+  "PlayerTimeLog",
+];
+
 // ─── CLEANED UP NAV ─────────────────────────────────────────────────────────
 // Coach/Admin nav
 const navItems = [
@@ -116,27 +133,26 @@ const navItems = [
 
 // Player nav
 const playerNavItems = [
-  { label: "Home",           page: "PlayerPortal",         icon: Home },
+  { label: "Home",           page: "NxAnnouncement",       icon: Home },
+  { label: "Announcements",  page: "NxAnnouncement",       icon: MessageSquare },
   { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays },
-  { label: "Roster",         page: "Roster",               icon: Users },
   { label: "Eligibility",    page: "AcademicEligibility",  icon: GraduationCap },
   { label: "Health",         page: "PlayerHealth",         icon: Activity },
-  { label: "NxLab",          page: "NxLab",                icon: Clapperboard },
-  { label: "My S&C",         page: "StrengthConditioning", icon: Dumbbell },
-  { label: "Recruiting",     page: "Recruiting",           icon: Star },
-  { label: "Analytics",      page: "PerformanceAnalytics", icon: BarChart2 },
   { label: "NxMessages",     page: "Messages",             icon: MessageSquare },
-  { label: "Announcements",  page: "NxAnnouncement",       icon: MessageSquare },
 ];
 
 // Parent nav
 const parentNavItems = [
-  { label: "Home",           page: "ParentPortal",         icon: Home },
+  { label: "Home",           page: "NxAnnouncement",       icon: Home },
+  { label: "Announcements",  page: "NxAnnouncement",       icon: MessageSquare },
   { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays },
   { label: "Roster",         page: "Roster",               icon: Users },
-  { label: "My Player Health", page: "PlayerHealth",       icon: Activity },
+  { label: "Eligibility",    page: "AcademicEligibility",  icon: GraduationCap },
+  { label: "Health",         page: "PlayerHealth",         icon: Activity },
+  { label: "Film",           page: "FilmRoom",             icon: Clapperboard },
+  { label: "Recruiting",     page: "Recruiting",           icon: Star },
   { label: "NxMessages",     page: "Messages",             icon: MessageSquare },
-  { label: "Announcements",  page: "NxAnnouncement",       icon: MessageSquare },
+  { label: "Analytics",      page: "PerformanceAnalytics", icon: BarChart2 },
 ];
 
 // Inject critical mobile meta tags at runtime (since index.html can't be edited directly)
@@ -176,6 +192,10 @@ export default function Layout({ children, currentPageName }) {
   const [activeSport, setActiveSport] = useState("football");
   const [showSportPicker, setShowSportPicker] = useState(false);
   const [assignedSports, setAssignedSports] = useState(["football"]);
+  const trackedPageRef = useRef(null);
+  const trackedStartRef = useRef(null);
+  const usageEntityRef = useRef(null);
+  const disableUsageTrackingRef = useRef(false);
 
   useEffect(() => {
     if (currentPageName !== prevPage) {
@@ -244,6 +264,88 @@ export default function Layout({ children, currentPageName }) {
     setShowSportPicker(false);
     if (user) await base44.auth.updateMe({ active_sport: sport });
   };
+
+  const persistPlayerUsage = async (pageName, startMs, endMs) => {
+    const areaKey = PLAYER_USAGE_PAGE_MAP[pageName];
+    if (!areaKey || !user || disableUsageTrackingRef.current) return;
+
+    const durationSeconds = Math.floor((endMs - startMs) / 1000);
+    if (durationSeconds < 10) return;
+
+    const payload = {
+      area_key: areaKey,
+      page: pageName,
+      duration_seconds: durationSeconds,
+      player_id: user.id,
+      player_name: user.full_name || user.email || "Unknown Player",
+      team_id: user.team_id || null,
+      school_id: user.school_id || null,
+      school_name: user.school_name || null,
+      sport: activeSport,
+      started_at: new Date(startMs).toISOString(),
+      ended_at: new Date(endMs).toISOString(),
+    };
+
+    const candidates = usageEntityRef.current
+      ? [usageEntityRef.current]
+      : PLAYER_USAGE_ENTITY_CANDIDATES;
+
+    for (const entityName of candidates) {
+      try {
+        const entity = base44.entities?.[entityName];
+        if (!entity || typeof entity.create !== "function") continue;
+        await entity.create(payload);
+        usageEntityRef.current = entityName;
+        return;
+      } catch {
+        // Try next candidate entity name.
+      }
+    }
+
+    if (!usageEntityRef.current) {
+      disableUsageTrackingRef.current = true;
+    }
+  };
+
+  useEffect(() => {
+    if (!user || user.user_type !== "player") {
+      trackedPageRef.current = null;
+      trackedStartRef.current = null;
+      return;
+    }
+
+    const now = Date.now();
+    if (trackedPageRef.current && trackedStartRef.current != null && trackedPageRef.current !== currentPageName) {
+      persistPlayerUsage(trackedPageRef.current, trackedStartRef.current, now);
+    }
+
+    trackedPageRef.current = currentPageName;
+    trackedStartRef.current = now;
+  }, [currentPageName, user?.id, user?.user_type]);
+
+  useEffect(() => {
+    const flushCurrentPageUsage = () => {
+      if (!user || user.user_type !== "player") return;
+      if (!trackedPageRef.current || trackedStartRef.current == null) return;
+      const now = Date.now();
+      persistPlayerUsage(trackedPageRef.current, trackedStartRef.current, now);
+      trackedStartRef.current = now;
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        flushCurrentPageUsage();
+      }
+    };
+
+    window.addEventListener("beforeunload", flushCurrentPageUsage);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("beforeunload", flushCurrentPageUsage);
+    };
+  }, [user?.id, user?.user_type, activeSport]);
 
   const filteredNav = user?.role === "super_admin"
     ? [{ label: "Teams", page: "UserManagement", icon: UserCog, roles: null }]
@@ -353,10 +455,10 @@ export default function Layout({ children, currentPageName }) {
   if (location.pathname === "/" || location.pathname === "") {
     const isAthlDir = effectiveRole === "athletic_director" || user?.role === "admin" && user?.coaching_role === "athletic_director";
     if (isPlayer) {
-      return <Navigate to={createPageUrl("PlayerPortal")} replace />;
+      return <Navigate to={createPageUrl("NxAnnouncement")} replace />;
     }
     if (isParent) {
-      return <Navigate to={createPageUrl("ParentPortal")} replace />;
+      return <Navigate to={createPageUrl("NxAnnouncement")} replace />;
     }
     if (isAD && !isHeadCoach) {
       return <Navigate to={createPageUrl("ADPortal")} replace />;

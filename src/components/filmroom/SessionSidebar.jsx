@@ -2,7 +2,7 @@ import { Plus, Film, Trash2, Link as LinkIcon, Upload, X } from "lucide-react";
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 
-export default function SessionSidebar({ sessions, activeId, onSelect, onCreate, onDelete }) {
+export default function SessionSidebar({ sessions, activeId, onSelect, onCreate, onDelete, canAddSession = true, canDeleteSession = true }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: "", video_url: "", opponent: "", game_date: "", unit: "all" });
   const [uploadMode, setUploadMode] = useState("url"); // "url" | "file"
@@ -37,11 +37,13 @@ export default function SessionSidebar({ sessions, activeId, onSelect, onCreate,
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-white font-semibold text-sm">Film Sessions</h3>
-        <button onClick={() => setShowForm(f => !f)}
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-white"
-          style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
-          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-        </button>
+        {canAddSession && (
+          <button onClick={() => setShowForm(f => !f)}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-white"
+            style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+            {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -132,10 +134,12 @@ export default function SessionSidebar({ sessions, activeId, onSelect, onCreate,
               {s.tag_count > 0 && (
                 <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-500">{s.tag_count}</span>
               )}
-              <button onClick={e => { e.stopPropagation(); onDelete(s.id); }}
-                className="opacity-0 group-hover:opacity-100 text-gray-700 hover:text-red-400 transition-all">
-                <Trash2 className="w-3 h-3" />
-              </button>
+              {canDeleteSession && (
+                <button onClick={e => { e.stopPropagation(); onDelete(s.id); }}
+                  className="opacity-0 group-hover:opacity-100 text-gray-700 hover:text-red-400 transition-all">
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
             </div>
           </button>
         ))}
