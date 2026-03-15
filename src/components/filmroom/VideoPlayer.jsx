@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 
-function getEmbedUrl(url) {
+export function getEmbedUrl(url) {
   if (!url) return null;
   // YouTube
   const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -15,7 +15,7 @@ function getEmbedUrl(url) {
   return url;
 }
 
-function isIframe(url) {
+export function isIframe(url) {
   if (!url) return false;
   return url.includes("youtube") || url.includes("youtu.be") || url.includes("vimeo") || url.includes("hudl");
 }
