@@ -223,6 +223,23 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         poc_phone: form.poc_phone.trim(),
       };
 
+      const newSchool = await base44.entities.School.create(schoolData);
+
+      await base44.functions.invoke("sendInvite", {
+        email: form.poc_email.trim(),
+        team_id: teamId,
+        school_id: newSchool?.id || null,
+        school_name: form.school_name.trim(),
+        school_code: schoolCode,
+        coaching_role: form.poc_role,
+        assigned_sports: form.subscribed_sports,
+        assigned_positions: [],
+        assigned_phases: [],
+        first_name: firstName,
+        last_name: lastName,
+        invite_type: "school_setup",
+      });
+
       await Promise.all([
         base44.functions.invoke("sendInvite", {
           email: form.poc_email.trim(),
