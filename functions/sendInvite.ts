@@ -133,11 +133,12 @@ Deno.serve(async (req) => {
     // Determine platform role — HC and AD get admin, everyone else gets user
     const platformRole = ['head_coach', 'athletic_director'].includes(effectiveCoachingRole) ? 'admin' : 'user';
 
-    // Send the platform invite using the calling user's token (they must be admin)
-    await base44.users.inviteUser(email.trim(), platformRole);
+    // Send the platform invite using asServiceRole (has platform-level permissions)
+    await base44.asServiceRole.users.inviteUser(email.trim(), platformRole);
 
     return Response.json({ success: true, player_id: player_id || null });
   } catch (error) {
+    console.error('sendInvite error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
