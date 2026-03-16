@@ -238,30 +238,13 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         first_name: firstName,
         last_name: lastName,
         invite_type: "school_setup",
+        poc_phone: form.poc_phone.trim(),
+        mascot: form.mascot.trim(),
+        subscribed_sports: form.subscribed_sports,
+        subscription_term: form.subscription_term,
+        location_city: form.location_city.trim(),
+        location_state: form.location_state.trim(),
       });
-
-      await Promise.all([
-        base44.functions.invoke("sendInvite", {
-          email: form.poc_email.trim(),
-          team_id: teamId,
-          school_name: form.school_name.trim(),
-          school_code: schoolCode,
-          coaching_role: form.poc_role,
-          assigned_sports: form.subscribed_sports,
-          assigned_positions: [],
-          assigned_phases: [],
-          first_name: firstName,
-          last_name: lastName,
-          invite_type: "school_setup",
-          poc_phone: form.poc_phone.trim(),
-          mascot: form.mascot.trim(),
-          subscribed_sports: form.subscribed_sports,
-          subscription_term: form.subscription_term,
-          location_city: form.location_city.trim(),
-          location_state: form.location_state.trim(),
-        }),
-        base44.entities.School.create(schoolData),
-      ]);
       setMsg({ text: `School "${form.school_name}" created! Invite sent to ${form.poc_email}`, type: "success" });
       setForm(EMPTY_FORM);
       setShowAddSchool(false);
