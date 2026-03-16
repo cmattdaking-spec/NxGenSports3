@@ -163,7 +163,6 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
 
   const createPointOfContactInvite = async (school) => {
     const { firstName, lastName } = splitFullName(school.poc_name);
-    const platformRole = getPlatformRoleForCoachingRole(school.poc_role);
     const pendingInvites = await base44.entities.Invite.filter(
       { team_id: school.team_id, email: school.poc_email, status: "pending" },
       "-created_date",
@@ -172,7 +171,7 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
 
     await Promise.all(pendingInvites.map(invite => base44.entities.Invite.update(invite.id, { status: "expired" })));
 
-    await base44.entities.Invite.create({
+    await base44.functions.invoke("sendInvite", {
       email: school.poc_email.trim(),
       team_id: school.team_id,
       school_id: school.id,
@@ -182,12 +181,9 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
       assigned_sports: school.subscribed_sports || [],
       assigned_positions: [],
       assigned_phases: [],
-      status: "pending",
       first_name: firstName,
       last_name: lastName,
-      invited_by: "super_admin",
       invite_type: "school_setup",
-      poc_name: school.poc_name,
       poc_phone: school.poc_phone || "",
       mascot: school.mascot || "",
       subscribed_sports: school.subscribed_sports || [],
@@ -195,8 +191,6 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
       location_city: school.location_city || "",
       location_state: school.location_state || "",
     });
-
-    await base44.users.inviteUser(school.poc_email.trim(), platformRole);
   };
 
   const handleSubmit = async () => {
@@ -207,7 +201,6 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
       const teamId = form.team_id.trim() || form.school_name.trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
       const schoolCode = generateSchoolCode();
       const { firstName, lastName } = splitFullName(form.poc_name);
-      const platformRole = getPlatformRoleForCoachingRole(form.poc_role);
 
       const schoolData = {
         team_id: teamId,
@@ -228,12 +221,10 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         poc_role: form.poc_role,
         poc_email: form.poc_email.trim(),
         poc_phone: form.poc_phone.trim(),
-        // Assign this school to the creating super admin for scoped visibility.
-        super_admin_id: user?.id || null,
       };
 
       await Promise.all([
-        base44.entities.Invite.create({
+        base44.functions.invoke("sendInvite", {
           email: form.poc_email.trim(),
           team_id: teamId,
           school_name: form.school_name.trim(),
@@ -242,12 +233,9 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
           assigned_sports: form.subscribed_sports,
           assigned_positions: [],
           assigned_phases: [],
-          status: "pending",
           first_name: firstName,
           last_name: lastName,
-          invited_by: "super_admin",
           invite_type: "school_setup",
-          poc_name: form.poc_name.trim(),
           poc_phone: form.poc_phone.trim(),
           mascot: form.mascot.trim(),
           subscribed_sports: form.subscribed_sports,
@@ -257,8 +245,6 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         }),
         base44.entities.School.create(schoolData),
       ]);
-
-      await base44.users.inviteUser(form.poc_email.trim(), platformRole);
       setMsg({ text: `School "${form.school_name}" created! Invite sent to ${form.poc_email}`, type: "success" });
       setForm(EMPTY_FORM);
       setShowAddSchool(false);
