@@ -47,7 +47,6 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const allowedRoles = ['admin', 'super_admin', 'head_coach', 'athletic_director'];
-    const allowedRoles = ['admin', 'head_coach', 'athletic_director', 'super_admin'];
     const effectiveRole = user.coaching_role || user.role;
     if (!allowedRoles.includes(user.role) && !allowedRoles.includes(effectiveRole)) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
