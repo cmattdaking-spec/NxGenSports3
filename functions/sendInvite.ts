@@ -47,6 +47,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const allowedRoles = ['admin', 'super_admin', 'head_coach', 'athletic_director'];
+    const allowedRoles = ['admin', 'head_coach', 'athletic_director', 'super_admin'];
     const effectiveRole = user.coaching_role || user.role;
     if (!allowedRoles.includes(user.role) && !allowedRoles.includes(effectiveRole)) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
@@ -63,6 +64,12 @@ Deno.serve(async (req) => {
       first_name,
       last_name,
       child_player_id,
+      poc_phone,
+      mascot,
+      subscribed_sports,
+      subscription_term,
+      location_city,
+      location_state,
     } = body;
 
     const cleanedFirstName = first_name?.trim();
@@ -94,7 +101,7 @@ Deno.serve(async (req) => {
         : coaching_role;
 
     // Create the invite record
-    await base44.asServiceRole.entities.Invite.create({
+    const inviteData: Record<string, any> = {
       email: email.trim(),
       team_id: teamId,
       school_id: schoolId,
@@ -112,16 +119,27 @@ Deno.serve(async (req) => {
       poc_name: fullName,
       child_player_id: child_player_id || null,
       player_id: player_id || null,
-    });
+    };
+
+    // Forward extra fields provided for school_setup invites
+    if (invite_type === 'school_setup') {
+      const extraFields = { poc_phone, mascot, subscribed_sports, subscription_term, location_city, location_state };
+      Object.entries(extraFields).forEach(([k, v]) => {
+        if (v !== undefined) inviteData[k] = v;
+      });
+    }
+
+    await base44.asServiceRole.entities.Invite.create(inviteData);
 
     // Determine platform role — HC and AD get admin, everyone else gets user
     const platformRole = ['head_coach', 'athletic_director'].includes(effectiveCoachingRole) ? 'admin' : 'user';
 
-    // Send the platform invite using the calling user's token (they must be admin)
-    await base44.users.inviteUser(email.trim(), platformRole);
+    // Send the platform invite using asServiceRole (has platform-level permissions)
+    await base44.asServiceRole.users.inviteUser(email.trim(), platformRole);
 
     return Response.json({ success: true, player_id: player_id || null });
   } catch (error) {
+    console.error('sendInvite error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

@@ -184,6 +184,12 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
       first_name: firstName,
       last_name: lastName,
       invite_type: "school_setup",
+      poc_phone: school.poc_phone || "",
+      mascot: school.mascot || "",
+      subscribed_sports: school.subscribed_sports || [],
+      subscription_term: school.subscription_term,
+      location_city: school.location_city || "",
+      location_state: school.location_state || "",
     });
   };
 
@@ -215,8 +221,6 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         poc_role: form.poc_role,
         poc_email: form.poc_email.trim(),
         poc_phone: form.poc_phone.trim(),
-        // Assign this school to the creating super admin for scoped visibility.
-        super_admin_id: user?.id || null,
       };
 
       const newSchool = await base44.entities.School.create(schoolData);
@@ -236,6 +240,28 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         invite_type: "school_setup",
       });
 
+      await Promise.all([
+        base44.functions.invoke("sendInvite", {
+          email: form.poc_email.trim(),
+          team_id: teamId,
+          school_name: form.school_name.trim(),
+          school_code: schoolCode,
+          coaching_role: form.poc_role,
+          assigned_sports: form.subscribed_sports,
+          assigned_positions: [],
+          assigned_phases: [],
+          first_name: firstName,
+          last_name: lastName,
+          invite_type: "school_setup",
+          poc_phone: form.poc_phone.trim(),
+          mascot: form.mascot.trim(),
+          subscribed_sports: form.subscribed_sports,
+          subscription_term: form.subscription_term,
+          location_city: form.location_city.trim(),
+          location_state: form.location_state.trim(),
+        }),
+        base44.entities.School.create(schoolData),
+      ]);
       setMsg({ text: `School "${form.school_name}" created! Invite sent to ${form.poc_email}`, type: "success" });
       setForm(EMPTY_FORM);
       setShowAddSchool(false);
