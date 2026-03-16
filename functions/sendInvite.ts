@@ -1,5 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+/** Safely stringify a value for error logging; returns '[unstringifiable]' on failure. */
+function safeJsonStringify(value: unknown): string {
+  try { return JSON.stringify(value); } catch { return '[unstringifiable]'; }
+}
+
 /** Generate a player ID: first initial of last name (uppercase) + 3 random alphanumeric chars.
  *  e.g. "John Smith" → "S4F2" */
 function generatePlayerId(fullName: string): string {
@@ -157,9 +162,11 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.Invite.create(inviteData);
     } catch (inviteError: any) {
       console.error('sendInvite: Invite.create failed', {
+        errorType: inviteError?.constructor?.name,
         message: inviteError?.message,
         stack: inviteError?.stack,
         cause: inviteError?.cause,
+        errorJson: safeJsonStringify(inviteError),
         inviteData: { ...inviteData, email: '[redacted]' },
       });
       return Response.json(
@@ -178,10 +185,13 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.users.inviteUser(email.trim(), platformRole);
     } catch (inviteUserError: any) {
       console.error('sendInvite: users.inviteUser failed', {
+        errorType: inviteUserError?.constructor?.name,
         message: inviteUserError?.message,
         stack: inviteUserError?.stack,
         cause: inviteUserError?.cause,
+        errorJson: safeJsonStringify(inviteUserError),
         platformRole,
+        inviteData: { ...inviteData, email: '[redacted]' },
       });
       return Response.json(
         { error: `Failed to send platform invite: ${inviteUserError?.message || 'Unknown error'}` },
@@ -192,9 +202,11 @@ Deno.serve(async (req) => {
     return Response.json({ success: true, player_id: player_id || null });
   } catch (error: any) {
     console.error('sendInvite error:', {
+      errorType: error?.constructor?.name,
       message: error?.message,
       stack: error?.stack,
       cause: error?.cause,
+      errorJson: safeJsonStringify(error),
     });
     return Response.json({ error: error?.message || 'Unknown error' }, { status: 500 });
   }
