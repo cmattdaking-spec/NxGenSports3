@@ -128,17 +128,74 @@ Deno.serve(async (req) => {
       });
     }
 
-    await base44.asServiceRole.entities.Invite.create(inviteData);
+    // Validate required invite fields before attempting creation
+    if (!inviteData.team_id) {
+      console.error('sendInvite validation failed: team_id is missing', { invite_type: body.invite_type, body_team_id: body.team_id });
+      return Response.json({ error: 'Missing required field: team_id' }, { status: 400 });
+    }
+    if (!inviteData.email) {
+      console.error('sendInvite validation failed: email is missing');
+      return Response.json({ error: 'Missing required field: email' }, { status: 400 });
+    }
+
+    const sanitizedBody = {
+      invite_type: body.invite_type,
+      team_id: body.team_id,
+      school_id: body.school_id,
+      school_name: body.school_name,
+      school_code: body.school_code,
+      first_name: body.first_name,
+      last_name: body.last_name,
+      coaching_role: body.coaching_role,
+      subscription_term: body.subscription_term,
+      subscribed_sports: body.subscribed_sports,
+      // email intentionally omitted from debug log
+    };
+    console.log('sendInvite: creating invite record', { sanitizedBody, resolvedContext: { teamId, schoolId, schoolName, schoolCode } });
+
+    try {
+      await base44.asServiceRole.entities.Invite.create(inviteData);
+    } catch (inviteError: any) {
+      console.error('sendInvite: Invite.create failed', {
+        message: inviteError?.message,
+        stack: inviteError?.stack,
+        cause: inviteError?.cause,
+        inviteData: { ...inviteData, email: '[redacted]' },
+      });
+      return Response.json(
+        { error: `Failed to create invite record: ${inviteError?.message || 'Unknown error'}` },
+        { status: 500 },
+      );
+    }
 
     // Determine platform role — HC and AD get admin, everyone else gets user
     const platformRole = ['head_coach', 'athletic_director'].includes(effectiveCoachingRole) ? 'admin' : 'user';
 
+    console.log('sendInvite: sending platform invite', { platformRole });
+
     // Send the platform invite using asServiceRole (has platform-level permissions)
-    await base44.asServiceRole.users.inviteUser(email.trim(), platformRole);
+    try {
+      await base44.asServiceRole.users.inviteUser(email.trim(), platformRole);
+    } catch (inviteUserError: any) {
+      console.error('sendInvite: users.inviteUser failed', {
+        message: inviteUserError?.message,
+        stack: inviteUserError?.stack,
+        cause: inviteUserError?.cause,
+        platformRole,
+      });
+      return Response.json(
+        { error: `Failed to send platform invite: ${inviteUserError?.message || 'Unknown error'}` },
+        { status: 500 },
+      );
+    }
 
     return Response.json({ success: true, player_id: player_id || null });
-  } catch (error) {
-    console.error('sendInvite error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+  } catch (error: any) {
+    console.error('sendInvite error:', {
+      message: error?.message,
+      stack: error?.stack,
+      cause: error?.cause,
+    });
+    return Response.json({ error: error?.message || 'Unknown error' }, { status: 500 });
   }
 });
