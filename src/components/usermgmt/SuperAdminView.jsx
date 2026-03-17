@@ -228,22 +228,6 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
 
       await base44.entities.School.create(schoolData);
 
-      // Also create a corresponding MasterTeams record for super admin tracking
-      await base44.entities.MasterTeams.create({
-        team_id: teamId,
-        school_name: form.school_name.trim(),
-        assigned_admin_name: form.poc_name.trim(),
-        assigned_admin_email: form.poc_email.trim(),
-        assigned_admin_role: form.poc_role,
-        subscription_status: form.status || "active",
-        subscription_term: form.subscription_term,
-        subscription_start: form.subscription_start || undefined,
-        subscription_end: form.subscription_end || undefined,
-      }).catch((err) => {
-        // MasterTeams sync is best-effort; do not fail school creation if it errors
-        console.warn('[SuperAdmin] MasterTeams sync failed for team', teamId, err?.message);
-      });
-
       setMsg({ text: `School "${form.school_name}" created successfully.`, type: "success" });
       setForm(EMPTY_FORM);
       setShowAddSchool(false);
