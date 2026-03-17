@@ -39,6 +39,10 @@ export default function ProfileVerify() {
   const [fullName, setFullName] = useState("");
   const [position, setPosition] = useState("");
   const [sports, setSports] = useState([]);
+  const [schoolCode, setSchoolCode] = useState("");
+  const [schoolInfo, setSchoolInfo] = useState(null);
+  const [schoolCodeError, setSchoolCodeError] = useState("");
+  const [lookingUp, setLookingUp] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,6 +58,32 @@ export default function ProfileVerify() {
       .finally(() => setLoading(false));
   }, []);
 
+  const lookUpSchoolCode = async () => {
+    const code = schoolCode.trim().toUpperCase();
+    if (!code) return;
+    setLookingUp(true);
+    setSchoolCodeError("");
+    setSchoolInfo(null);
+    try {
+      const res = await base44.functions.invoke("joinSchoolByCode", { school_code: code });
+      if (res.data?.error) {
+        setSchoolCodeError(res.data.error);
+      } else if (res.data?.school) {
+        setSchoolInfo(res.data.school);
+        // Refresh user to pick up updated school fields
+        const updated = await base44.auth.me();
+        setUser(updated);
+        if (updated?.assigned_sports?.length && sports.length === 0) {
+          setSports(updated.assigned_sports);
+        }
+      }
+    } catch (e) {
+      setSchoolCodeError(e?.message || "Failed to look up school code.");
+    } finally {
+      setLookingUp(false);
+    }
+  };
+
   const toggleSport = (sport) => {
     setSports((prev) =>
       prev.includes(sport) ? prev.filter((s) => s !== sport) : [...prev, sport]
@@ -62,12 +92,20 @@ export default function ProfileVerify() {
 
   const handleConfirm = async () => {
     if (!user) return;
+    // Require a school to be connected before confirming
+    const hasSchool = user.team_id || user.school_code || schoolInfo;
+    if (!hasSchool) {
+      setError("Please enter your school code to connect your account to a school.");
+      return;
+    }
     setSaving(true);
     setError("");
     try {
-      const allowedSports = (user.assigned_sports || []).filter((s) =>
-        sports.includes(s)
-      );
+      // If user has assigned_sports from an invite, only allow those; otherwise use self-selected sports
+      const invitedSports = user.assigned_sports || [];
+      const allowedSports = invitedSports.length > 0
+        ? invitedSports.filter((s) => sports.includes(s))
+        : sports;
 
       await base44.auth.updateMe({
         full_name: fullName || user.full_name,
@@ -101,6 +139,8 @@ export default function ProfileVerify() {
   }
 
   const assignedSports = user.assigned_sports || [];
+  const resolvedSchoolName = schoolInfo?.school_name || user.school_name;
+  const hasSchool = !!(user.team_id || user.school_code || schoolInfo);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: "#121212" }}>
@@ -128,20 +168,54 @@ export default function ProfileVerify() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block">School</label>
-                <div className="text-sm text-gray-300 bg-[#181818] border border-gray-700 rounded-xl px-3 py-2">
-                  {user.school_name || "Assigned by your Athletic Director"}
+            {/* School section: show assigned school or code entry */}
+            {hasSchool ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">School</label>
+                  <div className="text-sm text-gray-300 bg-[#181818] border border-gray-700 rounded-xl px-3 py-2">
+                    {resolvedSchoolName || "Assigned by your Athletic Director"}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">School Code</label>
+                  <div className="text-sm text-gray-300 bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 font-mono">
+                    {schoolInfo?.school_code || user.school_code || user.team_id || "—"}
+                  </div>
                 </div>
               </div>
+            ) : (
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">Team ID</label>
-                <div className="text-sm text-gray-300 bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 font-mono">
-                  {user.team_id || "—"}
+                <label className="text-xs text-gray-400 mb-1 block">
+                  School Code <span className="text-red-400">*</span>
+                </label>
+                <p className="text-[11px] text-gray-500 mb-2">
+                  Enter the school code provided by your Athletic Director to connect your account.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    value={schoolCode}
+                    onChange={(e) => { setSchoolCode(e.target.value.toUpperCase()); setSchoolCodeError(""); }}
+                    onKeyDown={(e) => e.key === "Enter" && lookUpSchoolCode()}
+                    placeholder="e.g. XABCD1"
+                    maxLength={8}
+                    className="flex-1 bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white font-mono outline-none uppercase"
+                  />
+                  <button
+                    type="button"
+                    onClick={lookUpSchoolCode}
+                    disabled={lookingUp || !schoolCode.trim()}
+                    className="px-4 py-2 rounded-xl text-sm font-semibold text-black disabled:opacity-50"
+                    style={{ background: "linear-gradient(135deg, #00F2FF, #1A4BBD)" }}
+                  >
+                    {lookingUp ? "..." : "Join"}
+                  </button>
                 </div>
+                {schoolCodeError && (
+                  <p className="text-xs text-red-400 mt-1.5">{schoolCodeError}</p>
+                )}
               </div>
-            </div>
+            )}
 
             <div>
               <label className="text-xs text-gray-400 mb-1 block">Primary Position (optional)</label>
@@ -189,7 +263,7 @@ export default function ProfileVerify() {
 
           <button
             onClick={handleConfirm}
-            disabled={saving || !fullName}
+            disabled={saving || !fullName || !hasSchool}
             className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
             style={{ background: "linear-gradient(135deg, #00F2FF, #1A4BBD)", color: "#121212" }}
           >

@@ -4,9 +4,23 @@ import { Pencil, X, Check, ChevronDown, ChevronRight, FileText } from "lucide-re
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SPORT_LABELS = {
-  football:"Football", basketball:"Basketball", baseball:"Baseball", softball:"Softball",
+  football:"Football", girls_flag_football:"Girls Flag Football",
+  boys_basketball:"Boys Basketball", girls_basketball:"Girls Basketball",
+  boys_baseball:"Boys Baseball", girls_softball:"Girls Softball",
+  boys_soccer:"Boys Soccer", girls_soccer:"Girls Soccer",
+  girls_volleyball:"Girls Volleyball",
+  boys_boxing:"Boys Boxing", girls_boxing:"Girls Boxing",
+  boys_golf:"Boys Golf", girls_golf:"Girls Golf",
+  boys_tennis:"Boys Tennis", girls_tennis:"Girls Tennis",
+  boys_wrestling:"Boys Wrestling", girls_wrestling:"Girls Wrestling",
+  boys_cross_country:"Boys Cross Country", girls_cross_country:"Girls Cross Country",
+  boys_track:"Boys Track & Field", girls_track:"Girls Track & Field",
+  boys_lacrosse:"Boys Lacrosse", girls_lacrosse:"Girls Lacrosse",
+  // legacy keys
+  basketball:"Basketball", baseball:"Baseball", softball:"Softball",
   soccer:"Soccer", volleyball:"Volleyball", boxing:"Boxing", golf:"Golf",
-  tennis:"Tennis", wrestling:"Wrestling", cross_country:"Cross Country", track:"Track", lacrosse:"Lacrosse"
+  tennis:"Tennis", wrestling:"Wrestling", cross_country:"Cross Country",
+  track:"Track", lacrosse:"Lacrosse",
 };
 
 function PlayerRow({ player, docs, onSavePlayer, onSaveDocs }) {
