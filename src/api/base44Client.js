@@ -49,7 +49,10 @@ async function getCurrentUser() {
 // `base44.entities.<EntityName>`) to this set. The applyScope function will
 // return [] for all list/filter calls from non-super-admin users, while
 // super admins receive the full unfiltered result set.
-const SUPER_ADMIN_ONLY_ENTITIES = new Set(['MasterTeams']);
+//
+// Currently empty: the former MasterTeams entity is no longer used; School
+// records are scoped by team_id/school_id in the general filter below.
+const SUPER_ADMIN_ONLY_ENTITIES = new Set([]);
 
 function applyScope(records, user, entityName) {
   if (!Array.isArray(records)) return records;

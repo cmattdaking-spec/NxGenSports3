@@ -80,13 +80,13 @@ export default function MasterTeamsTab() {
     if (!form.team_id.trim() || !form.school_name.trim()) return;
     setSubmitting(true);
     try {
-      await base44.entities.MasterTeams.create({
+      await base44.entities.School.create({
         team_id: form.team_id.trim(),
         school_name: form.school_name.trim(),
-        assigned_admin_name: form.assigned_admin_name.trim(),
-        assigned_admin_email: form.assigned_admin_email.trim(),
-        assigned_admin_role: form.assigned_admin_role,
-        subscription_status: form.subscription_status || "active",
+        poc_name: form.assigned_admin_name.trim(),
+        poc_email: form.assigned_admin_email.trim(),
+        poc_role: form.assigned_admin_role,
+        status: form.subscription_status || "active",
         subscription_term: form.subscription_term,
         subscription_start: form.subscription_start || undefined,
         subscription_end: form.subscription_end || undefined,
@@ -118,7 +118,16 @@ export default function MasterTeamsTab() {
   const saveEdit = async (teamId) => {
     setTeams(prev => prev.map(t => t.id === teamId ? { ...t, ...editForm } : t));
     try {
-      await base44.entities.MasterTeams.update(teamId, editForm);
+      await base44.entities.School.update(teamId, {
+        school_name: editForm.school_name,
+        poc_name: editForm.assigned_admin_name,
+        poc_email: editForm.assigned_admin_email,
+        poc_role: editForm.assigned_admin_role,
+        status: editForm.subscription_status,
+        subscription_term: editForm.subscription_term,
+        subscription_start: editForm.subscription_start || undefined,
+        subscription_end: editForm.subscription_end || undefined,
+      });
       setEditingId(null);
       showMsg("Master Team updated.");
     } catch (err) {
@@ -130,7 +139,7 @@ export default function MasterTeamsTab() {
   const updateStatus = async (team, nextStatus) => {
     setTeams(prev => prev.map(t => t.id === team.id ? { ...t, subscription_status: nextStatus } : t));
     try {
-      await base44.entities.MasterTeams.update(team.id, { subscription_status: nextStatus });
+      await base44.entities.School.update(team.id, { status: nextStatus });
       showMsg(`${team.school_name} marked ${nextStatus}.`);
     } catch (err) {
       loadTeams();
@@ -142,7 +151,7 @@ export default function MasterTeamsTab() {
     if (!window.confirm(`Delete Master Team record for "${team.school_name}"?`)) return;
     setDeletingId(team.id);
     try {
-      await base44.entities.MasterTeams.delete(team.id);
+      await base44.entities.School.delete(team.id);
       setTeams(prev => prev.filter(t => t.id !== team.id));
       showMsg(`${team.school_name} removed from Master Teams.`);
     } catch (err) {
