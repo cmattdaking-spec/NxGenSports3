@@ -12,7 +12,7 @@ const YEARS = ["Freshman","Sophomore","Junior","Senior","Grad"];
 const CAN_EDIT = ["admin","head_coach","athletic_director","associate_head_coach","offensive_coordinator","defensive_coordinator","special_teams_coordinator","strength_conditioning_coordinator","position_coach"];
 
 export default function Roster() {
-  const { activeSport, canEditAll, user: ctxUser, sportFilter } = useSport();
+  const { activeSport, canEditAll, user: ctxUser, sportFilter, isSuperAdmin } = useSport();
   const cfg = getSportConfig(activeSport);
   const POSITIONS = Object.values(cfg.positions).flat().filter((v, i, a) => a.indexOf(v) === i);
   const UNITS = cfg.units;
@@ -28,6 +28,8 @@ export default function Roster() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
   const [expanded, setExpanded] = useState(null);
+  const [schools, setSchools] = useState([]);
+  const [schoolsLoading, setSchoolsLoading] = useState(false);
 
   const load = () => base44.entities.Player.filter({ sport: activeSport }).then(d => { setPlayers(d); setLoading(false); });
 
@@ -40,11 +42,21 @@ export default function Roster() {
     load();
   }, [activeSport]);
 
+  useEffect(() => {
+    if (isSuperAdmin) {
+      setSchoolsLoading(true);
+      base44.functions.invoke("listAllSchools").then(res => {
+        setSchools(res.data?.schools || []);
+        setSchoolsLoading(false);
+      }).catch(() => setSchoolsLoading(false));
+    }
+  }, [isSuperAdmin]);
+
   const myRole = user?.coaching_role || user?.role;
   const isHeadCoach = user?.coaching_role === "head_coach" || user?.role === "admin";
-  const canEdit = isHeadCoach || canEditAll || CAN_EDIT.includes(myRole) || CAN_EDIT.includes(user?.role);
-  // Only head coach and admin can delete players
-  const canDelete = isHeadCoach || user?.role === "admin";
+  const canEdit = isSuperAdmin || isHeadCoach || canEditAll || CAN_EDIT.includes(myRole) || CAN_EDIT.includes(user?.role);
+  // Only head coach, admin, and super admin can delete players
+  const canDelete = isSuperAdmin || isHeadCoach || user?.role === "admin";
 
   const filtered = players.filter(p => {
     const name = `${p.first_name} ${p.last_name}`.toLowerCase();
@@ -71,8 +83,6 @@ export default function Roster() {
       ...form,
       sport: activeSport,
       team_id: ctxUser?.team_id || form.team_id || null,
-      school_id: ctxUser?.school_id || form.school_id || null,
-      school_name: ctxUser?.school_name || form.school_name || null,
       school_code: ctxUser?.school_code || form.school_code || null,
     };
 
@@ -232,6 +242,9 @@ export default function Roster() {
           onSave={save}
           onClose={() => setShowForm(false)}
           activeSport={activeSport}
+          isSuperAdmin={isSuperAdmin}
+          schools={schools}
+          schoolsLoading={schoolsLoading}
         />
       )}
     </div>
