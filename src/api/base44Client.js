@@ -41,13 +41,28 @@ async function getCurrentUser() {
   return pendingUserRequest;
 }
 
-function applyScope(records, user) {
+// Entities that only super admins may read. Non-super-admins receive an empty
+// array for any list/filter call on these entities (client-side RLS enforcement
+// to complement the server-side rule in the corresponding edge function).
+//
+// To add a new super-admin-only entity, add its name (exactly as used in
+// `base44.entities.<EntityName>`) to this set. The applyScope function will
+// return [] for all list/filter calls from non-super-admin users, while
+// super admins receive the full unfiltered result set.
+const SUPER_ADMIN_ONLY_ENTITIES = new Set(['MasterTeams']);
+
+function applyScope(records, user, entityName) {
   if (!Array.isArray(records)) return records;
   if (!user || user.role === 'super_admin') return records;
+
+  // Block non-super-admins from seeing super-admin-only entities entirely.
+  // RLS rule: super_admin role has an exception; all others get no records.
+  if (entityName && SUPER_ADMIN_ONLY_ENTITIES.has(entityName)) return [];
 
   const teamId = user.team_id || null;
   const schoolId = user.school_id || null;
 
+  // RLS rule: User.TeamID must match Data.TeamID (or Data.SchoolID).
   return records.filter((record) => {
     if (!record || typeof record !== 'object') return false;
 
@@ -66,7 +81,7 @@ function applyScope(records, user) {
   });
 }
 
-function wrapEntity(entityApi) {
+function wrapEntity(entityApi, entityName) {
   return new Proxy(entityApi, {
     get(target, prop, receiver) {
       const original = Reflect.get(target, prop, receiver);
@@ -78,7 +93,7 @@ function wrapEntity(entityApi) {
         const result = await original.apply(target, args);
         if (!Array.isArray(result)) return result;
         const user = await getCurrentUser();
-        return applyScope(result, user);
+        return applyScope(result, user, entityName);
       };
     }
   });
@@ -90,7 +105,7 @@ const scopedEntities = new Proxy(rawBase44.entities, {
     if (!entityApi || typeof entityApi !== 'object') {
       return entityApi;
     }
-    return wrapEntity(entityApi);
+    return wrapEntity(entityApi, prop);
   }
 });
 
