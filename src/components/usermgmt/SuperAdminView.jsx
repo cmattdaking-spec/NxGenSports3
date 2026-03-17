@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import {
   Plus, Building2, X, ChevronDown, ChevronUp,
-  Search, AlertTriangle, RefreshCw, Trash2,
-  MapPin, Calendar, Users, Mail, Phone, Edit2, Check, Ban, PauseCircle, PlayCircle
+  Search, RefreshCw, Trash2,
+  MapPin, Calendar, Users, Mail, Phone, Edit2, Ban, PauseCircle, PlayCircle, UserPlus
 } from "lucide-react";
+import InviteForm from "./InviteForm";
 
 const SPORT_LABELS = {
   boys_football:"Boys Football", girls_football:"Girls Football", girls_flag_football:"Girls Flag Football",
@@ -111,6 +112,7 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
   const [statusFilter, setStatusFilter] = useState("all");
   const [deletingId, setDeletingId] = useState(null);
   const [reinvitingId, setReinvitingId] = useState(null);
+  const [addingUserId, setAddingUserId] = useState(null);
 
   const loadSchools = () => {
     setSchoolsLoading(true);
@@ -200,7 +202,6 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
     try {
       const teamId = form.team_id.trim() || form.school_name.trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
       const schoolCode = generateSchoolCode();
-      const { firstName, lastName } = splitFullName(form.poc_name);
 
       const schoolData = {
         team_id: teamId,
@@ -223,29 +224,8 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         poc_phone: form.poc_phone.trim(),
       };
 
-      const newSchool = await base44.entities.School.create(schoolData);
-
-      await base44.functions.invoke("sendInvite", {
-        email: form.poc_email.trim(),
-        team_id: teamId,
-        school_id: newSchool?.id || null,
-        school_name: form.school_name.trim(),
-        school_code: schoolCode,
-        coaching_role: form.poc_role,
-        assigned_sports: form.subscribed_sports,
-        assigned_positions: [],
-        assigned_phases: [],
-        first_name: firstName,
-        last_name: lastName,
-        invite_type: "school_setup",
-        poc_phone: form.poc_phone.trim(),
-        mascot: form.mascot.trim(),
-        subscribed_sports: form.subscribed_sports,
-        subscription_term: form.subscription_term,
-        location_city: form.location_city.trim(),
-        location_state: form.location_state.trim(),
-      });
-      setMsg({ text: `School "${form.school_name}" created! Invite sent to ${form.poc_email}`, type: "success" });
+      await base44.entities.School.create(schoolData);
+      setMsg({ text: `School "${form.school_name}" created successfully.`, type: "success" });
       setForm(EMPTY_FORM);
       setShowAddSchool(false);
       loadSchools();
@@ -496,7 +476,6 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
                         submitting={false}
                         title="Edit School"
                         submitLabel="Save Changes"
-                        hideWarning
                       />
                     </div>
                   ) : (
@@ -524,7 +503,27 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 text-gray-300 hover:bg-red-500/20 hover:text-red-400 transition-all disabled:opacity-40">
                           Delete School
                         </button>
+                        <button onClick={() => setAddingUserId(addingUserId === school.id ? null : school.id)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/15 text-blue-400 hover:bg-blue-500/20 transition-all flex items-center gap-1.5">
+                          <UserPlus className="w-3.5 h-3.5" />
+                          {addingUserId === school.id ? "Cancel" : "Add User"}
+                        </button>
                       </div>
+
+                      {/* Add User Form */}
+                      {addingUserId === school.id && (
+                        <InviteForm
+                          user={{
+                            team_id: school.team_id,
+                            school_id: school.id,
+                            school_name: school.school_name,
+                            school_code: school.school_code,
+                            assigned_sports: school.subscribed_sports || [],
+                          }}
+                          onClose={() => setAddingUserId(null)}
+                          onInvited={() => { loadSchools(); onRefresh?.(); }}
+                        />
+                      )}
 
                       {/* POC */}
                       {(school.poc_name || school.poc_email) && (
@@ -602,7 +601,7 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
 }
 
 // ── Reusable school form (add + edit) ──────────────────────────────────────
-function SchoolForm({ form, setForm, onToggleSport, onSubmit, onCancel, submitting, title, submitLabel = "Create School & Send Invite", hideWarning = false }) {
+function SchoolForm({ form, setForm, onToggleSport, onSubmit, onCancel, submitting, title, submitLabel = "Create School" }) {
   const f = (field) => (val) => setForm(p => ({ ...p, [field]: typeof val === "string" ? val : val.target?.value ?? val }));
 
   return (
@@ -707,15 +706,6 @@ function SchoolForm({ form, setForm, onToggleSport, onSubmit, onCancel, submitti
           </Field>
         </div>
       </div>
-
-      {!hideWarning && (
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2.5 flex items-start gap-2">
-          <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0 mt-0.5" />
-          <p className="text-yellow-300 text-xs">
-            An invitation will be sent to the point of contact with platform access based on the role you assign here. Once they accept, they can set up their account and invite their coaching staff. Only the subscribed sports will be visible to their team.
-          </p>
-        </div>
-      )}
 
       <div className="flex gap-2">
         <button type="button" onClick={onSubmit}
