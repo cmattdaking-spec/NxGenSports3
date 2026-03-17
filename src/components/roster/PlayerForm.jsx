@@ -79,9 +79,9 @@ export default function PlayerForm({ form, setForm, editing, onSave, onClose, ac
                         onChange={e => {
                           const selected = (schools || []).find(s => String(s.team_id) === e.target.value);
                           if (selected) {
-                            setForm({ ...form, team_id: selected.team_id, school_code: selected.school_code });
+                            setForm({ ...form, team_id: selected.team_id, school_id: selected.id, school_code: selected.school_code });
                           } else {
-                            setForm({ ...form, team_id: "", school_code: "" });
+                            setForm({ ...form, team_id: "", school_id: "", school_code: "" });
                           }
                         }}
                         className={inp}

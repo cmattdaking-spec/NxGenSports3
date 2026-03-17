@@ -33,9 +33,7 @@ export default function Roster() {
 
   const load = () => base44.entities.Player.filter({ sport: activeSport }).then(d => { setPlayers(d); setLoading(false); });
 
-  const { refreshing, pullDelta, handlers: pullHandlers } = usePullToRefresh(
-    () => base44.entities.Player.filter({ sport: activeSport }).then(d => setPlayers(d))
-  );
+  const { refreshing, pullDelta, handlers: pullHandlers } = usePullToRefresh(load);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -83,6 +81,7 @@ export default function Roster() {
       ...form,
       sport: activeSport,
       team_id: ctxUser?.team_id || form.team_id || null,
+      school_id: ctxUser?.school_id || form.school_id || null,
       school_code: ctxUser?.school_code || form.school_code || null,
     };
 
