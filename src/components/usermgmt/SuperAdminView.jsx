@@ -3,9 +3,10 @@ import { base44 } from "@/api/base44Client";
 import {
   Plus, Building2, X, ChevronDown, ChevronUp,
   Search, RefreshCw, Trash2,
-  MapPin, Calendar, Users, Mail, Phone, Edit2, Ban, PauseCircle, PlayCircle, UserPlus
+  MapPin, Calendar, Users, Mail, Phone, Edit2, Ban, PauseCircle, PlayCircle, UserPlus, Shield
 } from "lucide-react";
 import InviteForm from "./InviteForm";
+import MasterTeamsTab from "./MasterTeamsTab";
 
 const SPORT_LABELS = {
   boys_football:"Boys Football", girls_football:"Girls Football", girls_flag_football:"Girls Flag Football",
@@ -90,6 +91,7 @@ const EMPTY_FORM = {
 const SUITE_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/29e077944_generated_image.png";
 
 export default function SuperAdminView({ allUsers, loading: usersLoading, onRefresh, user }) {
+  const [activeTab, setActiveTab] = useState("schools");
   const [schools, setSchools] = useState([]);
   const [schoolsLoading, setSchoolsLoading] = useState(true);
   const [schoolsError, setSchoolsError] = useState("");
@@ -225,6 +227,23 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
       };
 
       await base44.entities.School.create(schoolData);
+
+      // Also create a corresponding MasterTeams record for super admin tracking
+      await base44.entities.MasterTeams.create({
+        team_id: teamId,
+        school_name: form.school_name.trim(),
+        assigned_admin_name: form.poc_name.trim(),
+        assigned_admin_email: form.poc_email.trim(),
+        assigned_admin_role: form.poc_role,
+        subscription_status: form.status || "active",
+        subscription_term: form.subscription_term,
+        subscription_start: form.subscription_start || undefined,
+        subscription_end: form.subscription_end || undefined,
+      }).catch((err) => {
+        // MasterTeams sync is best-effort; do not fail school creation if it errors
+        console.warn('[SuperAdmin] MasterTeams sync failed for team', teamId, err?.message);
+      });
+
       setMsg({ text: `School "${form.school_name}" created successfully.`, type: "success" });
       setForm(EMPTY_FORM);
       setShowAddSchool(false);
@@ -334,17 +353,47 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
               {savingColor ? "..." : "Save"}
             </button>
           </div>
-          <button onClick={() => { loadSchools(); onRefresh?.(); }} className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-all" title="Refresh">
-            <RefreshCw className="w-4 h-4" />
-          </button>
-          <button onClick={() => { setShowAddSchool(!showAddSchool); setEditingId(null); }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold"
-            style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
-            <Plus className="w-4 h-4" /> Add School
-          </button>
+          {activeTab === "schools" && (
+            <>
+              <button onClick={() => { loadSchools(); onRefresh?.(); }} className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-all" title="Refresh">
+                <RefreshCw className="w-4 h-4" />
+              </button>
+              <button onClick={() => { setShowAddSchool(!showAddSchool); setEditingId(null); }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold"
+                style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+                <Plus className="w-4 h-4" /> Add School
+              </button>
+            </>
+          )}
         </div>
       </div>
 
+      {/* Tab navigation */}
+      <div className="flex gap-1 bg-[#141414] border border-gray-800 rounded-xl p-1 w-fit">
+        <button
+          onClick={() => setActiveTab("schools")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "schools" ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
+          style={activeTab === "schools" ? { backgroundColor: "var(--color-primary,#f97316)22", color: "var(--color-primary,#f97316)" } : {}}
+        >
+          <Building2 className="w-4 h-4" /> Schools
+        </button>
+        <button
+          onClick={() => setActiveTab("master_teams")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "master_teams" ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
+          style={activeTab === "master_teams" ? { backgroundColor: "var(--color-primary,#f97316)22", color: "var(--color-primary,#f97316)" } : {}}
+        >
+          <Shield className="w-4 h-4" /> Master Teams
+        </button>
+      </div>
+
+      {/* Master Teams tab */}
+      {activeTab === "master_teams" && (
+        <MasterTeamsTab />
+      )}
+
+      {/* Schools tab */}
+      {activeTab === "schools" && (
+        <>
       {/* Feedback message */}
       {msg.text && (
         <div className={`rounded-xl p-3 text-sm ${msg.type === "success" ? "bg-green-500/10 border border-green-500/20 text-green-400" : "bg-red-500/10 border border-red-500/20 text-red-400"}`}>
@@ -596,6 +645,8 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
           );
         })}
       </div>
+        </>
+      )}
     </div>
   );
 }
