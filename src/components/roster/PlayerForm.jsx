@@ -22,7 +22,7 @@ const I = ({ label, required, children }) => (
 
 const inp = "w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-[var(--color-primary,#f97316)]";
 
-export default function PlayerForm({ form, setForm, editing, onSave, onClose, activeSport }) {
+export default function PlayerForm({ form, setForm, editing, onSave, onClose, activeSport, isSuperAdmin, schools, schoolsLoading }) {
   const cfg = getSportConfig(activeSport);
   const POSITIONS = Object.values(cfg.positions).flat().filter((v, i, a) => a.indexOf(v) === i);
   const UNITS = cfg.units;
@@ -71,6 +71,30 @@ export default function PlayerForm({ form, setForm, editing, onSave, onClose, ac
               <div className="grid grid-cols-2 gap-3">
                 <I label="First Name" required><input value={form.first_name || ""} onChange={e => setForm({...form, first_name: e.target.value})} className={inp} /></I>
                 <I label="Last Name" required><input value={form.last_name || ""} onChange={e => setForm({...form, last_name: e.target.value})} className={inp} /></I>
+                {isSuperAdmin && (
+                  <div className="col-span-2">
+                    <I label="School" required>
+                      <select
+                        value={form.team_id || ""}
+                        onChange={e => {
+                          const selected = (schools || []).find(s => String(s.team_id) === e.target.value);
+                          if (selected) {
+                            setForm({ ...form, team_id: selected.team_id, school_code: selected.school_code });
+                          } else {
+                            setForm({ ...form, team_id: "", school_code: "" });
+                          }
+                        }}
+                        className={inp}
+                        disabled={schoolsLoading}
+                      >
+                        <option value="">{schoolsLoading ? "Loading schools..." : "Select school..."}</option>
+                        {(schools || []).map(s => (
+                          <option key={s.id} value={s.team_id}>{s.school_name}</option>
+                        ))}
+                      </select>
+                    </I>
+                  </div>
+                )}
                 <I label="Jersey #"><input value={form.number || ""} onChange={e => setForm({...form, number: e.target.value})} className={inp} /></I>
                 <I label="Year">
                   <Select value={form.year || undefined} onValueChange={(value) => setForm({ ...form, year: value })}>
