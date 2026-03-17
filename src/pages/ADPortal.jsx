@@ -63,12 +63,32 @@ function ADPortalContent() {
       base44.functions.invoke("getTeamUsers").then(r => r.data).catch(() => []),
     ]);
     setUser(u);
-    setPlayers(p);
     setDocuments(docs);
     setHealthRecords(h);
     setOpponents(o);
     setPracticePlans(pp);
-    setStaff(s || []);
+    const staffList = s || [];
+    setStaff(staffList);
+
+    // Merge Player entities with player user accounts (those invited/registered as players)
+    // so the AD sees all players regardless of whether a separate Player entity exists yet.
+    const playerEntityIds = new Set(p.map(pe => pe.player_id).filter(Boolean));
+    const playerUsers = staffList.filter(u =>
+      (u.user_type === "player" || u.coaching_role === "player") &&
+      (!u.player_id || !playerEntityIds.has(u.player_id))
+    );
+    const additionalPlayers = playerUsers.map(u => ({
+      id: u.id,
+      first_name: u.first_name || (u.full_name || "").split(" ")[0] || "",
+      last_name: u.last_name || (u.full_name || "").split(" ").slice(1).join(" ") || "",
+      sport: (u.assigned_sports || [])[0] || "football",
+      team_id: u.team_id,
+      school_code: u.school_code,
+      player_id: u.player_id || null,
+      status: u.status || "active",
+      academic_eligible: true,
+    }));
+    setPlayers([...p, ...additionalPlayers]);
     setLoading(false);
   }, []);
 
