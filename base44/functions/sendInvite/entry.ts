@@ -1,13 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
-/** Safely stringify a value for error logging; returns '[unstringifiable]' on failure. */
-function safeJsonStringify(value: unknown): string {
+function safeJsonStringify(value) {
   try { return JSON.stringify(value); } catch { return '[unstringifiable]'; }
 }
 
-/** Generate a player ID: first initial of last name (uppercase) + 3 random alphanumeric chars.
- *  e.g. "John Smith" → "S4F2" */
-function generatePlayerId(fullName: string): string {
+function generatePlayerId(fullName) {
   const parts = fullName.trim().split(/\s+/);
   const lastName = parts.length > 1 ? parts[parts.length - 1] : parts[0];
   const initial = (lastName[0] || 'X').toUpperCase();
@@ -19,7 +16,7 @@ function generatePlayerId(fullName: string): string {
   return initial + rand;
 }
 
-async function resolveInviteContext(base44: any, user: any, body: any) {
+async function resolveInviteContext(base44, user, body) {
   const isSchoolSetupInvite = body.invite_type === 'school_setup';
   const teamId = (isSchoolSetupInvite ? body.team_id : user.team_id || body.team_id || '').trim();
   let schoolId = isSchoolSetupInvite ? (body.school_id || null) : (user.school_id || body.school_id || null);
@@ -29,7 +26,6 @@ async function resolveInviteContext(base44: any, user: any, body: any) {
   if (teamId && (!schoolId || !schoolName || !schoolCode)) {
     const schools = await base44.asServiceRole.entities.School.filter({ team_id: teamId }, '-created_date', 1);
     const school = schools?.[0];
-
     if (school) {
       schoolId = schoolId || school.id;
       schoolName = schoolName || school.school_name || '';
@@ -37,12 +33,7 @@ async function resolveInviteContext(base44: any, user: any, body: any) {
     }
   }
 
-  return {
-    teamId,
-    schoolId,
-    schoolName,
-    schoolCode,
-  };
+  return { teamId, schoolId, schoolName, schoolCode };
 }
 
 Deno.serve(async (req) => {
@@ -89,10 +80,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Child player ID is required for parent invites' }, { status: 400 });
     }
 
-    // For player invites, generate a unique player_id from the player's last name initial
-    const player_id = invite_type === 'player' && fullName
-      ? generatePlayerId(fullName)
-      : null;
+    const player_id = invite_type === 'player' && fullName ? generatePlayerId(fullName) : null;
 
     const effectiveSports = assigned_sports?.length
       ? assigned_sports
@@ -104,8 +92,7 @@ Deno.serve(async (req) => {
         ? 'parent'
         : coaching_role;
 
-    // Create the invite record
-    const inviteData: Record<string, any> = {
+    const inviteData = {
       email: email.trim(),
       team_id: teamId,
       school_id: schoolId,
@@ -125,7 +112,6 @@ Deno.serve(async (req) => {
       player_id: player_id || null,
     };
 
-    // Forward extra fields provided for school_setup invites
     if (invite_type === 'school_setup') {
       const extraFields = { poc_phone, mascot, subscribed_sports, subscription_term, location_city, location_state };
       Object.entries(extraFields).forEach(([k, v]) => {
@@ -133,41 +119,22 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate required invite fields before attempting creation
     if (!inviteData.team_id) {
-      console.error('sendInvite validation failed: team_id is missing', { invite_type: body.invite_type, body_team_id: body.team_id });
       return Response.json({ error: 'Missing required field: team_id' }, { status: 400 });
     }
-    if (!inviteData.email) {
-      console.error('sendInvite validation failed: email is missing');
-      return Response.json({ error: 'Missing required field: email' }, { status: 400 });
-    }
 
-    const sanitizedBody = {
+    console.log('sendInvite: creating invite record', {
       invite_type: body.invite_type,
-      team_id: body.team_id,
-      school_id: body.school_id,
-      school_name: body.school_name,
-      school_code: body.school_code,
-      first_name: body.first_name,
-      last_name: body.last_name,
-      coaching_role: body.coaching_role,
-      subscription_term: body.subscription_term,
-      subscribed_sports: body.subscribed_sports,
-      // email intentionally omitted from debug log
-    };
-    console.log('sendInvite: creating invite record', { sanitizedBody, resolvedContext: { teamId, schoolId, schoolName, schoolCode } });
+      team_id: teamId,
+      school_name: schoolName,
+    });
 
     try {
       await base44.asServiceRole.entities.Invite.create(inviteData);
-    } catch (inviteError: any) {
+    } catch (inviteError) {
       console.error('sendInvite: Invite.create failed', {
-        errorType: inviteError?.constructor?.name,
         message: inviteError?.message,
-        stack: inviteError?.stack,
-        cause: inviteError?.cause,
         errorJson: safeJsonStringify(inviteError),
-        inviteData: { ...inviteData, email: '[redacted]' },
       });
       return Response.json(
         { error: `Failed to create invite record: ${inviteError?.message || 'Unknown error'}` },
@@ -178,20 +145,17 @@ Deno.serve(async (req) => {
     // Determine platform role — HC and AD get admin, everyone else gets user
     const platformRole = ['head_coach', 'athletic_director'].includes(effectiveCoachingRole) ? 'admin' : 'user';
 
-    // Send the platform invite (the SDK handles deduplication — if user already exists, it's a no-op)
+    // Send the platform invite email
     try {
       await base44.auth.inviteUser(email.trim(), platformRole);
       console.log('sendInvite: platform invite sent successfully', { platformRole });
-    } catch (inviteUserError: any) {
-      const errMsg: string = inviteUserError?.message || '';
-      // If user already exists on the platform, that's acceptable — continue
+    } catch (inviteUserError) {
+      const errMsg = inviteUserError?.message || '';
+      // If user already exists on the platform that is fine — the invite record was created
       if (errMsg.toLowerCase().includes('already') || errMsg.toLowerCase().includes('exists')) {
-        console.log('sendInvite: user already exists on platform, skipping invite', { platformRole });
+        console.log('sendInvite: user already exists on platform, invite record created', { platformRole });
       } else {
-        console.error('sendInvite: inviteUser failed', {
-          message: errMsg,
-          errorJson: safeJsonStringify(inviteUserError),
-        });
+        console.error('sendInvite: inviteUser failed', { message: errMsg });
         return Response.json(
           { error: `Failed to send platform invite: ${errMsg || 'Unknown error'}` },
           { status: 500 },
@@ -200,12 +164,10 @@ Deno.serve(async (req) => {
     }
 
     return Response.json({ success: true, player_id: player_id || null });
-  } catch (error: any) {
+  } catch (error) {
     console.error('sendInvite error:', {
-      errorType: error?.constructor?.name,
       message: error?.message,
       stack: error?.stack,
-      cause: error?.cause,
       errorJson: safeJsonStringify(error),
     });
     return Response.json({ error: error?.message || 'Unknown error' }, { status: 500 });
