@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 /** Safely stringify a value for error logging; returns '[unstringifiable]' on failure. */
 function safeJsonStringify(value: unknown): string {
