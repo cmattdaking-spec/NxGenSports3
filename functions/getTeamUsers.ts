@@ -11,12 +11,15 @@ Deno.serve(async (req) => {
     // Super admin: only sees users for schools explicitly assigned to them
     // (minus other super admins).
     if (user.role === 'super_admin') {
-      const allSchools = await base44.asServiceRole.entities.School.list(
-        '-created_date',
-        500,
-        0,
-        ['team_id', 'super_admin_id'],
-      );
+      const [allSchools, allUsers] = await Promise.all([
+        base44.asServiceRole.entities.School.list(
+          '-created_date',
+          500,
+          0,
+          ['team_id', 'super_admin_id'],
+        ),
+        base44.asServiceRole.entities.User.list(),
+      ]);
       const myTeamIds = new Set(
         allSchools
           .filter((s: any) => !s.super_admin_id || s.super_admin_id === user.id)
@@ -28,7 +31,6 @@ Deno.serve(async (req) => {
         return Response.json([]);
       }
 
-      const allUsers = await base44.asServiceRole.entities.User.list();
       const scopedUsers = allUsers.filter((u: any) =>
         u.role !== 'super_admin' && u.team_id && myTeamIds.has(u.team_id)
       );

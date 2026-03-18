@@ -167,10 +167,10 @@ export default function Login() {
     try {
       // Create parent user account
       const response = await base44.functions.invoke("createParentUser", {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        schoolId: formData.school,
-        assignedSports: formData.sports,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        school_id: formData.school,
+        assigned_sports: formData.sports,
         position: formData.position,
       });
 

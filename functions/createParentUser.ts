@@ -13,27 +13,27 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const {
-      firstName,
-      lastName,
-      schoolId,
-      assignedSports,
+      first_name,
+      last_name,
+      school_id,
+      assigned_sports,
       position,
       email,
-      childPlayerId
+      child_player_id,
     } = body;
 
-    if (!firstName || !lastName || !schoolId || !assignedSports || assignedSports.length === 0) {
+    if (!first_name || !last_name || !school_id || !assigned_sports || assigned_sports.length === 0) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // Create parent user with restricted permissions
     // Only superadmin can edit these users until they're assigned to a team
     const userData = {
-      first_name: firstName,
-      last_name: lastName,
-      full_name: `${firstName} ${lastName}`,
-      school_id: schoolId,
-      assigned_sports: assignedSports,
+      first_name,
+      last_name,
+      full_name: `${first_name} ${last_name}`,
+      school_id,
+      assigned_sports,
       position: position || 'Parent',
       role: 'user', // Regular user role
       coaching_role: 'parent', // Mark as parent - restricts permissions
@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
       profile_verified: false, // Will need superadmin approval
       email: email, // If provided during signup
       user_type: 'parent',
-      child_ids: childPlayerId ? [childPlayerId] : [],
+      child_ids: child_player_id ? [child_player_id] : [],
       // Mark as pending superadmin approval
       status: 'pending_approval'
     };
@@ -49,9 +49,9 @@ Deno.serve(async (req) => {
     // Create the user record
     const newUser = await base44.asServiceRole.entities.User.create(userData);
 
-    // Establish parent-child relationship if childPlayerId provided
-    if (childPlayerId) {
-      await base44.asServiceRole.entities.User.update(childPlayerId, {
+    // Establish parent-child relationship if child_player_id provided
+    if (child_player_id) {
+      await base44.asServiceRole.entities.User.update(child_player_id, {
         parent_id: newUser.id
       });
     }
