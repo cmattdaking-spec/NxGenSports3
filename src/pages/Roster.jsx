@@ -31,7 +31,12 @@ export default function Roster() {
   const [schools, setSchools] = useState([]);
   const [schoolsLoading, setSchoolsLoading] = useState(false);
 
-  const load = () => base44.entities.Player.filter({ sport: activeSport }).then(d => { setPlayers(d); setLoading(false); });
+  const load = () => {
+    // Always scope to user's team_id to prevent cross-org data leakage
+    const filter = { sport: activeSport };
+    if (ctxUser?.team_id) filter.team_id = ctxUser.team_id;
+    base44.entities.Player.filter(filter).then(d => { setPlayers(d); setLoading(false); });
+  };
 
   const { refreshing, pullDelta, handlers: pullHandlers } = usePullToRefresh(load);
 

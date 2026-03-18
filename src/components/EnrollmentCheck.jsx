@@ -56,11 +56,19 @@ export default function EnrollmentCheck({ children }) {
         }
 
         // Look for pending invite matching this email
-        const invites = await base44.entities.Invite.filter(
-          { email: user.email, status: "pending" },
-          "-created_date",
-          1
-        );
+        // Note: new invitees have no team_id yet, so we search by email only.
+        // The RLS now allows users to read invites where data.email matches their email.
+        let invites = [];
+        try {
+          invites = await base44.entities.Invite.filter(
+            { email: user.email, status: "pending" },
+            "-created_date",
+            1
+          );
+        } catch {
+          // If the user has no team_id yet the original RLS would block this — best effort
+          invites = [];
+        }
 
         // If user already has a team AND no pending invite for a different team, skip enrollment
         if (user.team_id && invites.length === 0) {
