@@ -155,11 +155,8 @@ Deno.serve(async (req) => {
       if (errMsg.toLowerCase().includes('already') || errMsg.toLowerCase().includes('exists')) {
         console.log('sendInvite: user already exists on platform, invite record created', { platformRole });
       } else {
-        console.error('sendInvite: inviteUser failed', { message: errMsg });
-        return Response.json(
-          { error: `Failed to send platform invite: ${errMsg || 'Unknown error'}` },
-          { status: 500 },
-        );
+        // Log but don't fail — the invite record was created and enrollment will work on first login
+        console.warn('sendInvite: inviteUser failed (non-fatal, invite record was created)', { message: errMsg });
       }
     }
 
