@@ -42,8 +42,11 @@ export default function Roster() {
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     load();
-  }, [activeSport]);
+  }, [activeSport, ctxUser?.team_id]);
 
   useEffect(() => {
     if (isSuperAdmin) {
