@@ -226,9 +226,18 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         poc_phone: form.poc_phone.trim(),
       };
 
-      await base44.entities.School.create(schoolData);
+      const createdSchool = await base44.entities.School.create(schoolData);
 
-      setMsg({ text: `School "${form.school_name}" created successfully.`, type: "success" });
+      // Send POC invite immediately after school creation
+      if (form.poc_email?.trim() && form.poc_name?.trim()) {
+        try {
+          await createPointOfContactInvite({ ...schoolData, id: createdSchool.id, school_code: schoolCode });
+        } catch (inviteErr) {
+          console.warn("POC invite failed (school was created):", inviteErr?.message);
+        }
+      }
+
+      setMsg({ text: `School "${form.school_name}" created & invite sent to ${form.poc_email}.`, type: "success" });
       setForm(EMPTY_FORM);
       setShowAddSchool(false);
       loadSchools();
