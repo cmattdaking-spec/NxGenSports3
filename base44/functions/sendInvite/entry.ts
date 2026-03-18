@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
 
     // Send the platform invite (the SDK handles deduplication — if user already exists, it's a no-op)
     try {
-      await base44.asServiceRole.inviteUser(email.trim(), platformRole);
+      await base44.auth.inviteUser(email.trim(), platformRole);
       console.log('sendInvite: platform invite sent successfully', { platformRole });
     } catch (inviteUserError: any) {
       const errMsg: string = inviteUserError?.message || '';
