@@ -53,9 +53,12 @@ function ADPortalContent() {
   const [activeTab, setActiveTab] = useState("overview");
 
   const loadData = useCallback(async () => {
-    const [u, p, docs, h, o, pp, s] = await Promise.all([
-      base44.auth.me().catch(() => null),
-      base44.entities.Player.list(),
+    const u = await base44.auth.me().catch(() => null);
+    const teamId = u?.team_id;
+    // Scope all queries to the AD's team_id to prevent cross-org data leakage
+    const playerFilter = teamId ? { team_id: teamId } : {};
+    const [p, docs, h, o, pp, s] = await Promise.all([
+      teamId ? base44.entities.Player.filter(playerFilter) : Promise.resolve([]),
       base44.entities.PlayerDocument.list(),
       base44.entities.PlayerHealth.list(),
       base44.entities.Opponent.list(),

@@ -44,9 +44,8 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'super_admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-    // Use pagination (skip-based) and projection to avoid loading the entire
-    // School document including any embedded / back-referenced Player collection,
-    // which would cause circular-reference JSON serialisation errors and 502s.
+    // Paginate all schools then filter to only those owned by this super admin
+    // (schools with no super_admin_id are visible to all super admins)
     const allSchools: Record<string, any>[] = [];
     let skip = 0;
     while (true) {
@@ -59,11 +58,16 @@ Deno.serve(async (req) => {
       if (!batch || batch.length === 0) break;
 
       allSchools.push(...batch);
-      if (batch.length < PAGE_SIZE) break; // reached the last page
+      if (batch.length < PAGE_SIZE) break;
       skip += PAGE_SIZE;
     }
 
-    return Response.json({ schools: allSchools });
+    // Filter: show only schools explicitly assigned to this super_admin OR unassigned ones
+    const scopedSchools = allSchools.filter((s: any) =>
+      !s.super_admin_id || s.super_admin_id === user.id
+    );
+
+    return Response.json({ schools: scopedSchools });
   } catch (error: any) {
     console.error('listAllSchools error:', {
       message: error?.message,
