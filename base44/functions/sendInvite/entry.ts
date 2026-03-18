@@ -178,46 +178,22 @@ Deno.serve(async (req) => {
     // Determine platform role — HC and AD get admin, everyone else gets user
     const platformRole = ['head_coach', 'athletic_director'].includes(effectiveCoachingRole) ? 'admin' : 'user';
 
-    // Check if the user already exists on the platform before attempting to invite
-    let userAlreadyExists = false;
+    // Send the platform invite (the SDK handles deduplication — if user already exists, it's a no-op)
     try {
-      const existingUser = await base44.asServiceRole.users.getUserByEmail(email.trim());
-      if (existingUser) {
-        userAlreadyExists = true;
-        console.log('sendInvite: user already exists on platform, skipping inviteUser call', { platformRole });
-      }
-    } catch (getUserError: any) {
-      // getUserByEmail throws when the user is not found — this is expected for new users.
-      // Log unexpected errors (e.g. network or permission issues) for debugging while still
-      // proceeding with the invite attempt.
-      const msg: string = getUserError?.message || '';
-      if (!msg.toLowerCase().includes('not found') && !msg.toLowerCase().includes('does not exist')) {
-        console.warn('sendInvite: unexpected error from getUserByEmail, will attempt inviteUser anyway', {
-          errorType: getUserError?.constructor?.name,
-          message: msg,
-        });
+      await base44.asServiceRole.inviteUser(email.trim(), platformRole);
+      console.log('sendInvite: platform invite sent successfully', { platformRole });
+    } catch (inviteUserError: any) {
+      const errMsg: string = inviteUserError?.message || '';
+      // If user already exists on the platform, that's acceptable — continue
+      if (errMsg.toLowerCase().includes('already') || errMsg.toLowerCase().includes('exists')) {
+        console.log('sendInvite: user already exists on platform, skipping invite', { platformRole });
       } else {
-        console.log('sendInvite: user not found on platform, will send platform invite', { platformRole });
-      }
-    }
-
-    // Send the platform invite only if the user is not already registered
-    if (!userAlreadyExists) {
-      try {
-        await base44.asServiceRole.users.inviteUser(email.trim(), platformRole);
-        console.log('sendInvite: platform invite sent successfully', { platformRole });
-      } catch (inviteUserError: any) {
-        console.error('sendInvite: users.inviteUser failed', {
-          errorType: inviteUserError?.constructor?.name,
-          message: inviteUserError?.message,
-          stack: inviteUserError?.stack,
-          cause: inviteUserError?.cause,
+        console.error('sendInvite: inviteUser failed', {
+          message: errMsg,
           errorJson: safeJsonStringify(inviteUserError),
-          platformRole,
-          inviteData: { ...inviteData, email: '[redacted]' },
         });
         return Response.json(
-          { error: `Failed to send platform invite: ${inviteUserError?.message || 'Unknown error'}` },
+          { error: `Failed to send platform invite: ${errMsg || 'Unknown error'}` },
           { status: 500 },
         );
       }
