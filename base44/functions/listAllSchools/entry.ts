@@ -21,17 +21,9 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'super_admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-    const allSchools = [];
-    let skip = 0;
-    while (true) {
-      const batch = await base44.asServiceRole.entities.School.list('-created_date', PAGE_SIZE, skip, SCHOOL_PROJECTION);
-      if (!batch || batch.length === 0) break;
-      allSchools.push(...batch);
-      if (batch.length < PAGE_SIZE) break;
-      skip += PAGE_SIZE;
-    }
+    const allSchools = await base44.asServiceRole.entities.School.filter({}, '-created_date', 500);
 
-    return Response.json({ schools: allSchools });
+    return Response.json({ schools: allSchools || [] });
   } catch (error) {
     console.error('listAllSchools error:', { message: error?.message, errorJson: safeJsonStringify(error) });
     return Response.json({ error: error?.message || 'Unknown error' }, { status: 500 });
