@@ -31,10 +31,7 @@ Deno.serve(async (req) => {
       skip += PAGE_SIZE;
     }
 
-    // Show schools assigned to this super admin OR unassigned ones
-    const scopedSchools = allSchools.filter(s => !s.super_admin_id || s.super_admin_id === user.id);
-
-    return Response.json({ schools: scopedSchools });
+    return Response.json({ schools: allSchools });
   } catch (error) {
     console.error('listAllSchools error:', { message: error?.message, errorJson: safeJsonStringify(error) });
     return Response.json({ error: error?.message || 'Unknown error' }, { status: 500 });
