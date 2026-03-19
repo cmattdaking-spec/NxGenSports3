@@ -112,11 +112,14 @@ export default function Roster() {
         // Send player an email invitation if contact_email is provided
         if (scopedPlayerPayload.contact_email?.trim() && scopedPlayerPayload.first_name?.trim() && scopedPlayerPayload.last_name?.trim()) {
           try {
+            const schoolName = ctxUser?.school_name
+              || schools.find(s => s.id === scopedPlayerPayload.school_id)?.school_name
+              || null;
             await base44.functions.invoke("sendInvite", {
               email: scopedPlayerPayload.contact_email.trim(),
               team_id: scopedPlayerPayload.team_id,
               school_id: scopedPlayerPayload.school_id,
-              school_name: ctxUser?.school_name || null,
+              school_name: schoolName,
               school_code: scopedPlayerPayload.school_code,
               first_name: scopedPlayerPayload.first_name.trim(),
               last_name: scopedPlayerPayload.last_name.trim(),
@@ -126,7 +129,7 @@ export default function Roster() {
               invite_type: "player",
             });
           } catch (inviteErr) {
-            console.warn("Player invite failed (player was created):", inviteErr?.message);
+            console.warn(`Player invite failed for ${scopedPlayerPayload.contact_email} (player was created):`, inviteErr?.message);
           }
         }
       } catch {
