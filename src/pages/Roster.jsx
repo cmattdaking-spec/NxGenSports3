@@ -30,6 +30,7 @@ export default function Roster() {
   const [expanded, setExpanded] = useState(null);
   const [schools, setSchools] = useState([]);
   const [schoolsLoading, setSchoolsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const load = () => {
     // Always scope to user's team_id to prevent cross-org data leakage
@@ -84,6 +85,11 @@ export default function Roster() {
   const openEdit = (p) => { setEditing(p); setForm({ ...p }); setShowForm(true); };
 
   const save = async () => {
+    if (!isSuperAdmin && ctxUser?.team_id == null) {
+      setErrorMsg("Your account is missing a team assignment. Contact your administrator.");
+      return;
+    }
+    setErrorMsg("");
     setShowForm(false);
     const scopedPlayerPayload = {
       ...form,
@@ -271,12 +277,20 @@ export default function Roster() {
           setForm={setForm}
           editing={editing}
           onSave={save}
-          onClose={() => setShowForm(false)}
+          onClose={() => { setShowForm(false); setErrorMsg(""); }}
           activeSport={activeSport}
           isSuperAdmin={isSuperAdmin}
           schools={schools}
           schoolsLoading={schoolsLoading}
         />
+      )}
+
+      {/* Error notification */}
+      {errorMsg && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-xl text-sm z-50 max-w-md text-center shadow-lg">
+          {errorMsg}
+          <button onClick={() => setErrorMsg("")} aria-label="Close error message" className="ml-3 text-red-400 hover:text-white transition-colors">✕</button>
+        </div>
       )}
     </div>
   );
