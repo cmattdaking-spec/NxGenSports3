@@ -5,7 +5,6 @@ const SCHOOL_PROJECTION = [
   'logo_url', 'primary_color', 'secondary_color', 'status',
   'subscription_term', 'subscription_start', 'subscription_end', 'subscribed_sports',
   'location_city', 'location_state', 'poc_name', 'poc_role', 'poc_email', 'poc_phone',
-  'super_admin_id',
 ];
 
 function safeJsonStringify(value) {
