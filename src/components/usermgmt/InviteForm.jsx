@@ -172,7 +172,20 @@ export default function InviteForm({ user, onClose, onInvited }) {
       {/* Invite type */}
       <div className="flex gap-2">
         {[{ id: "staff", label: "Staff Member" }, { id: "player", label: "Player" }, { id: "parent", label: "Parent" }].map(t => (
-          <button key={t.id} onClick={() => setInviteType(t.id)}
+          <button key={t.id} onClick={() => {
+            setInviteType(t.id);
+            // Reset all type-specific fields when switching invite type
+            setForm(p => ({
+              ...p,
+              coaching_role: STAFF_ROLES[0]?.value || "head_coach",
+              positions: [],
+              phases: [],
+              sports: user?.assigned_sports?.length ? [...user.assigned_sports] : [defaultSport],
+              child_player_id: "",
+            }));
+            setMsg({ text: "", type: "" });
+            setGeneratedPlayerId(null);
+          }}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${inviteType === t.id ? "text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}
             style={inviteType === t.id ? { backgroundColor: "var(--color-primary,#3b82f6)" } : {}}>
             {t.label}

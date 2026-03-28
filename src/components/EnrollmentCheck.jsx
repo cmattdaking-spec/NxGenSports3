@@ -70,20 +70,13 @@ export default function EnrollmentCheck({ children }) {
           invites = [];
         }
 
-        // If user already has a team AND no pending invite for a different team, skip enrollment
+        // If user already has a team AND no pending invite, skip enrollment
         if (user.team_id && invites.length === 0) {
           setChecked(true);
           return;
         }
 
-        // If user already has a team AND the pending invite is for the SAME team, sync missing profile fields and mark accepted
-        if (user.team_id && invites.length > 0 && invites[0].team_id === user.team_id) {
-          await base44.auth.updateMe(buildInviteProfileUpdate(invites[0]));
-          await base44.entities.Invite.update(invites[0].id, { status: "accepted" });
-          setChecked(true);
-          return;
-        }
-
+        // If there is a pending invite, always apply it (regardless of same/different team)
         if (invites.length > 0) {
           const invite = invites[0];
 

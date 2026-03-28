@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import {
   Plus, Building2, X, ChevronDown, ChevronUp,
   Search, RefreshCw, Trash2,
-  MapPin, Calendar, Users, Mail, Phone, Edit2, Ban, PauseCircle, PlayCircle, UserPlus, Shield
+  MapPin, Calendar, Users, User, Mail, Phone, Edit2, Ban, PauseCircle, PlayCircle, UserPlus, Shield
 } from "lucide-react";
 import InviteForm from "./InviteForm";
 import MasterTeamsTab from "./MasterTeamsTab";
@@ -116,6 +116,24 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
   const [reinvitingId, setReinvitingId] = useState(null);
   const [addingUserId, setAddingUserId] = useState(null);
 
+  // ── Users tab state ──
+  const [usersData, setUsersData] = useState([]);
+  const [usersDataLoading, setUsersDataLoading] = useState(false);
+  const [usersDataError, setUsersDataError] = useState("");
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editUserForm, setEditUserForm] = useState({});
+  const [savingUserId, setSavingUserId] = useState(null);
+  const [userSearch, setUserSearch] = useState("");
+
+  // ── Players tab state ──
+  const [playersData, setPlayersData] = useState([]);
+  const [playersDataLoading, setPlayersDataLoading] = useState(false);
+  const [playersDataError, setPlayersDataError] = useState("");
+  const [editingPlayerId, setEditingPlayerId] = useState(null);
+  const [editPlayerForm, setEditPlayerForm] = useState({});
+  const [savingPlayerId, setSavingPlayerId] = useState(null);
+  const [playerSearch, setPlayerSearch] = useState("");
+
   const loadSchools = () => {
     setSchoolsLoading(true);
     setSchoolsError("");
@@ -128,6 +146,30 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
     });
   };
 
+  const loadUsersData = () => {
+    setUsersDataLoading(true);
+    setUsersDataError("");
+    base44.functions.invoke("getTeamUsers").then(res => {
+      setUsersData(Array.isArray(res.data) ? res.data : []);
+      setUsersDataLoading(false);
+    }).catch(err => {
+      setUsersDataError(err.message || "Failed to load users.");
+      setUsersDataLoading(false);
+    });
+  };
+
+  const loadPlayersData = () => {
+    setPlayersDataLoading(true);
+    setPlayersDataError("");
+    base44.entities.Player.list("-created_date").then(list => {
+      setPlayersData(list || []);
+      setPlayersDataLoading(false);
+    }).catch(err => {
+      setPlayersDataError(err.message || "Failed to load players.");
+      setPlayersDataLoading(false);
+    });
+  };
+
   const saveAccentColor = async () => {
     setSavingColor(true);
     await base44.auth.updateMe({ accent_color: accentColor });
@@ -136,6 +178,19 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
   };
 
   useEffect(() => { loadSchools(); }, []);
+
+  // Lazy-load users and players when their tabs are first opened
+  useEffect(() => {
+    if (activeTab === "users" && usersData.length === 0 && !usersDataLoading) {
+      loadUsersData();
+    }
+  }, [activeTab, usersData.length, usersDataLoading]);
+
+  useEffect(() => {
+    if (activeTab === "players" && playersData.length === 0 && !playersDataLoading) {
+      loadPlayersData();
+    }
+  }, [activeTab, playersData.length, playersDataLoading]);
 
   // Build member counts from allUsers by team_id
   // Scope member counts to users belonging to schools assigned to this super admin.
@@ -320,6 +375,32 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
     setTimeout(() => setMsg({ text: "", type: "" }), 5000);
   };
 
+  const saveUserEdit = async (userId) => {
+    setSavingUserId(userId);
+    try {
+      await base44.functions.invoke("updateTeamUser", { userId, data: editUserForm });
+      setUsersData(prev => prev.map(u => u.id === userId ? { ...u, ...editUserForm } : u));
+      setEditingUserId(null);
+    } catch (err) {
+      setMsg({ text: `Error updating user: ${err.message}`, type: "error" });
+      setTimeout(() => setMsg({ text: "", type: "" }), 5000);
+    }
+    setSavingUserId(null);
+  };
+
+  const savePlayerEdit = async (playerId) => {
+    setSavingPlayerId(playerId);
+    try {
+      await base44.entities.Player.update(playerId, editPlayerForm);
+      setPlayersData(prev => prev.map(p => p.id === playerId ? { ...p, ...editPlayerForm } : p));
+      setEditingPlayerId(null);
+    } catch (err) {
+      setPlayersDataError(`Error updating player: ${err.message}`);
+      setTimeout(() => setPlayersDataError(""), 5000);
+    }
+    setSavingPlayerId(null);
+  };
+
   // Only block on schools loading — user count/members are bonus info
   const loading = schoolsLoading;
 
@@ -362,13 +443,27 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
       </div>
 
       {/* Tab navigation */}
-      <div className="flex gap-1 bg-[#141414] border border-gray-800 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 bg-[#141414] border border-gray-800 rounded-xl p-1 w-fit flex-wrap">
         <button
           onClick={() => setActiveTab("schools")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "schools" ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
           style={activeTab === "schools" ? { backgroundColor: "var(--color-primary,#f97316)22", color: "var(--color-primary,#f97316)" } : {}}
         >
           <Building2 className="w-4 h-4" /> Schools
+        </button>
+        <button
+          onClick={() => setActiveTab("users")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "users" ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
+          style={activeTab === "users" ? { backgroundColor: "var(--color-primary,#f97316)22", color: "var(--color-primary,#f97316)" } : {}}
+        >
+          <Users className="w-4 h-4" /> Users
+        </button>
+        <button
+          onClick={() => setActiveTab("players")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "players" ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
+          style={activeTab === "players" ? { backgroundColor: "var(--color-primary,#f97316)22", color: "var(--color-primary,#f97316)" } : {}}
+        >
+          <User className="w-4 h-4" /> Players
         </button>
         <button
           onClick={() => setActiveTab("master_teams")}
@@ -401,7 +496,7 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
           setForm={setForm}
           onToggleSport={(s) => toggleSport(s, "subscribed_sports", setForm)}
           onSubmit={handleSubmit}
-          onCancel={() => setShowAddSchool(false)}
+          onCancel={() => { setShowAddSchool(false); setForm(EMPTY_FORM); }}
           submitting={submitting}
           title="Add New School / Organization"
         />
@@ -639,6 +734,262 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         })}
       </div>
         </>
+      )}
+
+      {/* Users tab */}
+      {activeTab === "users" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <input type="text" value={userSearch} onChange={e => setUserSearch(e.target.value)}
+                placeholder="Search users..."
+                className="w-full bg-[#141414] border border-gray-800 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm placeholder-gray-600 outline-none" />
+            </div>
+            <button onClick={loadUsersData} className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-all" title="Refresh">
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
+
+          {usersDataError && <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm">{usersDataError}</div>}
+
+          {usersDataLoading ? (
+            <div className="text-center py-12 text-gray-500">
+              <div className="w-6 h-6 border-2 border-gray-600 border-t-orange-500 rounded-full animate-spin mx-auto mb-2" />
+              Loading users...
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {usersData
+                .filter(u => {
+                  const q = userSearch.toLowerCase();
+                  return !q || (u.full_name || "").toLowerCase().includes(q) ||
+                    (u.email || "").toLowerCase().includes(q) ||
+                    (u.team_id || "").toLowerCase().includes(q) ||
+                    (u.school_name || "").toLowerCase().includes(q);
+                })
+                .map(u => {
+                  const isEditing = editingUserId === u.id;
+                  return (
+                    <div key={u.id} className="bg-[#141414] border border-gray-800 rounded-xl overflow-hidden">
+                      <div className="px-4 py-3 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                          style={{ backgroundColor: "var(--color-primary,#f97316)22", color: "var(--color-primary,#f97316)" }}>
+                          {(u.full_name || u.email || "?")[0].toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium">{u.full_name || "—"}</p>
+                          <p className="text-gray-500 text-xs">{u.email}</p>
+                          {u.school_name && <p className="text-gray-600 text-xs">{u.school_name} · <span className="font-mono">{u.team_id}</span></p>}
+                        </div>
+                        <span className="text-xs text-gray-500 capitalize bg-gray-800 px-2 py-0.5 rounded hidden md:block">
+                          {u.coaching_role?.replace(/_/g, " ") || u.role}
+                        </span>
+                        <button onClick={() => {
+                          if (isEditing) { setEditingUserId(null); return; }
+                          setEditingUserId(u.id);
+                          setEditUserForm({
+                            school_id: u.school_id || "",
+                            team_id: u.team_id || "",
+                            school_name: u.school_name || "",
+                            school_code: u.school_code || "",
+                            assigned_sports: u.assigned_sports || [],
+                          });
+                        }}
+                          className={`p-2 rounded-lg transition-all ${isEditing ? "text-white bg-gray-700" : "text-gray-500 hover:text-white hover:bg-gray-800"}`}>
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      {isEditing && (
+                        <div className="border-t border-gray-800 p-4 space-y-3">
+                          <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Reassign School / Team</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-gray-400 text-xs mb-1 block">School Name</label>
+                              <input value={editUserForm.school_name} onChange={e => setEditUserForm(p => ({ ...p, school_name: e.target.value }))}
+                                placeholder="School name" className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm outline-none" />
+                            </div>
+                            <div>
+                              <label className="text-gray-400 text-xs mb-1 block">Team ID</label>
+                              <input value={editUserForm.team_id} onChange={e => setEditUserForm(p => ({ ...p, team_id: e.target.value }))}
+                                placeholder="team_id" className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm outline-none font-mono" />
+                            </div>
+                            <div>
+                              <label className="text-gray-400 text-xs mb-1 block">School ID</label>
+                              <input value={editUserForm.school_id} onChange={e => setEditUserForm(p => ({ ...p, school_id: e.target.value }))}
+                                placeholder="school_id" className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm outline-none font-mono" />
+                            </div>
+                            <div>
+                              <label className="text-gray-400 text-xs mb-1 block">School Code</label>
+                              <input value={editUserForm.school_code} onChange={e => setEditUserForm(p => ({ ...p, school_code: e.target.value }))}
+                                placeholder="e.g. XABCD5" className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm outline-none font-mono" />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-gray-400 text-xs mb-2 block">Assigned Sports</label>
+                            <div className="flex flex-wrap gap-1.5">
+                              {ALL_SPORTS.map(s => (
+                                <button key={s} onClick={() => setEditUserForm(p => ({
+                                  ...p,
+                                  assigned_sports: p.assigned_sports.includes(s)
+                                    ? p.assigned_sports.filter(x => x !== s)
+                                    : [...p.assigned_sports, s]
+                                }))}
+                                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${editUserForm.assigned_sports?.includes(s) ? "text-white" : "bg-gray-800 text-gray-500 hover:text-gray-300"}`}
+                                  style={editUserForm.assigned_sports?.includes(s) ? { backgroundColor: "var(--color-primary,#f97316)" } : {}}>
+                                  {SPORT_LABELS[s] || s}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => saveUserEdit(u.id)} disabled={savingUserId === u.id}
+                              className="px-4 py-2 rounded-xl text-white text-sm font-semibold disabled:opacity-50"
+                              style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+                              {savingUserId === u.id ? "Saving..." : "Save Changes"}
+                            </button>
+                            <button onClick={() => setEditingUserId(null)} className="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 text-sm hover:bg-gray-700">
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              {usersData.length === 0 && !usersDataLoading && (
+                <p className="text-center text-gray-600 py-8 text-sm">No users found.</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Players tab */}
+      {activeTab === "players" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <input type="text" value={playerSearch} onChange={e => setPlayerSearch(e.target.value)}
+                placeholder="Search players..."
+                className="w-full bg-[#141414] border border-gray-800 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm placeholder-gray-600 outline-none" />
+            </div>
+            <button onClick={loadPlayersData} className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-all" title="Refresh">
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
+
+          {playersDataError && <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm">{playersDataError}</div>}
+
+          {playersDataLoading ? (
+            <div className="text-center py-12 text-gray-500">
+              <div className="w-6 h-6 border-2 border-gray-600 border-t-orange-500 rounded-full animate-spin mx-auto mb-2" />
+              Loading players...
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {playersData
+                .filter(p => {
+                  const q = playerSearch.toLowerCase();
+                  return !q || (`${p.first_name || ""} ${p.last_name || ""}`).toLowerCase().includes(q) ||
+                    (p.team_id || "").toLowerCase().includes(q) ||
+                    (p.school_id || "").toLowerCase().includes(q) ||
+                    (p.position || "").toLowerCase().includes(q);
+                })
+                .map(p => {
+                  const isEditing = editingPlayerId === p.id;
+                  const playerName = `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Unnamed Player";
+                  return (
+                    <div key={p.id} className="bg-[#141414] border border-gray-800 rounded-xl overflow-hidden">
+                      <div className="px-4 py-3 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                          style={{ backgroundColor: "var(--color-primary,#f97316)22", color: "var(--color-primary,#f97316)" }}>
+                          {playerName[0]?.toUpperCase() || "P"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium">{playerName}</p>
+                          <p className="text-gray-500 text-xs">
+                            {p.position && <span className="mr-2">{p.position}</span>}
+                            {p.sport && <span>{SPORT_LABELS[p.sport] || p.sport}</span>}
+                          </p>
+                          {p.team_id && <p className="text-gray-600 text-xs font-mono">{p.team_id}</p>}
+                        </div>
+                        <button onClick={() => {
+                          if (isEditing) { setEditingPlayerId(null); return; }
+                          setEditingPlayerId(p.id);
+                          setEditPlayerForm({
+                            first_name: p.first_name || "",
+                            last_name: p.last_name || "",
+                            school_id: p.school_id || "",
+                            team_id: p.team_id || "",
+                            sport: p.sport || "",
+                            position: p.position || "",
+                          });
+                        }}
+                          className={`p-2 rounded-lg transition-all ${isEditing ? "text-white bg-gray-700" : "text-gray-500 hover:text-white hover:bg-gray-800"}`}>
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      {isEditing && (
+                        <div className="border-t border-gray-800 p-4 space-y-3">
+                          <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Edit Player</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-gray-400 text-xs mb-1 block">First Name</label>
+                              <input value={editPlayerForm.first_name} onChange={e => setEditPlayerForm(p => ({ ...p, first_name: e.target.value }))}
+                                placeholder="First name" className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm outline-none" />
+                            </div>
+                            <div>
+                              <label className="text-gray-400 text-xs mb-1 block">Last Name</label>
+                              <input value={editPlayerForm.last_name} onChange={e => setEditPlayerForm(p => ({ ...p, last_name: e.target.value }))}
+                                placeholder="Last name" className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm outline-none" />
+                            </div>
+                            <div>
+                              <label className="text-gray-400 text-xs mb-1 block">Team ID</label>
+                              <input value={editPlayerForm.team_id} onChange={e => setEditPlayerForm(p => ({ ...p, team_id: e.target.value }))}
+                                placeholder="team_id" className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm outline-none font-mono" />
+                            </div>
+                            <div>
+                              <label className="text-gray-400 text-xs mb-1 block">School ID</label>
+                              <input value={editPlayerForm.school_id} onChange={e => setEditPlayerForm(p => ({ ...p, school_id: e.target.value }))}
+                                placeholder="school_id" className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm outline-none font-mono" />
+                            </div>
+                            <div>
+                              <label className="text-gray-400 text-xs mb-1 block">Sport</label>
+                              <select value={editPlayerForm.sport} onChange={e => setEditPlayerForm(p => ({ ...p, sport: e.target.value }))}
+                                className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm outline-none">
+                                <option value="">— select sport —</option>
+                                {ALL_SPORTS.map(s => <option key={s} value={s}>{SPORT_LABELS[s] || s}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-gray-400 text-xs mb-1 block">Position</label>
+                              <input value={editPlayerForm.position} onChange={e => setEditPlayerForm(p => ({ ...p, position: e.target.value }))}
+                                placeholder="e.g. QB, WR" className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2 text-white text-sm outline-none" />
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => savePlayerEdit(p.id)} disabled={savingPlayerId === p.id}
+                              className="px-4 py-2 rounded-xl text-white text-sm font-semibold disabled:opacity-50"
+                              style={{ backgroundColor: "var(--color-primary,#f97316)" }}>
+                              {savingPlayerId === p.id ? "Saving..." : "Save Changes"}
+                            </button>
+                            <button onClick={() => setEditingPlayerId(null)} className="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 text-sm hover:bg-gray-700">
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              {playersData.length === 0 && !playersDataLoading && (
+                <p className="text-center text-gray-600 py-8 text-sm">No players found.</p>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
