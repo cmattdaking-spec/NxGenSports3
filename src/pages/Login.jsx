@@ -1,9 +1,204 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
 
 const NXGEN_LOGO = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/29e077944_generated_image.png";
 
+const LEGAL_UPDATED = "March 14, 2026";
+
+function LegalDisclosure() {
+  return (
+    <div className="space-y-2">
+      <details className="rounded-xl border border-gray-800 bg-[#151515] px-3 py-2">
+        <summary className="cursor-pointer list-none text-xs font-semibold text-[#E8E8E8]">
+          Terms &amp; Conditions
+        </summary>
+        <div className="mt-2 space-y-2 text-[11px] leading-relaxed text-[#9CA3AF]">
+          <p>Last updated: {LEGAL_UPDATED}</p>
+          <p>NxGenSports provides school-managed access to team operations, athlete development, communication, scheduling, and performance data.</p>
+          <p>You are responsible for keeping your login credentials secure and using the platform lawfully. You may not access records outside your assigned school, sport, team, or role.</p>
+        </div>
+      </details>
+      <details className="rounded-xl border border-gray-800 bg-[#151515] px-3 py-2">
+        <summary className="cursor-pointer list-none text-xs font-semibold text-[#E8E8E8]">
+          Privacy Policy
+        </summary>
+        <div className="mt-2 space-y-2 text-[11px] leading-relaxed text-[#9CA3AF]">
+          <p>Last updated: {LEGAL_UPDATED}</p>
+          <p>NxGenSports collects account details, school and team affiliation data, and usage data to deliver the platform. Data is shared with program administrators based on your assigned role. NxGenSports does not sell personal information.</p>
+        </div>
+      </details>
+    </div>
+  );
+}
+
+// ─── Login Form ───────────────────────────────────────────────────────────────
+function LoginForm({ onSuccess }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!email || !password) { setError("Email and password are required."); return; }
+    setLoading(true);
+    setError("");
+    try {
+      const data = await base44.auth.login(email, password);
+      onSuccess(data.user);
+    } catch (err) {
+      setError(err.message || "Invalid email or password.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleLogin} className="space-y-4">
+      <div>
+        <label className="text-xs text-gray-400 mb-1 block">Email</label>
+        <input
+          type="email"
+          value={email}
+          onChange={e => { setEmail(e.target.value); setError(""); }}
+          placeholder="coach@school.edu"
+          className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-[#00F2FF] transition-colors"
+          data-testid="login-email-input"
+          required
+        />
+      </div>
+      <div>
+        <label className="text-xs text-gray-400 mb-1 block">Password</label>
+        <input
+          type="password"
+          value={password}
+          onChange={e => { setPassword(e.target.value); setError(""); }}
+          placeholder="••••••••"
+          className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-[#00F2FF] transition-colors"
+          data-testid="login-password-input"
+          required
+        />
+      </div>
+      {error && (
+        <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2" data-testid="login-error">
+          {error}
+        </div>
+      )}
+      <button
+        type="submit"
+        disabled={loading}
+        data-testid="login-submit-button"
+        className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{ background: "linear-gradient(135deg, #00F2FF, #1A4BBD)", color: "#121212" }}
+      >
+        {loading ? "Signing in..." : "Sign in"}
+      </button>
+    </form>
+  );
+}
+
+// ─── Invite Acceptance Form ───────────────────────────────────────────────────
+function InviteAcceptForm({ inviteToken, onSuccess }) {
+  const [invite, setInvite] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    base44.auth.getInvite(inviteToken)
+      .then(inv => { setInvite(inv); setLoading(false); })
+      .catch(err => { setError(err.message || "Invalid or expired invite link."); setLoading(false); });
+  }, [inviteToken]);
+
+  const handleAccept = async (e) => {
+    e.preventDefault();
+    if (!password || password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (password !== confirmPassword) { setError("Passwords do not match."); return; }
+    setSubmitting(true);
+    setError("");
+    try {
+      const data = await base44.auth.acceptInvite(inviteToken, password, invite?.poc_name || "");
+      onSuccess(data.user);
+    } catch (err) {
+      setError(err.message || "Failed to accept invite.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) return (
+    <div className="flex items-center justify-center py-8">
+      <div className="w-6 h-6 border-2 border-gray-600 border-t-[#00F2FF] rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error && !invite) return (
+    <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2">
+      {error}
+    </div>
+  );
+
+  return (
+    <form onSubmit={handleAccept} className="space-y-4">
+      <div className="bg-[#1a1a1a] border border-gray-800 rounded-xl p-3 text-xs text-gray-400 space-y-1">
+        <p><span className="text-white font-semibold">{invite?.poc_name || `${invite?.first_name || ""} ${invite?.last_name || ""}`.trim()}</span></p>
+        <p>{invite?.email}</p>
+        {invite?.school_name && <p>{invite.school_name}</p>}
+        {invite?.coaching_role && (
+          <p className="capitalize">{invite.coaching_role.replace(/_/g, " ")}</p>
+        )}
+      </div>
+
+      <div>
+        <label className="text-xs text-gray-400 mb-1 block">Create Password</label>
+        <input
+          type="password"
+          value={password}
+          onChange={e => { setPassword(e.target.value); setError(""); }}
+          placeholder="Min. 8 characters"
+          className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-[#00F2FF] transition-colors"
+          data-testid="invite-password-input"
+          required
+        />
+      </div>
+      <div>
+        <label className="text-xs text-gray-400 mb-1 block">Confirm Password</label>
+        <input
+          type="password"
+          value={confirmPassword}
+          onChange={e => { setConfirmPassword(e.target.value); setError(""); }}
+          placeholder="Re-enter password"
+          className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-[#00F2FF] transition-colors"
+          data-testid="invite-confirm-password-input"
+          required
+        />
+      </div>
+
+      {error && (
+        <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2">
+          {error}
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={submitting}
+        data-testid="invite-accept-button"
+        className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+        style={{ background: "linear-gradient(135deg, #00F2FF, #1A4BBD)", color: "#121212" }}
+      >
+        {submitting ? "Setting up account..." : "Accept Invite & Continue"}
+      </button>
+    </form>
+  );
+}
+
+// ─── Parent Signup Form ───────────────────────────────────────────────────────
 const SPORT_OPTIONS = [
   { id: "football", label: "Football" },
   { id: "basketball", label: "Basketball" },
@@ -15,411 +210,165 @@ const SPORT_OPTIONS = [
   { id: "wrestling", label: "Wrestling" },
 ];
 
-const LEGAL_UPDATED = "March 14, 2026";
+function ParentSignupForm({ onBack }) {
+  const [formData, setFormData] = useState({ firstName: "", lastName: "", school: "", position: "", sports: [] });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [schools, setSchools] = useState([]);
+  const [schoolsLoading, setSchoolsLoading] = useState(true);
 
-function LegalDisclosure() {
+  useEffect(() => {
+    base44.functions.invoke("listAllSchools")
+      .then(res => { setSchools(res.data?.schools || []); setSchoolsLoading(false); })
+      .catch(() => { setSchools([]); setSchoolsLoading(false); });
+  }, []);
+
+  const handleInputChange = e => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setError("");
+  };
+
+  const handleSportToggle = sportId => {
+    setFormData(prev => ({
+      ...prev,
+      sports: prev.sports.includes(sportId) ? prev.sports.filter(id => id !== sportId) : [...prev.sports, sportId]
+    }));
+  };
+
+  const handleSignUp = async e => {
+    e.preventDefault();
+    if (!formData.firstName || !formData.lastName || !formData.school) {
+      setError("Please fill in all required fields."); return;
+    }
+    if (formData.sports.length === 0) {
+      setError("Please select at least one sport."); return;
+    }
+    setSubmitting(true);
+    setError("");
+    try {
+      const response = await base44.functions.invoke("createParentUser", {
+        first_name: formData.firstName, last_name: formData.lastName,
+        school_id: formData.school, assigned_sports: formData.sports, position: formData.position,
+      });
+      if (response.data?.success) {
+        setSuccess("Parent account created! Awaiting approval before you can access athlete information.");
+        setFormData({ firstName: "", lastName: "", school: "", position: "", sports: [] });
+      } else throw new Error(response.data?.error || "Failed to create account");
+    } catch (err) {
+      setError(err.message || "Failed to create account. Please try again.");
+    } finally { setSubmitting(false); }
+  };
+
   return (
-    <div className="space-y-2">
-      <details className="rounded-xl border border-gray-800 bg-[#151515] px-3 py-2">
-        <summary className="cursor-pointer list-none text-xs font-semibold text-[#E8E8E8]">
-          Terms & Conditions
-        </summary>
-        <div className="mt-2 space-y-2 text-[11px] leading-relaxed text-[#9CA3AF]">
-          <p>Last updated: {LEGAL_UPDATED}</p>
-          <p>
-            NxGenSports provides school-managed access to team operations, athlete development, communication,
-            scheduling, and performance data. You may use the platform only for legitimate school, team, athlete,
-            or family participation authorized by your program.
-          </p>
-          <p>
-            You are responsible for keeping your login credentials secure, using the platform lawfully, and keeping
-            profile information accurate. You may not attempt to access records outside your assigned school, sport,
-            team, or role, and you may not copy, scrape, resell, or misuse confidential athlete or staff data.
-          </p>
-          <p>
-            Schools and program administrators control role assignments, access approvals, and roster affiliations.
-            NxGenSports may suspend or remove access when an account is inactive, unauthorized, misassigned,
-            disruptive, or used in violation of school policy, law, or these terms.
-          </p>
-          <p>
-            The platform is provided on an as-available basis. While NxGenSports uses commercially reasonable
-            safeguards, users and schools remain responsible for reviewing critical information before acting on it,
-            especially for medical, eligibility, and competition decisions.
-          </p>
-        </div>
-      </details>
+    <form onSubmit={handleSignUp} className="space-y-4">
+      <button type="button" onClick={onBack} className="text-xs text-[#00F2FF] hover:underline">
+        ← Back to login
+      </button>
 
-      <details className="rounded-xl border border-gray-800 bg-[#151515] px-3 py-2">
-        <summary className="cursor-pointer list-none text-xs font-semibold text-[#E8E8E8]">
-          Privacy Policy
-        </summary>
-        <div className="mt-2 space-y-2 text-[11px] leading-relaxed text-[#9CA3AF]">
-          <p>Last updated: {LEGAL_UPDATED}</p>
-          <p>
-            NxGenSports collects account details, school and team affiliation data, athlete participation data,
-            communication records, and operational usage data needed to deliver the platform and enforce access
-            controls. Information is used to authenticate users, connect them to the correct program, support product
-            features, protect the service, and respond to support requests.
-          </p>
-          <p>
-            Data is shared with your school or program administrators based on your assigned role and with service
-            providers that help operate the platform. NxGenSports does not sell personal information. Access is limited
-            by school, sport, team, and role wherever the platform supports that restriction.
-          </p>
-          <p>
-            Users should submit only information that is necessary for program participation. Sensitive health,
-            academic, and athlete-performance information should be handled according to school policy and applicable
-            law. If you believe your account is linked to the wrong school or team, contact your administrator
-            immediately so access can be corrected.
-          </p>
-          <p>
-            To request profile corrections or report privacy concerns, contact your Athletic Director, Head Coach, or
-            NxGenSports support through your organization&apos;s normal support channel.
-          </p>
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-[#E8E8E8]">Create your parent account</p>
+        <p className="text-xs text-[#9CA3AF]">Join NxGenSports to follow your athlete's progress.</p>
+      </div>
+
+      {success && (
+        <div className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-xl px-3 py-2">{success}</div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs text-gray-400 mb-1 block">First Name</label>
+          <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange}
+            className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-[#00F2FF]" required />
         </div>
-      </details>
-    </div>
+        <div>
+          <label className="text-xs text-gray-400 mb-1 block">Last Name</label>
+          <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange}
+            className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-[#00F2FF]" required />
+        </div>
+      </div>
+
+      <div>
+        <label className="text-xs text-gray-400 mb-1 block">School</label>
+        {schoolsLoading ? (
+          <div className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-400">Loading schools...</div>
+        ) : (
+          <select name="school" value={formData.school} onChange={handleInputChange}
+            className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-[#00F2FF]" required>
+            <option value="">Select your school</option>
+            {schools.map(s => <option key={s.id} value={s.id}>{s.school_name}</option>)}
+          </select>
+        )}
+      </div>
+
+      <div>
+        <label className="text-xs text-gray-400 mb-1 block">Relationship to Athlete</label>
+        <select name="position" value={formData.position} onChange={handleInputChange}
+          className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-[#00F2FF]" required>
+          <option value="">Select relationship</option>
+          <option value="parent">Parent</option>
+          <option value="guardian">Guardian</option>
+          <option value="family">Family Member</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="text-xs text-gray-400 mb-1 block">Sports to Follow</label>
+        <div className="flex flex-wrap gap-2">
+          {SPORT_OPTIONS.map(sport => (
+            <button key={sport.id} type="button" onClick={() => handleSportToggle(sport.id)}
+              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${formData.sports.includes(sport.id) ? "bg-[#00F2FF] text-black border-transparent" : "bg-[#181818] text-gray-400 border-gray-700 hover:border-gray-600"}`}>
+              {sport.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {error && (
+        <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2">{error}</div>
+      )}
+
+      <button type="submit" disabled={submitting}
+        className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+        style={{ background: "linear-gradient(135deg, #00F2FF, #1A4BBD)", color: "#121212" }}>
+        {submitting ? "Processing..." : "Continue to secure login"}
+      </button>
+    </form>
   );
 }
 
+// ─── Main Login Page ──────────────────────────────────────────────────────────
 export default function Login() {
-  const { navigateToLogin } = useAuth();
-  const [isSignUpMode, setIsSignUpMode] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    school: "",
-    position: "",
-    sports: [],
-  });
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [schools, setSchools] = useState([]);
-  const [schoolsLoading, setSchoolsLoading] = useState(true);
-  const [schoolsError, setSchoolsError] = useState("");
+  const { setUser } = useAuth();
+  const navigate = useNavigate();
+  const [mode, setMode] = useState("login"); // "login" | "signup"
+  const [inviteToken, setInviteToken] = useState(null);
 
   useEffect(() => {
-    // Ensure brand colors are applied even before app settings load
     document.documentElement.style.setProperty("--color-primary", "#00F2FF");
     document.documentElement.style.setProperty("--color-secondary", "#E8E8E8");
+
+    // Check for invite token in URL
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("invite_token");
+    if (token) setInviteToken(token);
   }, []);
 
-  useEffect(() => {
-    // Fetch schools from the superadmin endpoint
-    const loadSchools = async () => {
-      try {
-        setSchoolsLoading(true);
-        setSchoolsError("");
-        const response = await base44.functions.invoke("listAllSchools");
-        const schoolsData = response.data?.schools || [];
-        setSchools(schoolsData);
-      } catch (err) {
-        console.error("Failed to load schools:", err);
-        setSchoolsError("Failed to load schools. Please try again.");
-        // Fallback to empty array
-        setSchools([]);
-      } finally {
-        setSchoolsLoading(false);
-      }
-    };
-
-    loadSchools();
-  }, []);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setError(""); // Clear error when user starts typing
-  };
-
-  const handleSportToggle = (sportId) => {
-    setFormData(prev => ({
-      ...prev,
-      sports: prev.sports.includes(sportId)
-        ? prev.sports.filter(id => id !== sportId)
-        : [...prev.sports, sportId]
-    }));
-    setError("");
-  };
-
-  const handleSignUp = async (e) => {
-    e.preventDefault();
-
-    // Validation
-    if (!formData.firstName || !formData.lastName || !formData.school) {
-      setError("Please fill in all required fields.");
-      return;
+  const handleSuccess = (user) => {
+    if (setUser) setUser(user);
+    if (user?.profile_verified === false) {
+      navigate(createPageUrl("ProfileVerify"), { replace: true });
+    } else {
+      navigate(createPageUrl("Dashboard"), { replace: true });
     }
-
-    if (formData.sports.length === 0) {
-      setError("Please select at least one sport.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      // Create parent user account
-      const response = await base44.functions.invoke("createParentUser", {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        school_id: formData.school,
-        assigned_sports: formData.sports,
-        position: formData.position,
-      });
-
-      if (response.data?.success) {
-        // Account created successfully
-        setSuccess("Parent account created successfully! Awaiting superadmin approval before you can access athlete information.");
-        // Clear form
-        setFormData({
-          firstName: "",
-          lastName: "",
-          school: "",
-          position: "",
-          sports: [],
-        });
-        // Redirect after showing success message
-        setTimeout(() => {
-          navigateToLogin();
-        }, 3000);
-      } else {
-        throw new Error(response.data?.error || "Failed to create account");
-      }
-    } catch (err) {
-      console.error("Signup error:", err);
-      setError(err.message || "Failed to create account. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    window.location.reload();
   };
 
-  const handleLogin = () => {
-    navigateToLogin();
-  };
+  const isInviteMode = !!inviteToken;
 
-  // Render login or signup view
-  if (isSignUpMode) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center px-4"
-        style={{ backgroundColor: "#121212" }}
-      >
-        <div className="w-full max-w-lg rounded-3xl p-8 border relative overflow-hidden"
-          style={{
-            borderColor: "rgba(232,232,232,0.08)",
-            background: "radial-gradient(circle at top, rgba(0,242,255,0.12), transparent 55%) #121212"
-          }}>
-          <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full opacity-10 blur-3xl"
-            style={{ background: "conic-gradient(from 140deg, #00F2FF, #1A4BBD, #00F2FF)" }} />
-
-          <div className="relative space-y-6">
-            {/* Logo and Brand */}
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="absolute inset-0 rounded-2xl blur-md opacity-50"
-                  style={{ background: "linear-gradient(135deg, #00F2FF, #1A4BBD)" }} />
-                <img
-                  src={NXGEN_LOGO}
-                  alt="NxGenSports"
-                  className="relative w-14 h-14 rounded-2xl object-cover border border-[rgba(232,232,232,0.18)]"
-                />
-              </div>
-              <div>
-                <h1 className="text-2xl font-black tracking-tight"
-                  style={{ color: "#E8E8E8" }}>
-                  Nx<span style={{ color: "#00F2FF" }}>GenSports</span>
-                </h1>
-                <p className="text-xs" style={{ color: "#9CA3AF" }}>
-                  NxGeneration Multi-Sports Systems
-                </p>
-              </div>
-            </div>
-
-            {/* Header Text */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold" style={{ color: "#E8E8E8" }}>
-                Create your parent account
-              </p>
-              <p className="text-xs leading-relaxed" style={{ color: "#9CA3AF" }}>
-                Join NxGenSports to follow your athlete's progress and stay connected with their program.
-              </p>
-            </div>
-
-            {/* Back to Login Link */}
-            <div className="text-center">
-              <button
-                onClick={() => setIsSignUpMode(false)}
-                className="text-xs text-[#00F2FF] hover:underline"
-              >
-                ← Back to login
-              </button>
-            </div>
-
-            {/* Success Message */}
-            {success && (
-              <div className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded-xl px-3 py-2">
-                {success}
-              </div>
-            )}
-
-            {/* Sign Up Form */}
-            <form onSubmit={handleSignUp} className="space-y-4">
-              {/* Name Fields */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">First Name</label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-[#00F2FF] transition-colors"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Last Name</label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-[#00F2FF] transition-colors"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* School */}
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block">School</label>
-                {schoolsLoading ? (
-                  <div className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-400">
-                    Loading schools...
-                  </div>
-                ) : schoolsError ? (
-                  <div className="w-full bg-[#181818] border border-red-500/30 rounded-xl px-3 py-2 text-sm text-red-400">
-                    {schoolsError}
-                  </div>
-                ) : (
-                  <select
-                    name="school"
-                    value={formData.school}
-                    onChange={handleInputChange}
-                    className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-[#00F2FF] transition-colors"
-                    required
-                  >
-                    <option value="">Select your school</option>
-                    {schools.map(school => (
-                      <option key={school.id} value={school.id}>
-                        {school.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              {/* Position */}
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block">Relationship to Athlete</label>
-                <select
-                  name="position"
-                  value={formData.position}
-                  onChange={handleInputChange}
-                  className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-[#00F2FF] transition-colors"
-                  required
-                >
-                  <option value="">Select relationship</option>
-                  <option value="parent">Parent</option>
-                  <option value="guardian">Guardian</option>
-                  <option value="family">Family Member</option>
-                </select>
-              </div>
-
-              {/* Sports */}
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block">Sports to Follow</label>
-                <p className="text-[10px] text-gray-500 mb-2">
-                  Select all that apply
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {SPORT_OPTIONS.map(sport => (
-                    <button
-                      key={sport.id}
-                      type="button"
-                      onClick={() => handleSportToggle(sport.id)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                        formData.sports.includes(sport.id)
-                          ? "bg-[#00F2FF] text-black border-transparent"
-                          : "bg-[#181818] text-gray-400 border-gray-700 hover:border-gray-600"
-                      }`}
-                    >
-                      {sport.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Error Message */}
-              {error && (
-                <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2">
-                  {error}
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-[rgba(0,242,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-                style={{
-                  background: "linear-gradient(135deg, #00F2FF, #1A4BBD)",
-                  color: "#121212",
-                }}
-              >
-                {isSubmitting ? "Processing..." : "Continue to secure login"}
-              </button>
-            </form>
-
-            {/* Divider */}
-            <div className="flex items-center gap-2">
-              <div className="h-px flex-1" style={{ backgroundColor: "#1F2933" }} />
-              <span className="text-[10px]" style={{ color: "#6B7280" }}>
-                NxGenSports Single Sign-On
-              </span>
-              <div className="h-px flex-1" style={{ backgroundColor: "#1F2933" }} />
-            </div>
-
-            {/* Footer */}
-            <div className="flex flex-col gap-1.5 text-[10px]" style={{ color: "#6B7280" }}>
-              <p>
-                For access issues, contact your Athletic Director or NxGenSports support.
-              </p>
-              <p>
-                By continuing, you agree to the NxGenSports Terms & Conditions and Privacy Policy below.
-              </p>
-            </div>
-
-            <LegalDisclosure />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Simple login view
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4"
-      style={{ backgroundColor: "#121212" }}
-    >
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: "#121212" }}>
       <div className="w-full max-w-md rounded-3xl p-8 border relative overflow-hidden"
         style={{
           borderColor: "rgba(232,232,232,0.08)",
@@ -429,80 +378,56 @@ export default function Login() {
           style={{ background: "conic-gradient(from 140deg, #00F2FF, #1A4BBD, #00F2FF)" }} />
 
         <div className="relative space-y-6">
-          {/* Logo and Brand */}
+          {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="absolute inset-0 rounded-2xl blur-md opacity-50"
-                style={{ background: "linear-gradient(135deg, #00F2FF, #1A4BBD)" }} />
-              <img
-                src={NXGEN_LOGO}
-                alt="NxGenSports"
-                className="relative w-14 h-14 rounded-2xl object-cover border border-[rgba(232,232,232,0.18)]"
-              />
+              <div className="absolute inset-0 rounded-2xl blur-md opacity-50" style={{ background: "linear-gradient(135deg, #00F2FF, #1A4BBD)" }} />
+              <img src={NXGEN_LOGO} alt="NxGenSports" className="relative w-14 h-14 rounded-2xl object-cover border border-[rgba(232,232,232,0.18)]" />
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight"
-                style={{ color: "#E8E8E8" }}>
+              <h1 className="text-2xl font-black tracking-tight" style={{ color: "#E8E8E8" }}>
                 Nx<span style={{ color: "#00F2FF" }}>GenSports</span>
               </h1>
-              <p className="text-xs" style={{ color: "#9CA3AF" }}>
-                NxGeneration Multi-Sports Systems
-              </p>
+              <p className="text-xs" style={{ color: "#9CA3AF" }}>NxGeneration Multi-Sports Systems</p>
             </div>
           </div>
 
-          {/* Header Text */}
-          <div className="space-y-2">
-            <p className="text-sm font-semibold" style={{ color: "#E8E8E8" }}>
-              Sign in to your program
-            </p>
-            <p className="text-xs leading-relaxed" style={{ color: "#9CA3AF" }}>
-              Secure access for Athletic Directors, coaches, staff, and athletes.
-              All accounts are isolated by school and sport.
-            </p>
-          </div>
-
-          {/* Login Button */}
-          <button
-            onClick={handleLogin}
-            className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-[rgba(0,242,255,0.2)]"
-            style={{
-              background: "linear-gradient(135deg, #00F2FF, #1A4BBD)",
-              color: "#121212",
-            }}
-          >
-            Continue to secure login
-          </button>
-
-          {/* Sign Up Link */}
-          <div className="text-center">
-            <button
-              onClick={() => setIsSignUpMode(true)}
-              className="text-xs text-[#00F2FF] hover:underline"
-            >
-              New to NxGenSports? Sign up here
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div className="flex items-center gap-2">
-            <div className="h-px flex-1" style={{ backgroundColor: "#1F2933" }} />
-            <span className="text-[10px]" style={{ color: "#6B7280" }}>
-              NxGenSports Single Sign-On
-            </span>
-            <div className="h-px flex-1" style={{ backgroundColor: "#1F2933" }} />
-          </div>
+          {/* Content */}
+          {isInviteMode ? (
+            <>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-[#E8E8E8]">You've been invited</p>
+                <p className="text-xs text-[#9CA3AF]">Set your password to activate your account.</p>
+              </div>
+              <InviteAcceptForm inviteToken={inviteToken} onSuccess={handleSuccess} />
+            </>
+          ) : mode === "signup" ? (
+            <ParentSignupForm onBack={() => setMode("login")} />
+          ) : (
+            <>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-[#E8E8E8]">Sign in to your program</p>
+                <p className="text-xs text-[#9CA3AF]">Secure access for Athletic Directors, coaches, staff, and athletes.</p>
+              </div>
+              <LoginForm onSuccess={handleSuccess} />
+              <div className="text-center">
+                <button onClick={() => setMode("signup")} className="text-xs text-[#00F2FF] hover:underline" data-testid="signup-link">
+                  New to NxGenSports? Sign up here
+                </button>
+              </div>
+            </>
+          )}
 
           {/* Footer */}
-          <div className="flex flex-col gap-1.5 text-[10px]" style={{ color: "#6B7280" }}>
-            <p>
-              For access issues, contact your Athletic Director or NxGenSports support.
-            </p>
-            <p>
-              By continuing, you agree to the NxGenSports Terms & Conditions and Privacy Policy below.
-            </p>
+          <div className="flex items-center gap-2">
+            <div className="h-px flex-1" style={{ backgroundColor: "#1F2933" }} />
+            <span className="text-[10px]" style={{ color: "#6B7280" }}>NxGenSports Single Sign-On</span>
+            <div className="h-px flex-1" style={{ backgroundColor: "#1F2933" }} />
           </div>
-
+          <div className="flex flex-col gap-1.5 text-[10px]" style={{ color: "#6B7280" }}>
+            <p>For access issues, contact your Athletic Director or NxGenSports support.</p>
+            <p>By continuing, you agree to the NxGenSports Terms &amp; Conditions and Privacy Policy below.</p>
+          </div>
           <LegalDisclosure />
         </div>
       </div>
