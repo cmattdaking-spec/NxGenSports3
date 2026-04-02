@@ -61,6 +61,27 @@ Build the NxGenSports app from the Base44 repository with a standalone FastAPI +
 ## Testing Results
 - Iteration 1: Backend 100% (18/18), Frontend 95%
 - Iteration 2: Backend 100% (29/29), Frontend 100% (all 28 pages)
+- Iteration 3: Backend 100% (12/12), Frontend 100% (messaging, onboarding wizard, change password, Resend notice)
+
+## Completed Features (All 4 Next Action Items)
+1. **Resend email** — invite + password reset emails via noreply@nxgen-sports.com (domain needs Resend verification)
+2. **Password reset** — /ResetPassword?token=xxx public route, Forgot password? on login, 1hr token expiry
+3. **Rate limiting** — 5 bad logins by email = 15min lockout (HTTP 429)
+4. **28-page sweep** — UploadFile wired, InvokeLLM works, asServiceRole fixed, all pages load
+
+## Completed Enhancement (Onboarding Wizard)
+- 5-step modal: Welcome → Add Player → Schedule Game → Create Play → Done
+- Shown to eligible coaches after ProfileVerify completes (profile_verified=true + no onboarding_completed)
+- Each step creates real data (Player, Opponent, Play entities)
+- Skip buttons on each step; "Skip setup" on welcome exits immediately
+- Sets onboarding_completed=true when finished
+- Not shown to super_admin, players, or parents
+
+## Other Improvements
+- NxMessages: replaced broken subscribe() with setInterval polling (4s messages, 10s convos)
+- Settings: Change Password fully wired with error handling
+- ProfileVerify: full page reload after completion so Layout re-initialises and wizard triggers
+- Resend domain banner in Super Admin view
 
 ## Prioritized Backlog
 

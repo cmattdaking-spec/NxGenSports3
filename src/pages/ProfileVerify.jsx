@@ -114,7 +114,9 @@ export default function ProfileVerify() {
         profile_verified: true,
       });
 
-      navigate(createPageUrl("Dashboard"), { replace: true });
+      // Full page navigation so Layout re-initialises with the updated user,
+      // which triggers the onboarding wizard for eligible coaches.
+      window.location.href = createPageUrl("Dashboard");
     } catch (e) {
       setError(e?.message || "Failed to save profile.");
     } finally {
