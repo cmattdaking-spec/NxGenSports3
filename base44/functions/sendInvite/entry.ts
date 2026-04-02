@@ -23,7 +23,32 @@ async function resolveInviteContext(base44, user, body) {
   let schoolName = isSchoolSetupInvite ? (body.school_name || '') : (user.school_name || body.school_name || '');
   let schoolCode = isSchoolSetupInvite ? (body.school_code || '') : (user.school_code || body.school_code || '');
 
-  if (teamId && (!schoolId || !schoolName || !schoolCode)) {
+  // Automatically create School entity for school_setup if it doesn't exist
+  if (isSchoolSetupInvite && teamId && !schoolId) {
+    const existing = await base44.asServiceRole.entities.School.filter({ team_id: teamId }, '-created_date', 1);
+    if (existing?.[0]) {
+      schoolId = existing[0].id;
+      schoolName = schoolName || existing[0].school_name;
+      schoolCode = schoolCode || existing[0].school_code;
+    } else {
+      const newSchool = await base44.asServiceRole.entities.School.create({
+        school_name: schoolName,
+        school_code: schoolCode,
+        team_id: teamId,
+        status: 'active',
+        subscribed_sports: body.subscribed_sports || [],
+        mascot: body.mascot,
+        location_city: body.location_city,
+        location_state: body.location_state,
+        poc_name: [body.first_name, body.last_name].join(' '),
+        poc_phone: body.poc_phone
+      });
+      schoolId = newSchool.id;
+    }
+  }
+
+  // For non-school_setup invites, still fall back to looking up existing school data
+  if (!isSchoolSetupInvite && teamId && (!schoolId || !schoolName || !schoolCode)) {
     const schools = await base44.asServiceRole.entities.School.filter({ team_id: teamId }, '-created_date', 1);
     const school = schools?.[0];
     if (school) {
@@ -145,10 +170,44 @@ Deno.serve(async (req) => {
     // Determine platform role — HC and AD get admin, everyone else gets user
     const platformRole = ['head_coach', 'athletic_director'].includes(effectiveCoachingRole) ? 'admin' : 'user';
 
-    // Send the platform invite email
+    const userMetadata = {
+      team_id: teamId,
+      school_id: schoolId,
+      school_name: schoolName,
+      school_code: schoolCode,
+      assigned_sports: effectiveSports,
+      coaching_role: effectiveCoachingRole,
+      role: platformRole,
+      full_name: fullName,
+      first_name: cleanedFirstName,
+      last_name: cleanedLastName,
+      profile_verified: false, // Ensure they go through ProfileVerify
+    };
+
+    // Send the platform invite or update existing user
     try {
-      await base44.auth.inviteUser(email.trim(), platformRole);
-      console.log('sendInvite: platform invite sent successfully', { platformRole });
+      // Check if user already exists
+      let userAlreadyExists = false;
+      try {
+        const existingUsers = await base44.asServiceRole.users.listUsers({ email: email.trim() });
+        userAlreadyExists = existingUsers && existingUsers.length > 0;
+      } catch (listUsersError) {
+        // If we can't check, assume user doesn't exist and proceed with invite
+        console.warn('sendInvite: listUsers check failed, assuming new user', { message: listUsersError?.message });
+        userAlreadyExists = false;
+      }
+
+      if (userAlreadyExists) {
+        // Update existing user so they gain access to the new team/school
+        await base44.asServiceRole.users.updateUserByEmail(email.trim(), {
+          user_metadata: userMetadata
+        });
+        console.log('sendInvite: existing user metadata updated', { platformRole });
+      } else {
+        // Pass metadata during invite so the new account is created with these fields
+        await base44.asServiceRole.users.inviteUser(email.trim(), platformRole, userMetadata);
+        console.log('sendInvite: platform invite sent with metadata', { platformRole });
+      }
     } catch (inviteUserError) {
       const errMsg = inviteUserError?.message || '';
       // If user already exists on the platform that is fine — the invite record was created
