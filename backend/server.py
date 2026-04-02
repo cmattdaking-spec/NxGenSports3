@@ -30,6 +30,12 @@ ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@nxgensports.com")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Admin123!")
 EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY", "")
 INTEGRATION_PROXY_URL = os.environ.get("INTEGRATION_PROXY_URL", "https://integrations.emergentagent.com")
+
+# Candidate LLM endpoints tried in order — first 200 wins.
+_LLM_ENDPOINTS = [
+    f"{INTEGRATION_PROXY_URL}/v1/chat/completions",
+    "https://api.openai.com/v1/chat/completions",
+]
 APP_URL = os.environ.get("APP_URL", "http://localhost:3000")
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "noreply@nxgen-sports.com")
@@ -395,6 +401,9 @@ def reset_password_email_html(reset_url: str) -> str:
 
 # ─── LLM Helper ──────────────────────────────────────────────────────────────
 async def invoke_llm(prompt: str, schema: dict = None) -> dict:
+    """Call the LLM. Tries Emergent proxy first, falls back to OpenAI directly."""
+    if not EMERGENT_LLM_KEY:
+        return {}
     payload = {
         "model": "gpt-4o-mini",
         "messages": [{"role": "user", "content": prompt}],
@@ -402,19 +411,22 @@ async def invoke_llm(prompt: str, schema: dict = None) -> dict:
     if schema:
         payload["response_format"] = {"type": "json_object"}
     async with httpx.AsyncClient() as c:
-        try:
-            r = await c.post(
-                f"{INTEGRATION_PROXY_URL}/v1/chat/completions",
-                headers={"Authorization": f"Bearer {EMERGENT_LLM_KEY}"},
-                json=payload,
-                timeout=60.0,
-            )
-            r.raise_for_status()
-            content = r.json()["choices"][0]["message"]["content"]
-            return json.loads(content) if schema else {"text": content}
-        except Exception as e:
-            print(f"LLM error: {e}")
-            return {}
+        for url in _LLM_ENDPOINTS:
+            try:
+                r = await c.post(
+                    url,
+                    headers={"Authorization": f"Bearer {EMERGENT_LLM_KEY}"},
+                    json=payload,
+                    timeout=60.0,
+                )
+                if r.status_code == 404:
+                    continue          # try next endpoint
+                r.raise_for_status()
+                content = r.json()["choices"][0]["message"]["content"]
+                return json.loads(content) if schema else {"text": content}
+            except Exception:
+                continue             # try next endpoint
+    return {}
 
 # ─── Auth Routes ─────────────────────────────────────────────────────────────
 @app.post("/api/auth/login")
