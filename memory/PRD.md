@@ -24,29 +24,43 @@ Build the NxGenSports app from the Base44 repository with a standalone FastAPI +
 - Functions: sendInvite, getTeamUsers, listAllSchools, updateTeamUser, createParentUser, joinSchoolByCode, listMasterTeams
 - LLM proxy (Emergent LLM key)
 - Admin seed on startup (admin@nxgensports.com / Admin123!)
+- **Resend email integration** — invite emails + password reset emails (noreply@nxgen-sports.com)
+- **Password reset flow** — forgot-password + reset-password endpoints with 1hr token TTL
+- **Rate limiting** — 5 failed login attempts by email = 15min lockout (HTTP 429)
+- **File upload** — POST /api/upload → stores in /app/static/uploads/, returns file_url
+- **Static file serving** — /static/* served by FastAPI
 
 ### Frontend
 - New API client (apiClient.js) replacing Base44 SDK
   - Same interface: base44.auth.*, base44.entities.*, base44.functions.invoke()
   - JWT Bearer token stored in localStorage
-- Updated Login page: email/password login, invite acceptance, parent signup
+  - **UploadFile** implemented via POST /api/upload
+  - 401 redirect excludes /Login and /ResetPassword
+- Updated Login page: email/password login, **Forgot password? link**, invite acceptance, parent signup
+- **ForgotPasswordForm** — submits email → Resend sends reset link
+- **ResetPassword page** (/ResetPassword?token=xxx) — public route, set new password
 - Updated AuthContext: simple JWT-based auth check
 - Simplified EnrollmentCheck (enrollment at account creation)
 - Fixed vite.config.js (removed @base44/vite-plugin, added path aliases + proxy)
 - Frontend package.json wrapper to run Vite from /app/frontend
 
 ### Invite Flow Fix
-- sendInvite creates invite record with unique invite_token
-- Invite URL: /Login?invite_token=<token> (logged to backend console)
+- sendInvite creates invite record with unique invite_token + sends Resend email
+- Invite URL: /Login?invite_token=<token>
 - InviteAcceptForm pre-fills user data from invite
 - After acceptance: user gets team_id assigned → appears in getTeamUsers
 - Schools immediately visible in listAllSchools after creation
 - PendingInvites shows invites with status="pending" filtered by team_id
 
 ### Bug Fixes Applied
-- ParentPortal: removed base44.asServiceRole reference (replaced with base44.entities.Player.get)
-- CORS: configured explicit allowed origins instead of wildcard
-- Vite: allowedHosts set to true for Emergent preview environment
+- ParentPortal: removed base44.asServiceRole reference
+- CORS: configured explicit allowed origins
+- Vite: allowedHosts set to true
+- ResetPassword: public route added to App.jsx; apiClient.js 401-redirect exclusion added
+
+## Testing Results
+- Iteration 1: Backend 100% (18/18), Frontend 95%
+- Iteration 2: Backend 100% (29/29), Frontend 100% (all 28 pages)
 
 ## Prioritized Backlog
 
