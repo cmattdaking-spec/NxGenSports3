@@ -47,8 +47,8 @@ Deno.serve(async (req) => {
     const teamUsers = allUsers.filter((u: any) => {
       if (u.team_id !== teamId || u.role === 'super_admin') return false;
 
-      // Admins and Athletic Directors see everyone in the school
-      if (user.role === 'admin' || user.role === 'super_admin') return true;
+      // Admins, Athletic Directors, and super_admins (safety fallback) see everyone in the school
+      if (user.role === 'admin' || user.role === 'athletic_director' || user.role === 'super_admin') return true;
 
       // Filter staff/players by sport: they must share at least one sport with the viewer
       const viewerSports = user.assigned_sports || [];
