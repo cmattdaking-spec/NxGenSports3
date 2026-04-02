@@ -75,6 +75,7 @@ import StrengthConditioning from './pages/StrengthConditioning.jsx';
 import UserManagement from './pages/UserManagement.jsx';
 import PlayerPortal from './pages/PlayerPortal.jsx';
 import ParentPortal from './pages/ParentPortal.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 import __Layout from './Layout.jsx';
 
 
@@ -107,6 +108,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "PlayerPortal": PlayerPortal,
     "ParentPortal": ParentPortal,
+    "ResetPassword": ResetPassword,
 }
 
 export const pagesConfig = {

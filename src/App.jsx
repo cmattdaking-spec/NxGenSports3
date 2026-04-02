@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { base44 } from '@/api/base44Client';
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword.jsx';
 import ProfileVerify from './pages/ProfileVerify.jsx';
 import { isValidComponent, validatePages } from '@/lib/componentUtils';
 
@@ -190,7 +191,10 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
-          <AuthenticatedApp />
+          <Routes>
+            <Route path="/ResetPassword" element={<ResetPassword />} />
+            <Route path="/*" element={<AuthenticatedApp />} />
+          </Routes>
         </Router>
         <Toaster />
       </QueryClientProvider>

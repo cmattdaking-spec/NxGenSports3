@@ -4,15 +4,18 @@ load_dotenv()
 import os
 import re
 import json
+import uuid
 import secrets
+import asyncio
 import bcrypt
 import jwt
 import httpx
+import resend
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
 from bson import ObjectId
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Request, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 
 # ─── Config ──────────────────────────────────────────────────────────────────
@@ -25,12 +28,16 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Admin123!")
 EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY", "")
 INTEGRATION_PROXY_URL = os.environ.get("INTEGRATION_PROXY_URL", "https://integrations.emergentagent.com")
 APP_URL = os.environ.get("APP_URL", "http://localhost:3000")
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "noreply@nxgen-sports.com")
 
-ALLOWED_ORIGINS = [
-    APP_URL,
-    "http://localhost:3000",
-    "http://0.0.0.0:3000",
-]
+resend.api_key = RESEND_API_KEY
+
+ALLOWED_ORIGINS = [APP_URL, "http://localhost:3000", "http://0.0.0.0:3000"]
+
+# ─── Rate limit constants ─────────────────────────────────────────────────────
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_MINUTES = 15
 
 # ─── App ─────────────────────────────────────────────────────────────────────
 app = FastAPI()
@@ -43,8 +50,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+UPLOAD_DIR = "/app/static/uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/static", StaticFiles(directory="/app/static"), name="static")
+
 # ─── MongoDB ─────────────────────────────────────────────────────────────────
-client: AsyncIOMotorClient = None
+client = None
 db = None
 
 @app.on_event("startup")
@@ -56,6 +67,9 @@ async def startup():
     await db.invites.create_index("invite_token")
     await db.invites.create_index([("email", 1), ("status", 1)])
     await db.invites.create_index([("team_id", 1), ("status", 1)])
+    await db.password_reset_tokens.create_index("token")
+    await db.password_reset_tokens.create_index("expires_at", expireAfterSeconds=0)
+    await db.login_attempts.create_index([("identifier", 1), ("attempted_at", -1)])
     await seed_admin()
     print("NxGenSports backend started")
 
@@ -65,7 +79,6 @@ async def shutdown():
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 def entity_to_collection(entity_name: str) -> str:
-    """Convert PascalCase entity name to snake_case collection name."""
     s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', entity_name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s).lower()
 
@@ -96,8 +109,7 @@ def parse_sort(sort_str: str):
     return (sort_str, 1)
 
 def hash_password(password: str) -> str:
-    salt = bcrypt.gensalt()
-    return bcrypt.hashpw(password.encode(), salt).decode()
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 def verify_password(plain: str, hashed: str) -> bool:
     return bcrypt.checkpw(plain.encode(), hashed.encode())
@@ -144,12 +156,157 @@ async def seed_admin():
             "profile_verified": True,
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
-    else:
-        if not verify_password(ADMIN_PASSWORD, existing.get("password_hash", "")):
-            await db.users.update_one(
-                {"email": ADMIN_EMAIL},
-                {"$set": {"password_hash": hash_password(ADMIN_PASSWORD)}}
-            )
+    elif not verify_password(ADMIN_PASSWORD, existing.get("password_hash", "")):
+        await db.users.update_one(
+            {"email": ADMIN_EMAIL},
+            {"$set": {"password_hash": hash_password(ADMIN_PASSWORD)}}
+        )
+
+# ─── Rate Limiting ────────────────────────────────────────────────────────────
+async def check_rate_limit(identifier: str):
+    """Check if identifier is locked out. Raises 429 if so."""
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=LOCKOUT_MINUTES)
+    count = await db.login_attempts.count_documents({
+        "identifier": identifier,
+        "success": False,
+        "attempted_at": {"$gte": cutoff},
+    })
+    if count >= MAX_LOGIN_ATTEMPTS:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many failed attempts. Try again in {LOCKOUT_MINUTES} minutes."
+        )
+
+async def record_login_attempt(identifier: str, success: bool):
+    await db.login_attempts.insert_one({
+        "identifier": identifier,
+        "success": success,
+        "attempted_at": datetime.now(timezone.utc),
+    })
+    if success:
+        # Clear failed attempts on successful login
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=LOCKOUT_MINUTES)
+        await db.login_attempts.delete_many({
+            "identifier": identifier,
+            "success": False,
+            "attempted_at": {"$gte": cutoff},
+        })
+
+# ─── Email Helpers ────────────────────────────────────────────────────────────
+async def send_email(to_email: str, subject: str, html: str):
+    """Send email via Resend (non-blocking)."""
+    if not RESEND_API_KEY:
+        print(f"[EMAIL] No Resend key — would send to {to_email}: {subject}")
+        return
+    try:
+        params = {
+            "from": f"NxGenSports <{SENDER_EMAIL}>",
+            "to": [to_email],
+            "subject": subject,
+            "html": html,
+        }
+        await asyncio.to_thread(resend.Emails.send, params)
+        print(f"[EMAIL] Sent to {to_email}: {subject}")
+    except Exception as e:
+        print(f"[EMAIL] Failed to send to {to_email}: {e}")
+
+def invite_email_html(invite: dict, invite_url: str) -> str:
+    name = invite.get("poc_name") or f"{invite.get('first_name', '')} {invite.get('last_name', '')}".strip() or "there"
+    school = invite.get("school_name", "your school")
+    role = (invite.get("coaching_role") or "").replace("_", " ").title()
+    invite_type = invite.get("invite_type", "staff")
+    role_line = f"<p style='color:#9ca3af;font-size:14px;margin:0 0 8px'>Role: <strong style='color:#e8e8e8'>{role}</strong></p>" if role and invite_type == "staff" else ""
+
+    return f"""
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;padding:40px 20px">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto">
+    <tr><td>
+      <div style="background:#111111;border:1px solid #1f2937;border-radius:16px;padding:40px">
+        <h1 style="color:#ffffff;font-size:22px;font-weight:900;margin:0 0 4px">
+          Nx<span style="color:#00f2ff">GenSports</span>
+        </h1>
+        <p style="color:#6b7280;font-size:13px;margin:0 0 32px">NxGeneration Multi-Sports Systems</p>
+
+        <p style="color:#e8e8e8;font-size:16px;font-weight:700;margin:0 0 12px">Hi {name},</p>
+        <p style="color:#9ca3af;font-size:14px;line-height:1.6;margin:0 0 20px">
+          You've been invited to join <strong style="color:#e8e8e8">{school}</strong> on NxGenSports.
+        </p>
+        {role_line}
+        <p style="color:#9ca3af;font-size:14px;margin:0 0 28px">
+          Click the button below to set up your account and get started.
+        </p>
+
+        <table cellpadding="0" cellspacing="0" style="margin:0 0 28px">
+          <tr>
+            <td style="background:linear-gradient(135deg,#00f2ff,#1a4bbd);border-radius:10px;padding:1px">
+              <a href="{invite_url}" style="display:inline-block;background:linear-gradient(135deg,#00f2ff,#1a4bbd);color:#0a0a0a;text-decoration:none;font-weight:700;font-size:15px;padding:14px 32px;border-radius:10px">
+                Accept Invite &amp; Set Up Account
+              </a>
+            </td>
+          </tr>
+        </table>
+
+        <p style="color:#6b7280;font-size:12px;margin:0 0 4px">Or copy this link:</p>
+        <p style="color:#00f2ff;font-size:12px;word-break:break-all;margin:0 0 28px">{invite_url}</p>
+
+        <hr style="border:none;border-top:1px solid #1f2937;margin:0 0 20px">
+        <p style="color:#4b5563;font-size:12px;margin:0">
+          This invite was sent by {invite.get('invited_by', 'your administrator')}. 
+          If you weren't expecting this, you can ignore this email.
+        </p>
+      </div>
+    </td></tr>
+  </table>
+</body>
+</html>
+"""
+
+def reset_password_email_html(reset_url: str) -> str:
+    return f"""
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;padding:40px 20px">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto">
+    <tr><td>
+      <div style="background:#111111;border:1px solid #1f2937;border-radius:16px;padding:40px">
+        <h1 style="color:#ffffff;font-size:22px;font-weight:900;margin:0 0 4px">
+          Nx<span style="color:#00f2ff">GenSports</span>
+        </h1>
+        <p style="color:#6b7280;font-size:13px;margin:0 0 32px">NxGeneration Multi-Sports Systems</p>
+
+        <p style="color:#e8e8e8;font-size:16px;font-weight:700;margin:0 0 12px">Reset your password</p>
+        <p style="color:#9ca3af;font-size:14px;line-height:1.6;margin:0 0 28px">
+          We received a request to reset your NxGenSports password. Click the button below to choose a new one.
+          This link expires in 1 hour.
+        </p>
+
+        <table cellpadding="0" cellspacing="0" style="margin:0 0 28px">
+          <tr>
+            <td style="background:linear-gradient(135deg,#00f2ff,#1a4bbd);border-radius:10px;padding:1px">
+              <a href="{reset_url}" style="display:inline-block;background:linear-gradient(135deg,#00f2ff,#1a4bbd);color:#0a0a0a;text-decoration:none;font-weight:700;font-size:15px;padding:14px 32px;border-radius:10px">
+                Reset Password
+              </a>
+            </td>
+          </tr>
+        </table>
+
+        <p style="color:#6b7280;font-size:12px;margin:0 0 4px">Or copy this link:</p>
+        <p style="color:#00f2ff;font-size:12px;word-break:break-all;margin:0 0 28px">{reset_url}</p>
+
+        <hr style="border:none;border-top:1px solid #1f2937;margin:0 0 20px">
+        <p style="color:#4b5563;font-size:12px;margin:0">
+          If you didn't request a password reset, ignore this email — your password won't change.
+        </p>
+      </div>
+    </td></tr>
+  </table>
+</body>
+</html>
+"""
 
 # ─── LLM Helper ──────────────────────────────────────────────────────────────
 async def invoke_llm(prompt: str, schema: dict = None) -> dict:
@@ -171,16 +328,26 @@ async def invoke_llm(prompt: str, schema: dict = None) -> dict:
             content = r.json()["choices"][0]["message"]["content"]
             return json.loads(content) if schema else {"text": content}
         except Exception as e:
+            print(f"LLM error: {e}")
             return {}
 
 # ─── Auth Routes ─────────────────────────────────────────────────────────────
 @app.post("/api/auth/login")
-async def login(body: dict):
+async def login(request: Request, body: dict):
     email = body.get("email", "").lower().strip()
     password = body.get("password", "")
+    client_ip = request.client.host if request.client else "unknown"
+    identifier = email  # Key on email only (not IP) — ingress can use multiple IPs
+
+    # Rate limit check
+    await check_rate_limit(identifier)
+
     user = await db.users.find_one({"email": email})
     if not user or not verify_password(password, user.get("password_hash", "")):
+        await record_login_attempt(identifier, False)
         raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    await record_login_attempt(identifier, True)
     user_id = str(user["_id"])
     token = create_token(user_id, email)
     user["_id"] = user_id
@@ -234,37 +401,44 @@ async def accept_invite(body: dict):
         raise HTTPException(status_code=404, detail="Invalid or expired invite token")
 
     email = invite.get("email", "").lower()
+    admin_roles = ["head_coach", "athletic_director", "associate_head_coach",
+                   "offensive_coordinator", "defensive_coordinator",
+                   "special_teams_coordinator", "strength_conditioning_coordinator"]
+    coaching_role = invite.get("coaching_role", "")
+    platform_role = "admin" if coaching_role in admin_roles else "user"
+    invite_type = invite.get("invite_type", "staff")
+
+    profile_update = {
+        "team_id": invite.get("team_id"),
+        "school_id": invite.get("school_id"),
+        "school_name": invite.get("school_name", ""),
+        "school_code": invite.get("school_code", ""),
+        "coaching_role": coaching_role,
+        "assigned_sports": invite.get("assigned_sports", []),
+        "assigned_positions": invite.get("assigned_positions", []),
+        "assigned_phases": invite.get("assigned_phases", []),
+        "role": platform_role,
+        "profile_verified": False,
+    }
+    if invite.get("first_name"):
+        profile_update["first_name"] = invite["first_name"]
+    if invite.get("last_name"):
+        profile_update["last_name"] = invite["last_name"]
+    if invite.get("poc_name"):
+        profile_update["full_name"] = invite["poc_name"]
+    if invite_type == "player":
+        profile_update["user_type"] = "player"
+        if invite.get("player_id"):
+            profile_update["player_id"] = invite["player_id"]
+    elif invite_type == "parent":
+        profile_update["user_type"] = "parent"
+        if invite.get("child_player_id"):
+            profile_update["linked_player_id"] = invite["child_player_id"]
+            profile_update["linked_player_ids"] = [invite["child_player_id"]]
+
     existing = await db.users.find_one({"email": email})
     if existing:
-        # Update existing user with invite data
-        admin_roles = ["head_coach", "athletic_director", "associate_head_coach",
-                       "offensive_coordinator", "defensive_coordinator",
-                       "special_teams_coordinator", "strength_conditioning_coordinator"]
-        coaching_role = invite.get("coaching_role", "")
-        platform_role = "admin" if coaching_role in admin_roles else "user"
-        update_data = {
-            "team_id": invite.get("team_id"),
-            "school_id": invite.get("school_id"),
-            "school_name": invite.get("school_name", ""),
-            "school_code": invite.get("school_code", ""),
-            "coaching_role": coaching_role,
-            "assigned_sports": invite.get("assigned_sports", []),
-            "assigned_positions": invite.get("assigned_positions", []),
-            "assigned_phases": invite.get("assigned_phases", []),
-            "role": platform_role,
-            "profile_verified": False,
-        }
-        if invite.get("first_name"):
-            update_data["first_name"] = invite["first_name"]
-        if invite.get("last_name"):
-            update_data["last_name"] = invite["last_name"]
-        if invite.get("poc_name"):
-            update_data["full_name"] = invite["poc_name"]
-        if invite.get("invite_type") == "player":
-            update_data["user_type"] = "player"
-        if invite.get("invite_type") == "parent":
-            update_data["user_type"] = "parent"
-        await db.users.update_one({"email": email}, {"$set": update_data})
+        await db.users.update_one({"email": email}, {"$set": profile_update})
         await db.invites.update_one({"_id": invite["_id"]}, {"$set": {"status": "accepted"}})
         user = await db.users.find_one({"email": email})
         user_id = str(user["_id"])
@@ -273,39 +447,12 @@ async def accept_invite(body: dict):
         user.pop("password_hash", None)
         return {"access_token": token, "token_type": "bearer", "user": serialize_doc(user)}
 
-    # Create new user from invite
-    admin_roles = ["head_coach", "athletic_director", "associate_head_coach",
-                   "offensive_coordinator", "defensive_coordinator",
-                   "special_teams_coordinator", "strength_conditioning_coordinator"]
-    coaching_role = invite.get("coaching_role", "")
-    platform_role = "admin" if coaching_role in admin_roles else "user"
-    invite_type = invite.get("invite_type", "staff")
-
     user_doc = {
         "email": email,
         "password_hash": hash_password(password),
-        "full_name": body.get("full_name") or invite.get("poc_name", ""),
-        "first_name": invite.get("first_name", ""),
-        "last_name": invite.get("last_name", ""),
-        "role": platform_role,
-        "coaching_role": coaching_role,
-        "user_type": "player" if invite_type == "player" else ("parent" if invite_type == "parent" else "coach"),
-        "team_id": invite.get("team_id"),
-        "school_id": invite.get("school_id"),
-        "school_name": invite.get("school_name", ""),
-        "school_code": invite.get("school_code", ""),
-        "assigned_sports": invite.get("assigned_sports", []),
-        "assigned_positions": invite.get("assigned_positions", []),
-        "assigned_phases": invite.get("assigned_phases", []),
-        "profile_verified": False,
+        **profile_update,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
-    if invite_type == "player" and invite.get("player_id"):
-        user_doc["player_id"] = invite["player_id"]
-    if invite_type == "parent" and invite.get("child_player_id"):
-        user_doc["linked_player_id"] = invite["child_player_id"]
-        user_doc["linked_player_ids"] = [invite["child_player_id"]]
-
     result = await db.users.insert_one(user_doc)
     user_id = str(result.inserted_id)
     await db.invites.update_one({"_id": invite["_id"]}, {"$set": {"status": "accepted"}})
@@ -321,7 +468,7 @@ async def get_me(user: dict = Depends(get_current_user)):
 
 @app.patch("/api/auth/me")
 async def update_me(body: dict, user: dict = Depends(get_current_user)):
-    user_id = user["id"] if "id" in user else user["_id"]
+    user_id = user.get("id") or user.get("_id")
     body.pop("id", None)
     body.pop("_id", None)
     body.pop("password_hash", None)
@@ -343,11 +490,84 @@ async def get_invite(invite_token: str):
         raise HTTPException(status_code=404, detail="Invalid or expired invite")
     return serialize_doc(invite)
 
+# ─── Password Reset ───────────────────────────────────────────────────────────
+@app.post("/api/auth/forgot-password")
+async def forgot_password(body: dict):
+    email = body.get("email", "").lower().strip()
+    if not email:
+        raise HTTPException(status_code=400, detail="Email required")
+
+    user = await db.users.find_one({"email": email})
+    # Always return success to prevent email enumeration
+    if not user:
+        return {"success": True, "message": "If this email exists, a reset link was sent."}
+
+    # Expire existing tokens
+    await db.password_reset_tokens.delete_many({"email": email})
+
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+    await db.password_reset_tokens.insert_one({
+        "token": token,
+        "email": email,
+        "expires_at": expires_at,
+        "used": False,
+    })
+
+    reset_url = f"{APP_URL}/ResetPassword?token={token}"
+    print(f"[RESET] {email} — {reset_url}")
+
+    asyncio.create_task(send_email(
+        to_email=email,
+        subject="Reset your NxGenSports password",
+        html=reset_password_email_html(reset_url),
+    ))
+    return {"success": True, "message": "If this email exists, a reset link was sent."}
+
+@app.post("/api/auth/reset-password")
+async def reset_password(body: dict):
+    token = body.get("token", "")
+    new_password = body.get("password", "")
+    if not token or not new_password:
+        raise HTTPException(status_code=400, detail="token and password required")
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+
+    record = await db.password_reset_tokens.find_one({"token": token, "used": False})
+    if not record:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    if record["expires_at"] < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Reset token has expired")
+
+    await db.users.update_one(
+        {"email": record["email"]},
+        {"$set": {"password_hash": hash_password(new_password)}}
+    )
+    await db.password_reset_tokens.update_one({"token": token}, {"$set": {"used": True}})
+    return {"success": True, "message": "Password updated successfully"}
+
+# ─── File Upload ──────────────────────────────────────────────────────────────
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    ext = os.path.splitext(file.filename or "")[1].lower() or ".bin"
+    allowed = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".mp4", ".mov", ".avi",
+               ".pdf", ".doc", ".docx", ".txt", ".csv", ".json"}
+    if ext not in allowed:
+        raise HTTPException(status_code=400, detail="File type not allowed")
+
+    filename = f"{uuid.uuid4()}{ext}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    content = await file.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+
+    file_url = f"{APP_URL}/static/uploads/{filename}"
+    return {"file_url": file_url, "filename": filename}
+
 # ─── Entity CRUD ─────────────────────────────────────────────────────────────
 @app.get("/api/entities/{entity_name}")
 async def list_entity(entity_name: str, request: Request, user: dict = Depends(get_current_user)):
-    collection_name = entity_to_collection(entity_name)
-    collection = db[collection_name]
+    collection = db[entity_to_collection(entity_name)]
     params = dict(request.query_params)
     sort_str = params.get("sort", "-created_at")
     limit = int(params.get("limit", 500))
@@ -364,19 +584,15 @@ async def list_entity(entity_name: str, request: Request, user: dict = Depends(g
 
 @app.post("/api/entities/{entity_name}/filter")
 async def filter_entity(entity_name: str, body: dict, user: dict = Depends(get_current_user)):
-    collection_name = entity_to_collection(entity_name)
-    collection = db[collection_name]
+    collection = db[entity_to_collection(entity_name)]
     query = body.get("query", {})
     sort_str = body.get("sort", "-created_at")
     limit = int(body.get("limit", 500))
     sort_field, sort_dir = parse_sort(sort_str)
 
-    # Apply RLS only if no team_id is already in query and user has team_id
     if user.get("role") != "super_admin":
-        if "team_id" not in query and user.get("team_id"):
-            # For invite lookups by email, don't add team_id restriction
-            if "email" not in query:
-                query["team_id"] = user["team_id"]
+        if "team_id" not in query and "email" not in query and user.get("team_id"):
+            query["team_id"] = user["team_id"]
 
     cursor = collection.find(query).sort(sort_field, sort_dir).limit(limit)
     docs = await cursor.to_list(length=limit)
@@ -384,8 +600,7 @@ async def filter_entity(entity_name: str, body: dict, user: dict = Depends(get_c
 
 @app.get("/api/entities/{entity_name}/{doc_id}")
 async def get_entity(entity_name: str, doc_id: str, user: dict = Depends(get_current_user)):
-    collection_name = entity_to_collection(entity_name)
-    collection = db[collection_name]
+    collection = db[entity_to_collection(entity_name)]
     try:
         doc = await collection.find_one({"_id": ObjectId(doc_id)})
     except Exception:
@@ -396,22 +611,21 @@ async def get_entity(entity_name: str, doc_id: str, user: dict = Depends(get_cur
 
 @app.post("/api/entities/{entity_name}")
 async def create_entity(entity_name: str, body: dict, user: dict = Depends(get_current_user)):
-    collection_name = entity_to_collection(entity_name)
-    collection = db[collection_name]
+    collection = db[entity_to_collection(entity_name)]
     body.pop("id", None)
     body.pop("_id", None)
+    now = datetime.now(timezone.utc).isoformat()
     if "created_at" not in body:
-        body["created_at"] = datetime.now(timezone.utc).isoformat()
+        body["created_at"] = now
     if "created_date" not in body:
-        body["created_date"] = datetime.now(timezone.utc).isoformat()
+        body["created_date"] = now
     result = await collection.insert_one(body)
     doc = await collection.find_one({"_id": result.inserted_id})
     return serialize_doc(doc)
 
 @app.patch("/api/entities/{entity_name}/{doc_id}")
 async def update_entity(entity_name: str, doc_id: str, body: dict, user: dict = Depends(get_current_user)):
-    collection_name = entity_to_collection(entity_name)
-    collection = db[collection_name]
+    collection = db[entity_to_collection(entity_name)]
     body.pop("id", None)
     body.pop("_id", None)
     body["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -424,8 +638,7 @@ async def update_entity(entity_name: str, doc_id: str, body: dict, user: dict = 
 
 @app.delete("/api/entities/{entity_name}/{doc_id}")
 async def delete_entity(entity_name: str, doc_id: str, user: dict = Depends(get_current_user)):
-    collection_name = entity_to_collection(entity_name)
-    collection = db[collection_name]
+    collection = db[entity_to_collection(entity_name)]
     try:
         await collection.delete_one({"_id": ObjectId(doc_id)})
     except Exception:
@@ -436,17 +649,13 @@ async def delete_entity(entity_name: str, doc_id: str, user: dict = Depends(get_
 @app.post("/api/functions/getTeamUsers")
 async def fn_get_team_users(body: dict = None, user: dict = Depends(get_current_user)):
     if user.get("role") == "super_admin":
-        # Super admin: get all users except other super admins
         all_users = await db.users.find({"role": {"$ne": "super_admin"}}).to_list(length=2000)
         return [serialize_doc(u) for u in all_users]
-
     team_id = user.get("team_id")
     if not team_id:
         return []
-
     team_users = await db.users.find({
-        "team_id": team_id,
-        "role": {"$ne": "super_admin"}
+        "team_id": team_id, "role": {"$ne": "super_admin"}
     }).to_list(length=500)
     return [serialize_doc(u) for u in team_users]
 
@@ -476,7 +685,6 @@ async def fn_send_invite(body: dict, user: dict = Depends(get_current_user)):
     school_name = body.get("school_name") or user.get("school_name", "")
     school_code = body.get("school_code") or user.get("school_code", "")
 
-    # For school_setup invites, look up school if needed
     if invite_type == "school_setup" and team_id and not school_id:
         existing_school = await db.school.find_one({"team_id": team_id})
         if existing_school:
@@ -493,10 +701,8 @@ async def fn_send_invite(body: dict, user: dict = Depends(get_current_user)):
     assigned_sports = body.get("assigned_sports", user.get("assigned_sports", ["football"]))
     invite_token = secrets.token_urlsafe(32)
 
-    # Generate player ID for player invites
     player_id = None
     if invite_type == "player":
-        full_name = f"{first_name} {last_name}".strip()
         chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         initial = (last_name[0] if last_name else "X").upper()
         rand = "".join(secrets.choice(chars) for _ in range(3))
@@ -524,22 +730,17 @@ async def fn_send_invite(body: dict, user: dict = Depends(get_current_user)):
         "created_at": datetime.now(timezone.utc).isoformat(),
         "created_date": datetime.now(timezone.utc).isoformat(),
     }
-
-    # School setup extra fields
     if invite_type == "school_setup":
         for field in ["poc_phone", "mascot", "subscribed_sports", "subscription_term", "location_city", "location_state"]:
             if body.get(field) is not None:
                 invite_data[field] = body[field]
 
-    # Expire any previous pending invites for same email + team
     await db.invites.update_many(
         {"email": email, "team_id": team_id, "status": "pending"},
         {"$set": {"status": "expired"}}
     )
+    await db.invites.insert_one(invite_data)
 
-    result = await db.invites.insert_one(invite_data)
-
-    # Check if user already exists and update their data
     existing_user = await db.users.find_one({"email": email})
     if existing_user:
         admin_roles = ["head_coach", "athletic_director", "associate_head_coach",
@@ -547,20 +748,21 @@ async def fn_send_invite(body: dict, user: dict = Depends(get_current_user)):
                        "special_teams_coordinator", "strength_conditioning_coordinator"]
         platform_role = "admin" if coaching_role in admin_roles else "user"
         await db.users.update_one({"email": email}, {"$set": {
-            "team_id": team_id,
-            "school_id": school_id,
-            "school_name": school_name,
-            "school_code": school_code,
-            "coaching_role": coaching_role,
-            "assigned_sports": assigned_sports,
-            "role": platform_role,
-            "profile_verified": False,
+            "team_id": team_id, "school_id": school_id, "school_name": school_name,
+            "school_code": school_code, "coaching_role": coaching_role,
+            "assigned_sports": assigned_sports, "role": platform_role, "profile_verified": False,
         }})
 
     invite_url = f"{APP_URL}/Login?invite_token={invite_token}"
-    print(f"[INVITE] {email} | {invite_type} | Token: {invite_token}")
-    print(f"[INVITE URL] {invite_url}")
 
+    # Send email asynchronously
+    asyncio.create_task(send_email(
+        to_email=email,
+        subject=f"You've been invited to {school_name or 'NxGenSports'}",
+        html=invite_email_html(invite_data, invite_url),
+    ))
+
+    print(f"[INVITE] {email} → {invite_url}")
     return {"success": True, "player_id": player_id, "invite_token": invite_token, "invite_url": invite_url}
 
 @app.post("/api/functions/updateTeamUser")
@@ -579,28 +781,18 @@ async def fn_update_team_user(body: dict, user: dict = Depends(get_current_user)
         target = await db.users.find_one({"_id": ObjectId(user_id)})
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid userId")
-
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Super admin can edit any non-super-admin
     if user.get("role") == "super_admin":
         if target.get("role") == "super_admin":
             raise HTTPException(status_code=403, detail="Cannot modify super admin")
-        data.pop("id", None)
-        data.pop("_id", None)
-        data.pop("password_hash", None)
-        await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": data})
-        return {"success": True}
-
-    # Others: must be same team
-    if target.get("team_id") != user.get("team_id"):
+    elif target.get("team_id") != user.get("team_id"):
         raise HTTPException(status_code=403, detail="User not on your team")
 
     data.pop("id", None)
     data.pop("_id", None)
     data.pop("password_hash", None)
-    data.pop("role", None)  # Don't allow role elevation
     await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": data})
     return {"success": True}
 
@@ -610,11 +802,9 @@ async def fn_create_parent_user(body: dict):
     last_name = body.get("last_name", "")
     school_id = body.get("school_id")
     assigned_sports = body.get("assigned_sports", [])
-
     if not first_name or not last_name or not school_id or not assigned_sports:
         raise HTTPException(status_code=400, detail="Missing required fields")
 
-    # Find school to get team_id
     try:
         school = await db.school.find_one({"_id": ObjectId(school_id)})
     except Exception:
@@ -622,16 +812,12 @@ async def fn_create_parent_user(body: dict):
 
     user_doc = {
         "full_name": f"{first_name} {last_name}",
-        "first_name": first_name,
-        "last_name": last_name,
+        "first_name": first_name, "last_name": last_name,
         "school_id": school_id,
         "team_id": school.get("team_id") if school else None,
         "assigned_sports": assigned_sports,
-        "role": "user",
-        "coaching_role": "parent",
-        "user_type": "parent",
-        "profile_verified": False,
-        "status": "pending_approval",
+        "role": "user", "coaching_role": "parent", "user_type": "parent",
+        "profile_verified": False, "status": "pending_approval",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     if body.get("email"):
@@ -647,11 +833,9 @@ async def fn_join_school_by_code(body: dict, user: dict = Depends(get_current_us
     school_code = body.get("school_code", "").strip().upper()
     if not school_code:
         raise HTTPException(status_code=400, detail="school_code required")
-
     school = await db.school.find_one({"school_code": school_code})
     if not school:
         raise HTTPException(status_code=404, detail="School not found. Check your school code.")
-
     if school.get("status") and school["status"] != "active":
         raise HTTPException(status_code=403, detail="This school account is not currently active.")
 
@@ -662,12 +846,10 @@ async def fn_join_school_by_code(body: dict, user: dict = Depends(get_current_us
         "school_name": school.get("school_name", ""),
         "school_code": school.get("school_code", ""),
     }})
-
     return {
         "success": True,
         "school": {
-            "team_id": school["team_id"],
-            "school_id": str(school["_id"]),
+            "team_id": school["team_id"], "school_id": str(school["_id"]),
             "school_name": school.get("school_name", ""),
             "school_code": school.get("school_code", ""),
             "subscribed_sports": school.get("subscribed_sports", []),
@@ -679,21 +861,17 @@ async def fn_list_master_teams(body: dict = None, user: dict = Depends(get_curre
     if user.get("role") != "super_admin":
         raise HTTPException(status_code=403, detail="Forbidden")
     schools = await db.school.find({}).sort("created_at", -1).to_list(length=500)
-    teams = []
-    for s in schools:
-        teams.append({
-            "id": str(s["_id"]),
-            "team_id": s.get("team_id", ""),
-            "school_name": s.get("school_name", ""),
-            "assigned_admin_name": s.get("poc_name", ""),
-            "assigned_admin_email": s.get("poc_email", ""),
-            "assigned_admin_role": s.get("poc_role", "head_coach"),
-            "subscription_status": s.get("status", "active"),
-            "subscription_term": s.get("subscription_term", "annual"),
-            "subscription_start": s.get("subscription_start"),
-            "subscription_end": s.get("subscription_end"),
-        })
-    return {"teams": teams}
+    return {"teams": [{
+        "id": str(s["_id"]), "team_id": s.get("team_id", ""),
+        "school_name": s.get("school_name", ""),
+        "assigned_admin_name": s.get("poc_name", ""),
+        "assigned_admin_email": s.get("poc_email", ""),
+        "assigned_admin_role": s.get("poc_role", "head_coach"),
+        "subscription_status": s.get("status", "active"),
+        "subscription_term": s.get("subscription_term", "annual"),
+        "subscription_start": s.get("subscription_start"),
+        "subscription_end": s.get("subscription_end"),
+    } for s in schools]}
 
 @app.post("/api/functions/{function_name}")
 async def generic_function(function_name: str, body: dict = None, user: dict = Depends(get_current_user)):
@@ -702,9 +880,7 @@ async def generic_function(function_name: str, body: dict = None, user: dict = D
 # ─── LLM Proxy ───────────────────────────────────────────────────────────────
 @app.post("/api/integrations/llm")
 async def llm_proxy(body: dict, user: dict = Depends(get_current_user)):
-    prompt = body.get("prompt", "")
-    schema = body.get("response_json_schema")
-    result = await invoke_llm(prompt, schema)
+    result = await invoke_llm(body.get("prompt", ""), body.get("response_json_schema"))
     return result
 
 @app.get("/api/health")

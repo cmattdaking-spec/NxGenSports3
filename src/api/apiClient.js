@@ -31,7 +31,8 @@ async function apiFetch(method, url, body = null) {
 
   if (res.status === 401) {
     removeToken();
-    if (!window.location.pathname.includes("/Login")) {
+    const pathname = window.location.pathname;
+    if (!pathname.includes("/Login") && !pathname.includes("/ResetPassword")) {
       window.location.href = "/Login";
     }
     throw new Error("Unauthorized");
@@ -152,6 +153,19 @@ const integrations = {
   Core: {
     async InvokeLLM({ prompt, response_json_schema } = {}) {
       return apiFetch("POST", "/api/integrations/llm", { prompt, response_json_schema });
+    },
+    async UploadFile({ file } = {}) {
+      const token = getToken();
+      const formData = new FormData();
+      formData.append("file", file);
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      const res = await fetch("/api/upload", { method: "POST", headers, body: formData });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Upload failed");
+      }
+      return res.json(); // returns { file_url, filename }
     },
   },
 };

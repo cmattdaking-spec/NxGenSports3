@@ -2,6 +2,7 @@
 import pytest
 import requests
 import os
+import uuid
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
@@ -205,3 +206,116 @@ class TestFunctions:
                           headers=admin_headers)
         assert r.status_code == 400
         print("Missing fields returns 400 OK")
+
+
+# ── Rate Limiting tests ────────────────────────────────────────────────────────
+class TestRateLimiting:
+    """Test login rate limiting - 5 failed attempts trigger 429"""
+
+    def test_rate_limit_triggers_429(self):
+        """Make 5 failed attempts then verify 6th is 429."""
+        test_email = f"ratelimit_test_{uuid.uuid4().hex[:8]}@test.com"
+        # Make 5 failed attempts
+        for i in range(5):
+            r = requests.post(f"{BASE_URL}/api/auth/login", json={"email": test_email, "password": "wrongpass"})
+            assert r.status_code == 401, f"Expected 401 on attempt {i+1}, got {r.status_code}"
+        # 6th attempt should be 429
+        r = requests.post(f"{BASE_URL}/api/auth/login", json={"email": test_email, "password": "wrongpass"})
+        assert r.status_code == 429, f"Expected 429 on 6th attempt, got {r.status_code}: {r.text}"
+        print("Rate limiting 429 OK")
+
+    def test_rate_limit_correct_password_still_429_when_locked(self):
+        """Locked account with correct password still blocked (rate limit is pre-auth)."""
+        test_email = f"ratelimit2_{uuid.uuid4().hex[:8]}@test.com"
+        # Make 5 failed attempts
+        for i in range(5):
+            requests.post(f"{BASE_URL}/api/auth/login", json={"email": test_email, "password": "wrongpass"})
+        # Same email but would be correct - still rate limited before checking password
+        r = requests.post(f"{BASE_URL}/api/auth/login", json={"email": test_email, "password": "anypass"})
+        assert r.status_code == 429
+        print("Rate limit blocks even with different password OK")
+
+
+# ── Password Reset tests ───────────────────────────────────────────────────────
+class TestPasswordReset:
+    """Test forgot-password and reset-password flows"""
+    reset_token = None
+
+    def test_forgot_password_valid_email(self):
+        """Should return success regardless of email existence."""
+        r = requests.post(f"{BASE_URL}/api/auth/forgot-password", json={"email": ADMIN_EMAIL})
+        assert r.status_code == 200
+        data = r.json()
+        assert data["success"] is True
+        assert "message" in data
+        print("forgot-password valid email OK")
+
+    def test_forgot_password_nonexistent_email(self):
+        """Should return success (prevent enumeration)."""
+        r = requests.post(f"{BASE_URL}/api/auth/forgot-password", json={"email": "nobody@nowhere.com"})
+        assert r.status_code == 200
+        data = r.json()
+        assert data["success"] is True
+        print("forgot-password nonexistent email (anti-enumeration) OK")
+
+    def test_forgot_password_missing_email(self):
+        r = requests.post(f"{BASE_URL}/api/auth/forgot-password", json={})
+        assert r.status_code == 400
+        print("forgot-password missing email returns 400 OK")
+
+    def test_reset_password_invalid_token(self):
+        r = requests.post(f"{BASE_URL}/api/auth/reset-password", json={"token": "invalid_token_xyz", "password": "NewPass123!"})
+        assert r.status_code == 400
+        print("reset-password invalid token returns 400 OK")
+
+    def test_reset_password_short_password(self):
+        r = requests.post(f"{BASE_URL}/api/auth/reset-password", json={"token": "any_token", "password": "short"})
+        assert r.status_code == 400
+        print("reset-password short password returns 400 OK")
+
+    def test_reset_password_missing_fields(self):
+        r = requests.post(f"{BASE_URL}/api/auth/reset-password", json={})
+        assert r.status_code == 400
+        print("reset-password missing fields returns 400 OK")
+
+
+# ── File Upload tests ──────────────────────────────────────────────────────────
+class TestFileUpload:
+    def test_upload_image(self, admin_headers):
+        """Upload a PNG file and verify file_url is returned."""
+        import io
+        # Minimal 1x1 PNG
+        png_data = (
+            b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01'
+            b'\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00'
+            b'\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82'
+        )
+        headers = {k: v for k, v in admin_headers.items() if k != "Content-Type"}
+        r = requests.post(
+            f"{BASE_URL}/api/upload",
+            files={"file": ("test.png", io.BytesIO(png_data), "image/png")},
+            headers=headers,
+        )
+        assert r.status_code == 200, f"Upload failed: {r.text}"
+        data = r.json()
+        assert "file_url" in data
+        assert "filename" in data
+        assert data["filename"].endswith(".png")
+        print(f"File upload OK: {data['file_url']}")
+
+    def test_upload_disallowed_file_type(self, admin_headers):
+        import io
+        headers = {k: v for k, v in admin_headers.items() if k != "Content-Type"}
+        r = requests.post(
+            f"{BASE_URL}/api/upload",
+            files={"file": ("test.exe", io.BytesIO(b"fake exe"), "application/octet-stream")},
+            headers=headers,
+        )
+        assert r.status_code == 400
+        print("Disallowed file type returns 400 OK")
+
+    def test_upload_requires_auth(self):
+        import io
+        r = requests.post(f"{BASE_URL}/api/upload", files={"file": ("test.txt", io.BytesIO(b"hello"), "text/plain")})
+        assert r.status_code == 401
+        print("Upload without auth returns 401 OK")

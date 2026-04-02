@@ -35,7 +35,7 @@ function LegalDisclosure() {
 }
 
 // ─── Login Form ───────────────────────────────────────────────────────────────
-function LoginForm({ onSuccess }) {
+function LoginForm({ onSuccess, onForgotPassword }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -71,7 +71,12 @@ function LoginForm({ onSuccess }) {
         />
       </div>
       <div>
-        <label className="text-xs text-gray-400 mb-1 block">Password</label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-xs text-gray-400">Password</label>
+          <button type="button" onClick={onForgotPassword} className="text-xs text-[#00F2FF] hover:underline" data-testid="forgot-password-link">
+            Forgot password?
+          </button>
+        </div>
         <input
           type="password"
           value={password}
@@ -100,7 +105,71 @@ function LoginForm({ onSuccess }) {
   );
 }
 
-// ─── Invite Acceptance Form ───────────────────────────────────────────────────
+// ─── Forgot Password Form ─────────────────────────────────────────────────────
+function ForgotPasswordForm({ onBack }) {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState({ text: "", type: "" });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email) return;
+    setLoading(true);
+    setMsg({ text: "", type: "" });
+    try {
+      await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      setMsg({ text: "If that email exists, a reset link has been sent. Check your inbox.", type: "success" });
+    } catch {
+      setMsg({ text: "Something went wrong. Please try again.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <button type="button" onClick={onBack} className="text-xs text-[#00F2FF] hover:underline">
+        ← Back to sign in
+      </button>
+      <div className="space-y-1">
+        <p className="text-sm font-semibold text-[#E8E8E8]">Forgot your password?</p>
+        <p className="text-xs text-[#9CA3AF]">Enter your email and we'll send you a reset link.</p>
+      </div>
+      <div>
+        <label className="text-xs text-gray-400 mb-1 block">Email</label>
+        <input
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="coach@school.edu"
+          className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-[#00F2FF] transition-colors"
+          data-testid="forgot-email-input"
+          required
+        />
+      </div>
+      {msg.text && (
+        <div className={`text-xs rounded-xl px-3 py-2 ${msg.type === "success" ? "text-green-400 bg-green-500/10 border border-green-500/30" : "text-red-400 bg-red-500/10 border border-red-500/30"}`}>
+          {msg.text}
+        </div>
+      )}
+      <button
+        type="submit"
+        disabled={loading || !email}
+        data-testid="forgot-submit-button"
+        className="w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50"
+        style={{ background: "linear-gradient(135deg, #00F2FF, #1A4BBD)", color: "#121212" }}
+      >
+        {loading ? "Sending..." : "Send reset link"}
+      </button>
+    </form>
+  );
+}
+
+
 function InviteAcceptForm({ inviteToken, onSuccess }) {
   const [invite, setInvite] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -342,7 +411,7 @@ function ParentSignupForm({ onBack }) {
 export default function Login() {
   const { setUser } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState("login"); // "login" | "signup"
+  const [mode, setMode] = useState("login"); // "login" | "signup" | "forgot"
   const [inviteToken, setInviteToken] = useState(null);
 
   useEffect(() => {
@@ -403,13 +472,15 @@ export default function Login() {
             </>
           ) : mode === "signup" ? (
             <ParentSignupForm onBack={() => setMode("login")} />
+          ) : mode === "forgot" ? (
+            <ForgotPasswordForm onBack={() => setMode("login")} />
           ) : (
             <>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-[#E8E8E8]">Sign in to your program</p>
                 <p className="text-xs text-[#9CA3AF]">Secure access for Athletic Directors, coaches, staff, and athletes.</p>
               </div>
-              <LoginForm onSuccess={handleSuccess} />
+              <LoginForm onSuccess={handleSuccess} onForgotPassword={() => setMode("forgot")} />
               <div className="text-center">
                 <button onClick={() => setMode("signup")} className="text-xs text-[#00F2FF] hover:underline" data-testid="signup-link">
                   New to NxGenSports? Sign up here
