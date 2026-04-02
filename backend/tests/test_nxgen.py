@@ -6,8 +6,8 @@ import uuid
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
-ADMIN_EMAIL = "admin@nxgensports.com"
-ADMIN_PASSWORD = "Admin123!"
+ADMIN_EMAIL    = os.environ.get("ADMIN_EMAIL", "admin@nxgensports.com")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Admin123!")
 
 
 @pytest.fixture(scope="module")
@@ -132,7 +132,7 @@ class TestInviteFlow:
         }, headers=admin_headers)
         assert r.status_code == 200
         data = r.json()
-        assert data["success"] is True
+        assert data["success"] == True
         assert "invite_token" in data
         TestInviteFlow.invite_token = data["invite_token"]
         print(f"sendInvite OK, token={TestInviteFlow.invite_token[:12]}...")
@@ -246,7 +246,7 @@ class TestPasswordReset:
         r = requests.post(f"{BASE_URL}/api/auth/forgot-password", json={"email": ADMIN_EMAIL})
         assert r.status_code == 200
         data = r.json()
-        assert data["success"] is True
+        assert data["success"] == True
         assert "message" in data
         print("forgot-password valid email OK")
 
@@ -255,7 +255,7 @@ class TestPasswordReset:
         r = requests.post(f"{BASE_URL}/api/auth/forgot-password", json={"email": "nobody@nowhere.com"})
         assert r.status_code == 200
         data = r.json()
-        assert data["success"] is True
+        assert data["success"] == True
         print("forgot-password nonexistent email (anti-enumeration) OK")
 
     def test_forgot_password_missing_email(self):

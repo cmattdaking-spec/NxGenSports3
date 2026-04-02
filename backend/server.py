@@ -163,6 +163,18 @@ def entity_to_collection(entity_name: str) -> str:
     s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', entity_name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s).lower()
 
+def _serialize_value(v):
+    """Serialize a single MongoDB value to a JSON-safe type."""
+    if isinstance(v, dict):
+        return serialize_doc(v)
+    if isinstance(v, list):
+        return [_serialize_value(item) for item in v]
+    if isinstance(v, ObjectId):
+        return str(v)
+    if isinstance(v, datetime):
+        return v.isoformat()
+    return v
+
 def serialize_doc(doc: dict) -> dict:
     if not doc:
         return None
@@ -170,16 +182,8 @@ def serialize_doc(doc: dict) -> dict:
     for k, v in doc.items():
         if k == "_id":
             result["id"] = str(v)
-        elif isinstance(v, ObjectId):
-            result[k] = str(v)
-        elif isinstance(v, datetime):
-            result[k] = v.isoformat()
-        elif isinstance(v, list):
-            result[k] = [serialize_doc(i) if isinstance(i, dict) else (str(i) if isinstance(i, ObjectId) else i) for i in v]
-        elif isinstance(v, dict):
-            result[k] = serialize_doc(v)
         else:
-            result[k] = v
+            result[k] = _serialize_value(v)
     return result
 
 def parse_sort(sort_str: str):
@@ -470,10 +474,53 @@ async def register(body: dict):
     user_doc.pop("password_hash", None)
     return {"access_token": token, "token_type": "bearer", "user": serialize_doc(user_doc)}
 
+_ADMIN_COACHING_ROLES = frozenset({
+    "head_coach", "athletic_director", "associate_head_coach",
+    "offensive_coordinator", "defensive_coordinator",
+    "special_teams_coordinator", "strength_conditioning_coordinator",
+})
+
+def _platform_role(coaching_role: str) -> str:
+    """Return 'admin' for elevated coaching roles, otherwise 'user'."""
+    return "admin" if coaching_role in _ADMIN_COACHING_ROLES else "user"
+
+def _build_profile_from_invite(invite: dict) -> dict:
+    """Build a user profile-update dict from an accepted invite."""
+    coaching_role = invite.get("coaching_role", "")
+    invite_type   = invite.get("invite_type", "staff")
+    update = {
+        "team_id":           invite.get("team_id"),
+        "school_id":         invite.get("school_id"),
+        "school_name":       invite.get("school_name", ""),
+        "school_code":       invite.get("school_code", ""),
+        "coaching_role":     coaching_role,
+        "assigned_sports":   invite.get("assigned_sports", []),
+        "assigned_positions":invite.get("assigned_positions", []),
+        "assigned_phases":   invite.get("assigned_phases", []),
+        "role":              _platform_role(coaching_role),
+        "profile_verified":  False,
+    }
+    if invite.get("first_name"):
+        update["first_name"] = invite["first_name"]
+    if invite.get("last_name"):
+        update["last_name"] = invite["last_name"]
+    if invite.get("poc_name"):
+        update["full_name"] = invite["poc_name"]
+    if invite_type == "player":
+        update["user_type"] = "player"
+        if invite.get("player_id"):
+            update["player_id"] = invite["player_id"]
+    elif invite_type == "parent":
+        update["user_type"] = "parent"
+        if invite.get("child_player_id"):
+            update["linked_player_id"]  = invite["child_player_id"]
+            update["linked_player_ids"] = [invite["child_player_id"]]
+    return update
+
 @app.post("/api/auth/accept-invite")
 async def accept_invite(body: dict):
     invite_token = body.get("invite_token", "")
-    password = body.get("password", "")
+    password     = body.get("password", "")
     if not invite_token or not password:
         raise HTTPException(status_code=400, detail="invite_token and password required")
 
@@ -481,41 +528,8 @@ async def accept_invite(body: dict):
     if not invite:
         raise HTTPException(status_code=404, detail="Invalid or expired invite token")
 
-    email = invite.get("email", "").lower()
-    admin_roles = ["head_coach", "athletic_director", "associate_head_coach",
-                   "offensive_coordinator", "defensive_coordinator",
-                   "special_teams_coordinator", "strength_conditioning_coordinator"]
-    coaching_role = invite.get("coaching_role", "")
-    platform_role = "admin" if coaching_role in admin_roles else "user"
-    invite_type = invite.get("invite_type", "staff")
-
-    profile_update = {
-        "team_id": invite.get("team_id"),
-        "school_id": invite.get("school_id"),
-        "school_name": invite.get("school_name", ""),
-        "school_code": invite.get("school_code", ""),
-        "coaching_role": coaching_role,
-        "assigned_sports": invite.get("assigned_sports", []),
-        "assigned_positions": invite.get("assigned_positions", []),
-        "assigned_phases": invite.get("assigned_phases", []),
-        "role": platform_role,
-        "profile_verified": False,
-    }
-    if invite.get("first_name"):
-        profile_update["first_name"] = invite["first_name"]
-    if invite.get("last_name"):
-        profile_update["last_name"] = invite["last_name"]
-    if invite.get("poc_name"):
-        profile_update["full_name"] = invite["poc_name"]
-    if invite_type == "player":
-        profile_update["user_type"] = "player"
-        if invite.get("player_id"):
-            profile_update["player_id"] = invite["player_id"]
-    elif invite_type == "parent":
-        profile_update["user_type"] = "parent"
-        if invite.get("child_player_id"):
-            profile_update["linked_player_id"] = invite["child_player_id"]
-            profile_update["linked_player_ids"] = [invite["child_player_id"]]
+    email          = invite.get("email", "").lower()
+    profile_update = _build_profile_from_invite(invite)
 
     existing = await db.users.find_one({"email": email})
     if existing:
@@ -523,25 +537,18 @@ async def accept_invite(body: dict):
         await db.invites.update_one({"_id": invite["_id"]}, {"$set": {"status": "accepted"}})
         user = await db.users.find_one({"email": email})
         user_id = str(user["_id"])
-        token = create_token(user_id, email)
         user["_id"] = user_id
         user.pop("password_hash", None)
-        return {"access_token": token, "token_type": "bearer", "user": serialize_doc(user)}
+        return {"access_token": create_token(user_id, email), "token_type": "bearer", "user": serialize_doc(user)}
 
-    user_doc = {
-        "email": email,
-        "password_hash": hash_password(password),
-        **profile_update,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    }
-    result = await db.users.insert_one(user_doc)
+    user_doc = {"email": email, "password_hash": hash_password(password),
+                **profile_update, "created_at": datetime.now(timezone.utc).isoformat()}
+    result  = await db.users.insert_one(user_doc)
     user_id = str(result.inserted_id)
     await db.invites.update_one({"_id": invite["_id"]}, {"$set": {"status": "accepted"}})
-
-    token = create_token(user_id, email)
     user_doc["_id"] = user_id
     user_doc.pop("password_hash", None)
-    return {"access_token": token, "token_type": "bearer", "user": serialize_doc(user_doc)}
+    return {"access_token": create_token(user_id, email), "token_type": "bearer", "user": serialize_doc(user_doc)}
 
 @app.get("/api/auth/me")
 async def get_me(user: dict = Depends(get_current_user)):
@@ -699,6 +706,7 @@ async def filter_entity(entity_name: str, body: dict, user: dict = Depends(get_c
 @app.get("/api/entities/{entity_name}/{doc_id}")
 async def get_entity(entity_name: str, doc_id: str, user: dict = Depends(get_current_user)):
     collection = db[entity_to_collection(entity_name)]
+    doc = None
     try:
         doc = await collection.find_one({"_id": ObjectId(doc_id)})
     except Exception:
@@ -753,6 +761,7 @@ async def update_entity(entity_name: str, doc_id: str, body: dict, user: dict = 
     body.pop("id", None)
     body.pop("_id", None)
     body["updated_at"] = datetime.now(timezone.utc).isoformat()
+    doc = None
     try:
         await collection.update_one({"_id": ObjectId(doc_id)}, {"$set": body})
         doc = await collection.find_one({"_id": ObjectId(doc_id)})
@@ -770,6 +779,72 @@ async def delete_entity(entity_name: str, doc_id: str, user: dict = Depends(get_
     return {"success": True}
 
 # ─── Functions ───────────────────────────────────────────────────────────────
+# ── Invite helpers ────────────────────────────────────────────────────────────
+def _check_invite_permission(user: dict) -> None:
+    """Raise 403 if user is not permitted to send invites."""
+    allowed = {"admin", "super_admin", "head_coach", "athletic_director"}
+    effective_role = user.get("coaching_role") or user.get("role", "")
+    if user.get("role") not in allowed and effective_role not in allowed:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+async def _resolve_school_context(invite_type, team_id, school_id, school_name, school_code):
+    """For school_setup invites, fill in missing school info from DB."""
+    if invite_type != "school_setup" or not team_id or school_id:
+        return school_id, school_name, school_code
+    existing = await db.school.find_one({"team_id": team_id})
+    if existing:
+        school_id   = str(existing["_id"])
+        school_name = school_name or existing.get("school_name", "")
+        school_code = school_code or existing.get("school_code", "")
+    return school_id, school_name, school_code
+
+def _resolve_coaching_role(invite_type: str, raw_role: str) -> str:
+    return {"player": "player", "parent": "parent"}.get(invite_type, raw_role)
+
+def _generate_player_id(last_name: str) -> str:
+    chars   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    initial = (last_name[0] if last_name else "X").upper()
+    rand    = "".join(secrets.choice(chars) for _ in range(3))
+    return initial + rand
+
+def _build_invite_record(email, team_id, school_id, school_name, school_code,
+                         coaching_role, assigned_sports, invite_type, first_name,
+                         last_name, player_id, invite_token, invited_by, body):
+    record = {
+        "email": email, "team_id": team_id, "school_id": school_id,
+        "school_name": school_name, "school_code": school_code,
+        "coaching_role": coaching_role, "assigned_sports": assigned_sports,
+        "assigned_positions": body.get("assigned_positions", []),
+        "assigned_phases":    body.get("assigned_phases", []),
+        "status": "pending", "invited_by": invited_by, "invite_type": invite_type,
+        "first_name": first_name, "last_name": last_name,
+        "poc_name": f"{first_name} {last_name}",
+        "child_player_id": body.get("child_player_id"),
+        "player_id": player_id, "invite_token": invite_token,
+        "created_at":   datetime.now(timezone.utc).isoformat(),
+        "created_date": datetime.now(timezone.utc).isoformat(),
+    }
+    if invite_type == "school_setup":
+        for field in ("poc_phone", "mascot", "subscribed_sports",
+                      "subscription_term", "location_city", "location_state"):
+            if body.get(field) is not None:
+                record[field] = body[field]
+    return record
+
+async def _sync_existing_user_to_invite(email, team_id, school_id, school_name,
+                                         school_code, coaching_role, assigned_sports):
+    """If a user account already exists for this email, update it to reflect the invite."""
+    existing = await db.users.find_one({"email": email})
+    if not existing:
+        return
+    await db.users.update_one({"email": email}, {"$set": {
+        "team_id": team_id, "school_id": school_id, "school_name": school_name,
+        "school_code": school_code, "coaching_role": coaching_role,
+        "assigned_sports": assigned_sports,
+        "role": _platform_role(coaching_role),
+        "profile_verified": False,
+    }})
+
 @app.post("/api/functions/getTeamUsers")
 async def fn_get_team_users(body: dict = None, user: dict = Depends(get_current_user)):
     if user.get("role") == "super_admin":
@@ -792,100 +867,49 @@ async def fn_list_all_schools(body: dict = None, user: dict = Depends(get_curren
 
 @app.post("/api/functions/sendInvite")
 async def fn_send_invite(body: dict, user: dict = Depends(get_current_user)):
-    allowed_roles = ["admin", "super_admin", "head_coach", "athletic_director"]
-    effective_role = user.get("coaching_role") or user.get("role")
-    if user.get("role") not in allowed_roles and effective_role not in allowed_roles:
-        raise HTTPException(status_code=403, detail="Forbidden")
+    _check_invite_permission(user)
 
-    email = body.get("email", "").strip().lower()
+    email      = body.get("email", "").strip().lower()
     first_name = body.get("first_name", "").strip()
-    last_name = body.get("last_name", "").strip()
+    last_name  = body.get("last_name", "").strip()
     if not email or not first_name or not last_name:
         raise HTTPException(status_code=400, detail="email, first_name, last_name are required")
 
-    invite_type = body.get("invite_type", "staff")
-    team_id = body.get("team_id") or user.get("team_id", "")
-    school_id = body.get("school_id") or user.get("school_id")
-    school_name = body.get("school_name") or user.get("school_name", "")
-    school_code = body.get("school_code") or user.get("school_code", "")
-
-    if invite_type == "school_setup" and team_id and not school_id:
-        existing_school = await db.school.find_one({"team_id": team_id})
-        if existing_school:
-            school_id = str(existing_school["_id"])
-            school_name = school_name or existing_school.get("school_name", "")
-            school_code = school_code or existing_school.get("school_code", "")
-
-    coaching_role = body.get("coaching_role", "position_coach")
-    if invite_type == "player":
-        coaching_role = "player"
-    elif invite_type == "parent":
-        coaching_role = "parent"
-
+    invite_type  = body.get("invite_type", "staff")
+    team_id      = body.get("team_id") or user.get("team_id", "")
+    school_id    = body.get("school_id") or user.get("school_id")
+    school_name  = body.get("school_name") or user.get("school_name", "")
+    school_code  = body.get("school_code") or user.get("school_code", "")
     assigned_sports = body.get("assigned_sports", user.get("assigned_sports", ["football"]))
-    invite_token = secrets.token_urlsafe(32)
 
-    player_id = None
-    if invite_type == "player":
-        chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        initial = (last_name[0] if last_name else "X").upper()
-        rand = "".join(secrets.choice(chars) for _ in range(3))
-        player_id = initial + rand
+    school_id, school_name, school_code = await _resolve_school_context(
+        invite_type, team_id, school_id, school_name, school_code
+    )
+    coaching_role = _resolve_coaching_role(invite_type, body.get("coaching_role", "position_coach"))
+    player_id     = _generate_player_id(last_name) if invite_type == "player" else None
+    invite_token  = secrets.token_urlsafe(32)
 
-    invite_data = {
-        "email": email,
-        "team_id": team_id,
-        "school_id": school_id,
-        "school_name": school_name,
-        "school_code": school_code,
-        "coaching_role": coaching_role,
-        "assigned_positions": body.get("assigned_positions", []),
-        "assigned_phases": body.get("assigned_phases", []),
-        "assigned_sports": assigned_sports,
-        "status": "pending",
-        "invited_by": user.get("email", ""),
-        "invite_type": invite_type,
-        "first_name": first_name,
-        "last_name": last_name,
-        "poc_name": f"{first_name} {last_name}",
-        "child_player_id": body.get("child_player_id"),
-        "player_id": player_id,
-        "invite_token": invite_token,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "created_date": datetime.now(timezone.utc).isoformat(),
-    }
-    if invite_type == "school_setup":
-        for field in ["poc_phone", "mascot", "subscribed_sports", "subscription_term", "location_city", "location_state"]:
-            if body.get(field) is not None:
-                invite_data[field] = body[field]
+    invite_data = _build_invite_record(
+        email, team_id, school_id, school_name, school_code,
+        coaching_role, assigned_sports, invite_type, first_name, last_name,
+        player_id, invite_token, user.get("email", ""), body,
+    )
 
     await db.invites.update_many(
         {"email": email, "team_id": team_id, "status": "pending"},
         {"$set": {"status": "expired"}}
     )
     await db.invites.insert_one(invite_data)
-
-    existing_user = await db.users.find_one({"email": email})
-    if existing_user:
-        admin_roles = ["head_coach", "athletic_director", "associate_head_coach",
-                       "offensive_coordinator", "defensive_coordinator",
-                       "special_teams_coordinator", "strength_conditioning_coordinator"]
-        platform_role = "admin" if coaching_role in admin_roles else "user"
-        await db.users.update_one({"email": email}, {"$set": {
-            "team_id": team_id, "school_id": school_id, "school_name": school_name,
-            "school_code": school_code, "coaching_role": coaching_role,
-            "assigned_sports": assigned_sports, "role": platform_role, "profile_verified": False,
-        }})
+    await _sync_existing_user_to_invite(
+        email, team_id, school_id, school_name, school_code, coaching_role, assigned_sports
+    )
 
     invite_url = f"{APP_URL}/Login?invite_token={invite_token}"
-
-    # Send email asynchronously
     asyncio.create_task(send_email(
         to_email=email,
         subject=f"You've been invited to {school_name or 'NxGenSports'}",
         html=invite_email_html(invite_data, invite_url),
     ))
-
     print(f"[INVITE] {email} → {invite_url}")
     return {"success": True, "player_id": player_id, "invite_token": invite_token, "invite_url": invite_url}
 
@@ -1016,36 +1040,42 @@ async def get_presence(team_id: str, user: dict = Depends(get_current_user)):
     return {"online_users": ws_manager.online_users(team_id)}
 
 # ─── WebSocket ────────────────────────────────────────────────────────────────
-@app.websocket("/api/ws/messages/{token}")
-async def websocket_endpoint(websocket: WebSocket, token: str):
-    """Authenticated WebSocket for real-time messaging."""
+async def _ws_authenticate(token: str):
+    """Verify JWT token and return (team_id, user_id) or None if invalid."""
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload  = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_doc = await db.users.find_one({"_id": ObjectId(payload["sub"])})
         if not user_doc:
-            await websocket.close(code=4001)
-            return
+            return None
+        team_id = user_doc.get("team_id") or str(user_doc["_id"])
+        user_id = str(user_doc["_id"])
+        return team_id, user_id
     except Exception:
+        return None
+
+async def _ws_disconnect_and_broadcast(websocket: WebSocket) -> None:
+    """Disconnect websocket and broadcast user_offline if the user is fully gone."""
+    gone_team, gone_uid = ws_manager.disconnect(websocket)
+    if gone_team and gone_uid:
+        await ws_manager.broadcast(gone_team, {"type": "user_offline", "user_id": gone_uid})
+
+@app.websocket("/api/ws/messages/{token}")
+async def websocket_endpoint(websocket: WebSocket, token: str):
+    """Authenticated WebSocket for real-time messaging and presence."""
+    auth = await _ws_authenticate(token)
+    if auth is None:
         await websocket.close(code=4001)
         return
 
-    team_id = user_doc.get("team_id") or str(user_doc["_id"])
-    user_id = str(user_doc["_id"])
-
+    team_id, user_id = auth
     await ws_manager.connect(websocket, team_id, user_id)
     try:
         while True:
             msg = await websocket.receive_text()
             if msg == "ping":
                 await websocket.send_text("pong")
-    except WebSocketDisconnect:
-        gone_team, gone_uid = ws_manager.disconnect(websocket)
-        if gone_team and gone_uid:
-            await ws_manager.broadcast(gone_team, {"type": "user_offline", "user_id": gone_uid})
-    except Exception:
-        gone_team, gone_uid = ws_manager.disconnect(websocket)
-        if gone_team and gone_uid:
-            await ws_manager.broadcast(gone_team, {"type": "user_offline", "user_id": gone_uid})
+    except (WebSocketDisconnect, Exception):
+        await _ws_disconnect_and_broadcast(websocket)
 
 # ─── Push Notification Helpers ────────────────────────────────────────────────
 async def _send_push(subscription_doc: dict, payload: dict):

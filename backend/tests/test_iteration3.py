@@ -5,8 +5,8 @@ import os
 import uuid
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
-ADMIN_EMAIL = "admin@nxgensports.com"
-ADMIN_PASSWORD = "Admin123!"
+ADMIN_EMAIL    = os.environ.get("ADMIN_EMAIL", "admin@nxgensports.com")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Admin123!")
 
 @pytest.fixture(scope="module")
 def admin_headers():
@@ -16,8 +16,8 @@ def admin_headers():
     return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
 # Test coach user for onboarding wizard
-TEST_COACH_EMAIL = f"test_coach_{uuid.uuid4().hex[:8]}@nxgen.test"
-TEST_COACH_PASSWORD = "TestCoach123!"
+TEST_COACH_EMAIL    = f"test_coach_{uuid.uuid4().hex[:8]}@nxgen.test"
+TEST_COACH_PASSWORD = os.environ.get("TEST_COACH_PASSWORD", "TestCoach123!")
 
 @pytest.fixture(scope="module")
 def coach_user():
@@ -60,7 +60,7 @@ class TestChangePassword:
             headers=coach_headers)
         assert r.status_code == 200, f"Expected 200, got {r.status_code}: {r.text}"
         data = r.json()
-        assert data.get("success") is True
+        assert data.get("success") == True
         print("Change password success OK")
 
     def test_login_with_new_password(self):
@@ -127,7 +127,7 @@ class TestOnboardingUser:
         data = r.json()
         assert data["coaching_role"] == "head_coach"
         assert data["team_id"] == "test_school_onboarding"
-        assert data.get("profile_verified") is True
+        assert data.get("profile_verified") == True
         assert data.get("onboarding_completed") is not True
         print("Coach user profile OK - should show onboarding wizard")
 
@@ -154,7 +154,7 @@ class TestOnboardingUser:
         # Verify it was saved
         r3 = requests.get(f"{BASE_URL}/api/auth/me", headers=headers)
         data = r3.json()
-        assert data.get("onboarding_completed") is True
+        assert data.get("onboarding_completed") == True
         print("Onboarding completed flag saved OK")
 
 
@@ -166,7 +166,7 @@ class TestForgotPassword:
             json={"email": ADMIN_EMAIL})
         assert r.status_code == 200
         data = r.json()
-        assert data.get("success") is True
+        assert data.get("success") == True
         print("Forgot password OK")
 
     def test_forgot_password_unknown_email(self):

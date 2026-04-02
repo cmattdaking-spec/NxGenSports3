@@ -16,8 +16,8 @@ import websocket  # websocket-client
 
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 
-ADMIN_EMAIL = "admin@nxgensports.com"
-ADMIN_PASSWORD = "Admin123!"
+ADMIN_EMAIL    = os.environ.get("ADMIN_EMAIL", "admin@nxgensports.com")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Admin123!")
 
 
 @pytest.fixture(scope="module")
@@ -104,7 +104,7 @@ class TestPushEndpoints:
         })
         assert resp.status_code == 200, f"Subscribe failed: {resp.text}"
         data = resp.json()
-        assert data.get("success") is True
+        assert data.get("success") == True
 
     def test_push_subscribe_missing_fields_returns_400(self, auth_session):
         resp = auth_session.post(f"{BASE_URL}/api/push/subscribe", json={
@@ -117,7 +117,7 @@ class TestPushEndpoints:
         resp = auth_session.delete(f"{BASE_URL}/api/push/subscribe", json={})
         assert resp.status_code == 200, f"Delete subscribe failed: {resp.text}"
         data = resp.json()
-        assert data.get("success") is True
+        assert data.get("success") == True
 
     def test_push_delete_unauthenticated_returns_401(self):
         resp = requests.delete(f"{BASE_URL}/api/push/subscribe", json={})
