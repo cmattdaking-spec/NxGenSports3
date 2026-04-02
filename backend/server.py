@@ -490,6 +490,23 @@ async def get_invite(invite_token: str):
         raise HTTPException(status_code=404, detail="Invalid or expired invite")
     return serialize_doc(invite)
 
+@app.post("/api/auth/change-password")
+async def change_password(body: dict, user: dict = Depends(get_current_user)):
+    current_password = body.get("current_password", "")
+    new_password = body.get("new_password", "")
+    if not current_password or not new_password:
+        raise HTTPException(status_code=400, detail="current_password and new_password required")
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+
+    user_id = user.get("id") or user.get("_id")
+    db_user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not db_user or not verify_password(current_password, db_user.get("password_hash", "")):
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+
+    await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {"password_hash": hash_password(new_password)}})
+    return {"success": True}
+
 # ─── Password Reset ───────────────────────────────────────────────────────────
 @app.post("/api/auth/forgot-password")
 async def forgot_password(body: dict):

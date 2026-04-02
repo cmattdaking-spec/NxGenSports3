@@ -104,11 +104,16 @@ export default function Settings() {
     if (pwForm.next.length < 6) { setPwError("New password must be at least 6 characters."); return; }
     if (pwForm.next !== pwForm.confirm) { setPwError("Passwords do not match."); return; }
     setPwSaving(true);
-    await base44.auth.changePassword(pwForm.current, pwForm.next);
-    setPwSaving(false);
-    setPwSuccess(true);
-    setPwForm({ current: "", next: "", confirm: "" });
-    setTimeout(() => setPwSuccess(false), 3000);
+    try {
+      await base44.auth.changePassword(pwForm.current, pwForm.next);
+      setPwSuccess(true);
+      setPwForm({ current: "", next: "", confirm: "" });
+      setTimeout(() => setPwSuccess(false), 3000);
+    } catch (e) {
+      setPwError(e.message || "Failed to change password. Check your current password.");
+    } finally {
+      setPwSaving(false);
+    }
   };
 
   const handleToggleNotifications = async () => {

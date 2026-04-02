@@ -82,6 +82,13 @@ const auth = {
     return apiFetch("PATCH", "/api/auth/me", data);
   },
 
+  async changePassword(currentPassword, newPassword) {
+    return apiFetch("POST", "/api/auth/change-password", {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
+  },
+
   logout(returnUrl) {
     removeToken();
     window.location.href = "/Login";

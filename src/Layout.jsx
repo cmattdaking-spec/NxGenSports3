@@ -3,6 +3,7 @@ import { Link, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import EnrollmentCheck from "@/components/EnrollmentCheck";
+import OnboardingWizard from "@/components/OnboardingWizard";
 import { SportLogoSVG } from "@/components/SportLogos";
 import { SportContext } from "@/components/SportContext";
 import {
@@ -203,6 +204,7 @@ export default function Layout({ children, currentPageName }) {
   const usageEntityRef = useRef(null);
   const disableUsageTrackingRef = useRef(false);
   const [mobileTabCache, setMobileTabCache] = useState({});
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (currentPageName !== prevPage) {
@@ -231,6 +233,12 @@ export default function Layout({ children, currentPageName }) {
       const uIsSuperAdmin = u?.role === "super_admin";
       const saved = (uIsAD || uIsSuperAdmin) ? "nxgensports" : (u?.active_sport || sports[0]);
       setActiveSport(saved);
+
+      // Show onboarding for coaches with school who haven't completed it
+      const isCoach = u?.user_type !== "player" && u?.user_type !== "parent" && u?.role !== "super_admin";
+      if (isCoach && u?.team_id && u?.profile_verified === true && !u?.onboarding_completed) {
+        setShowOnboarding(true);
+      }
     }).catch(() => {});
     base44.entities.AppSettings.list().then((list) => {
       if (list.length > 0) {
@@ -512,6 +520,9 @@ export default function Layout({ children, currentPageName }) {
   return (
     <SportContext.Provider value={sportContextValue}>
     <EnrollmentCheck>
+      {showOnboarding && user && (
+        <OnboardingWizard user={user} onComplete={() => { setShowOnboarding(false); setUser(u => ({ ...u, onboarding_completed: true })); }} />
+      )}
       <div className="flex h-screen bg-[#0a0a0a] overflow-hidden">
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col flex-shrink-0 bg-[#111111] border-r border-gray-800 transition-all duration-300 relative ${collapsed ? "w-16" : "w-56"}`}>

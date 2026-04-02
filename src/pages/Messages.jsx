@@ -78,15 +78,32 @@ export default function Messages() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // ─── Real-time polling: new messages in active conversation ────────────────
   useEffect(() => {
-    if (!activeConvo) return;
-    const unsub = base44.entities.Message.subscribe((event) => {
-      if (event.data?.conversation_id === activeConvo.id && isAfterMessageReset(event.data?.created_date)) {
-        if (event.type === "create") setMessages(prev => prev.find(m => m.id === event.id) ? prev : [...prev, event.data]);
-      }
-    });
-    return unsub;
-  }, [activeConvo?.id]);
+    if (!activeConvo || !user) return;
+    const poll = async () => {
+      try {
+        const msgs = await base44.entities.Message.filter(
+          { conversation_id: activeConvo.id }, "created_date", 500
+        );
+        const filtered = msgs.filter(m => isAfterMessageReset(m.created_date));
+        // Merge without disrupting scroll — only update if count changed
+        setMessages(prev => {
+          if (prev.length !== filtered.length) return filtered;
+          return prev;
+        });
+      } catch {}
+    };
+    const interval = setInterval(poll, 4000);
+    return () => clearInterval(interval);
+  }, [activeConvo?.id, user?.email]);
+
+  // ─── Real-time polling: refresh conversation list for new DMs ──────────────
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => loadConversations(user), 10000);
+    return () => clearInterval(interval);
+  }, [user?.email]);
 
   const loadConversations = async (u) => {
     const all = await base44.entities.Conversation.list("-updated_date");

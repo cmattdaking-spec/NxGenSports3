@@ -442,6 +442,22 @@ export default function SuperAdminView({ allUsers, loading: usersLoading, onRefr
         </div>
       </div>
 
+      {/* Resend domain verification notice */}
+      {activeTab === "schools" && (
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl px-4 py-3 flex items-start gap-3">
+          <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Mail className="w-3 h-3 text-blue-400" />
+          </div>
+          <div>
+            <p className="text-blue-300 text-xs font-semibold">Email delivery setup required</p>
+            <p className="text-blue-400/70 text-xs mt-0.5">
+              To ensure invite and password reset emails are delivered, verify <span className="font-mono font-semibold">nxgen-sports.com</span> in your{" "}
+              <a href="https://resend.com/domains" target="_blank" rel="noreferrer" className="underline hover:text-blue-300">Resend dashboard → Domains</a>.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Tab navigation */}
       <div className="flex gap-1 bg-[#141414] border border-gray-800 rounded-xl p-1 w-fit flex-wrap">
         <button
