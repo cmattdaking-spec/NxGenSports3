@@ -43,7 +43,20 @@ Deno.serve(async (req) => {
     if (!teamId) return Response.json([]);
 
     const allUsers = await base44.asServiceRole.entities.User.list();
-    const teamUsers = allUsers.filter((u: any) => u.team_id === teamId && u.role !== 'super_admin');
+
+    const teamUsers = allUsers.filter((u: any) => {
+      if (u.team_id !== teamId || u.role === 'super_admin') return false;
+
+      // Admins, Athletic Directors, and super_admins (safety fallback) see everyone in the school
+      if (user.role === 'admin' || user.role === 'athletic_director' || user.role === 'super_admin') return true;
+
+      // Filter staff/players by sport: they must share at least one sport with the viewer
+      const viewerSports = user.assigned_sports || [];
+      const targetSports = u.assigned_sports || [];
+
+      return targetSports.some((sport: any) => viewerSports.includes(sport));
+    });
+
     return Response.json(teamUsers);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
