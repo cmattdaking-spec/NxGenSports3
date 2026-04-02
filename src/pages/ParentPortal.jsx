@@ -16,7 +16,7 @@ export default function ParentPortal() {
         setUser(u);
         const linkedId = u?.linked_player_id || u?.linked_player_ids?.[0];
         if (linkedId) {
-          const p = await base44.asServiceRole.entities.Player.get(linkedId);
+          const p = await base44.entities.Player.get(linkedId);
           setPlayer(p);
         }
         const games = await base44.entities.Opponent.list("game_date");

@@ -37,11 +37,16 @@ Build the NxGenSports app from the Base44 repository with a standalone FastAPI +
 
 ### Invite Flow Fix
 - sendInvite creates invite record with unique invite_token
-- Invite URL: /Login?invite_token=<token>
+- Invite URL: /Login?invite_token=<token> (logged to backend console)
 - InviteAcceptForm pre-fills user data from invite
 - After acceptance: user gets team_id assigned → appears in getTeamUsers
 - Schools immediately visible in listAllSchools after creation
 - PendingInvites shows invites with status="pending" filtered by team_id
+
+### Bug Fixes Applied
+- ParentPortal: removed base44.asServiceRole reference (replaced with base44.entities.Player.get)
+- CORS: configured explicit allowed origins instead of wildcard
+- Vite: allowedHosts set to true for Emergent preview environment
 
 ## Prioritized Backlog
 

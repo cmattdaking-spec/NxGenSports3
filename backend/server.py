@@ -26,12 +26,18 @@ EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY", "")
 INTEGRATION_PROXY_URL = os.environ.get("INTEGRATION_PROXY_URL", "https://integrations.emergentagent.com")
 APP_URL = os.environ.get("APP_URL", "http://localhost:3000")
 
+ALLOWED_ORIGINS = [
+    APP_URL,
+    "http://localhost:3000",
+    "http://0.0.0.0:3000",
+]
+
 # ─── App ─────────────────────────────────────────────────────────────────────
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
