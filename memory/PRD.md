@@ -58,7 +58,8 @@ Build the NxGenSports app from the Base44 repository with a standalone FastAPI +
 - Vite: allowedHosts set to true
 - ResetPassword: public route added to App.jsx; apiClient.js 401-redirect exclusion added
 
-## Testing Results
+## Bug Fixes
+- **Invite expired/invalid link** (root cause: `entity_to_collection("Invite")` resolved to `invite` singular while `sendInvite`/`accept-invite`/`get-invite` all used `db.invites` plural — two separate MongoDB collections). Fix: added `_COLLECTION_OVERRIDES = {"Invite": "invites"}` so entity CRUD and direct DB access use the same collection. PendingInvites now shows correctly; tokens are never accidentally expired.
 - Iteration 1: Backend 100% (18/18), Frontend 95%
 - Iteration 2: Backend 100% (29/29), Frontend 100% (all 28 pages)
 - Iteration 5: Backend 100% (7/7), Frontend 100% (live presence indicator — green dot in NxMessages)

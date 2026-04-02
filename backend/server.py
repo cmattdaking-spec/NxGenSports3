@@ -152,7 +152,14 @@ async def shutdown():
     client.close()
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
+# Override map: entity names whose collection differs from the auto snake_case rule
+_COLLECTION_OVERRIDES: Dict[str, str] = {
+    "Invite": "invites",   # sendInvite writes to db.invites; keep in sync
+}
+
 def entity_to_collection(entity_name: str) -> str:
+    if entity_name in _COLLECTION_OVERRIDES:
+        return _COLLECTION_OVERRIDES[entity_name]
     s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', entity_name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s).lower()
 
