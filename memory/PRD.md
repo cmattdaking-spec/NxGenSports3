@@ -61,7 +61,7 @@ Build the NxGenSports app from the Base44 repository with a standalone FastAPI +
 ## Testing Results
 - Iteration 1: Backend 100% (18/18), Frontend 95%
 - Iteration 2: Backend 100% (29/29), Frontend 100% (all 28 pages)
-- Iteration 3: Backend 100% (12/12), Frontend 100% (messaging, onboarding wizard, change password, Resend notice)
+- Iteration 4: Backend 100% (13/13), Frontend 100% (WebSocket, push notifications, service worker)
 
 ## Completed Features (All 4 Next Action Items)
 1. **Resend email** — invite + password reset emails via noreply@nxgen-sports.com (domain needs Resend verification)
