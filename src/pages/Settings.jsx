@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings as SettingsIcon, LogOut, Palette, Check, User, Shield, Bell, Lock, Eye, EyeOff, Upload, Building2, Trash2 } from "lucide-react";
+import { Settings as SettingsIcon, LogOut, Palette, Check, User, Shield, Bell, BellOff, Lock, Eye, EyeOff, Upload, Building2, Trash2 } from "lucide-react";
 import TeamLanguagePanel from "../components/settings/TeamLanguagePanel";
 import SystemDesigner from "../components/settings/SystemDesigner";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const COLOR_SCHEMES = [
   { name: "NxDown Default", primary: "#3b82f6", secondary: "#1d4ed8", preview: "bg-blue-500" },
@@ -41,6 +42,7 @@ export default function Settings() {
   const canChangeColors = ["head_coach", "athletic_director", "admin"].includes(coachingRole);
   const [logoUploading, setLogoUploading] = useState(false);
   const [teamLogo, setTeamLogo] = useState(null);
+  const { supported: pushSupported, permission, subscribed, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
 
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
@@ -276,20 +278,36 @@ export default function Settings() {
         <h2 className="text-white font-bold mb-1 flex items-center gap-2">
           <Bell className="w-4 h-4 text-[var(--color-primary,#3b82f6)]" /> Push Notifications
         </h2>
-        <p className="text-gray-500 text-xs mb-4">Get notified about team updates, messages, and alerts</p>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-white text-sm font-medium">Enable Notifications</p>
-            <p className="text-gray-500 text-xs mt-0.5">{notificationsEnabled ? "You will receive push notifications" : "Notifications are off"}</p>
+        <p className="text-gray-500 text-xs mb-4">
+          {pushSupported
+            ? "Get notified of new messages even when the app is in the background."
+            : "Push notifications are not supported in this browser."}
+        </p>
+        {pushSupported && (
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white text-sm font-medium">
+                {subscribed ? "Notifications enabled" : permission === "denied" ? "Blocked by browser" : "Notifications off"}
+              </p>
+              <p className="text-gray-500 text-xs mt-0.5">
+                {permission === "denied"
+                  ? "Allow notifications in your browser settings to enable."
+                  : subscribed
+                  ? "You'll receive alerts for new messages."
+                  : "Click to enable alerts for new NxMessages."}
+              </p>
+            </div>
+            <button
+              onClick={subscribed ? unsubscribePush : subscribePush}
+              disabled={permission === "denied"}
+              data-testid="push-notifications-toggle"
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 ${subscribed ? "bg-red-500/10 text-red-400 border border-red-500/20" : "text-white"}`}
+              style={!subscribed && permission !== "denied" ? { backgroundColor: "var(--color-primary,#3b82f6)" } : {}}
+            >
+              {subscribed ? <><BellOff className="w-4 h-4" /> Disable</> : <><Bell className="w-4 h-4" /> Enable</>}
+            </button>
           </div>
-          <button
-            onClick={handleToggleNotifications}
-            disabled={notifSaving}
-            className={`relative w-12 h-6 rounded-full transition-all duration-300 ${notificationsEnabled ? "bg-[var(--color-primary,#3b82f6)]" : "bg-gray-700"} disabled:opacity-50`}
-          >
-            <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${notificationsEnabled ? "left-6" : "left-0.5"}`} />
-          </button>
-        </div>
+        )}
       </div>
 
       {/* Change Password */}

@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import { getToken } from "@/api/apiClient";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import {
   MessageSquare, Plus, Send, Users, User, ChevronLeft,
   Lock, X, Check, Hash, Paperclip, FileText, Download,
-  Search, Megaphone, ChevronDown, ChevronUp, Shield
+  Search, Megaphone, ChevronDown, ChevronUp, Shield, Bell, BellOff
 } from "lucide-react";
 
 const MESSAGE_RESET_AT = new Date("2026-03-14T00:00:00.000Z");
@@ -61,6 +63,10 @@ export default function Messages() {
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const [isAnnouncement, setIsAnnouncement] = useState(false);
+  const wsRef     = useRef(null);
+  const wsAlive   = useRef(false);
+  const { supported: pushSupported, permission, subscribed, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
+  const [showPushBanner, setShowPushBanner] = useState(false);
 
   const myType = user?.user_type || "coach";
   const isCoachOrAdmin = myType === "coach" || myType === "admin" || user?.role === "admin";
@@ -78,30 +84,110 @@ export default function Messages() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ─── Real-time polling: new messages in active conversation ────────────────
+  // ─── Real-time: WebSocket connection ──────────────────────────────────────
+  useEffect(() => {
+    if (!user) return;
+
+    const token = getToken();
+    if (!token) return;
+
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const wsUrl    = `${protocol}://${window.location.host}/api/ws/messages/${token}`;
+
+    let ws;
+    let pingInterval;
+    let reconnectTimeout;
+    let unmounted = false;
+
+    const connect = () => {
+      if (unmounted) return;
+      try {
+        ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          wsAlive.current = true;
+          pingInterval = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) ws.send('ping');
+          }, 25000);
+        };
+
+        ws.onmessage = (e) => {
+          if (e.data === 'pong') return;
+          try {
+            const payload = JSON.parse(e.data);
+            if (payload.type === 'new_message') {
+              const msg = payload.data;
+              setMessages(prev => {
+                if (prev.find(m => m.id === msg.id)) return prev;
+                // Only append if this conversation is open
+                setActiveConvo(current => {
+                  if (current?.id === msg.conversation_id) {
+                    setMessages(p => p.find(m => m.id === msg.id) ? p : [...p, msg]);
+                  }
+                  return current;
+                });
+                return prev;
+              });
+              // Refresh conversation list for last_message preview
+              setUser(u => { if (u) loadConversations(u); return u; });
+            }
+            if (payload.type === 'new_conversation') {
+              setUser(u => { if (u) loadConversations(u); return u; });
+            }
+          } catch {}
+        };
+
+        ws.onclose = () => {
+          wsAlive.current = false;
+          clearInterval(pingInterval);
+          if (!unmounted) reconnectTimeout = setTimeout(connect, 3000);
+        };
+
+        ws.onerror = () => ws.close();
+      } catch {
+        if (!unmounted) reconnectTimeout = setTimeout(connect, 3000);
+      }
+    };
+
+    connect();
+
+    // Show push-notification banner for users who haven't enabled it yet
+    if (pushSupported && permission === 'default' && !subscribed) {
+      setTimeout(() => setShowPushBanner(true), 3000);
+    }
+
+    return () => {
+      unmounted = true;
+      clearInterval(pingInterval);
+      clearTimeout(reconnectTimeout);
+      wsRef.current?.close();
+    };
+  }, [user?.email]);
+
+  // ─── Fallback polling when WS is not alive ────────────────────────────────
   useEffect(() => {
     if (!activeConvo || !user) return;
     const poll = async () => {
+      if (wsAlive.current) return; // skip if WebSocket is live
       try {
         const msgs = await base44.entities.Message.filter(
           { conversation_id: activeConvo.id }, "created_date", 500
         );
         const filtered = msgs.filter(m => isAfterMessageReset(m.created_date));
-        // Merge without disrupting scroll — only update if count changed
-        setMessages(prev => {
-          if (prev.length !== filtered.length) return filtered;
-          return prev;
-        });
+        setMessages(prev => prev.length !== filtered.length ? filtered : prev);
       } catch {}
     };
     const interval = setInterval(poll, 4000);
     return () => clearInterval(interval);
   }, [activeConvo?.id, user?.email]);
 
-  // ─── Real-time polling: refresh conversation list for new DMs ──────────────
+  // ─── Fallback polling: refresh conversation list when WS is not alive ─────
   useEffect(() => {
     if (!user) return;
-    const interval = setInterval(() => loadConversations(user), 10000);
+    const interval = setInterval(() => {
+      if (!wsAlive.current) loadConversations(user);
+    }, 10000);
     return () => clearInterval(interval);
   }, [user?.email]);
 
@@ -312,6 +398,30 @@ export default function Messages() {
                 Start Conversation ({selectedUsers.length})
               </button>
             )}
+          </div>
+        )}
+
+      {/* Push Notification Banner */}
+        {showPushBanner && !subscribed && (
+          <div className="mx-3 mb-2 bg-[var(--color-primary,#3b82f6)]/10 border border-[var(--color-primary,#3b82f6)]/20 rounded-xl p-3 flex items-start gap-2">
+            <Bell className="w-4 h-4 text-[var(--color-primary,#3b82f6)] flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-xs font-semibold">Enable notifications</p>
+              <p className="text-gray-500 text-xs mt-0.5">Get notified of new messages even when the app is in the background.</p>
+              <div className="flex gap-2 mt-2">
+                <button onClick={async () => { await subscribePush(); setShowPushBanner(false); }}
+                  className="px-3 py-1 rounded-lg text-xs font-semibold text-white"
+                  style={{ backgroundColor: "var(--color-primary,#3b82f6)" }}>
+                  Enable
+                </button>
+                <button onClick={() => setShowPushBanner(false)} className="px-3 py-1 rounded-lg text-xs text-gray-500 hover:text-gray-300">
+                  Not now
+                </button>
+              </div>
+            </div>
+            <button onClick={() => setShowPushBanner(false)} className="text-gray-600 hover:text-gray-400 flex-shrink-0">
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
 

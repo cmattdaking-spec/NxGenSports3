@@ -5,6 +5,7 @@ import os
 import re
 import json
 import uuid
+import base64
 import secrets
 import asyncio
 import bcrypt
@@ -12,11 +13,13 @@ import jwt
 import httpx
 import resend
 from datetime import datetime, timezone, timedelta
+from typing import Dict, Set
 from bson import ObjectId
-from fastapi import FastAPI, HTTPException, Request, Depends, UploadFile, File
+from fastapi import FastAPI, HTTPException, Request, Depends, UploadFile, File, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
+from pywebpush import webpush, WebPushException
 
 # ─── Config ──────────────────────────────────────────────────────────────────
 MONGO_URL = os.environ["MONGO_URL"]
@@ -30,6 +33,14 @@ INTEGRATION_PROXY_URL = os.environ.get("INTEGRATION_PROXY_URL", "https://integra
 APP_URL = os.environ.get("APP_URL", "http://localhost:3000")
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "noreply@nxgen-sports.com")
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_PEM_B64 = os.environ.get("VAPID_PRIVATE_PEM_B64", "")
+VAPID_CONTACT = os.environ.get("VAPID_CONTACT", f"mailto:{ADMIN_EMAIL}")
+
+def _vapid_private_pem() -> str:
+    if not VAPID_PRIVATE_PEM_B64:
+        return ""
+    return base64.b64decode(VAPID_PRIVATE_PEM_B64).decode()
 
 resend.api_key = RESEND_API_KEY
 
@@ -38,6 +49,34 @@ ALLOWED_ORIGINS = [APP_URL, "http://localhost:3000", "http://0.0.0.0:3000"]
 # ─── Rate limit constants ─────────────────────────────────────────────────────
 MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_MINUTES = 15
+
+# ─── WebSocket connection manager ─────────────────────────────────────────────
+class ConnectionManager:
+    """Tracks active WebSocket connections keyed by team_id."""
+    def __init__(self):
+        self._connections: Dict[str, Set[WebSocket]] = {}
+
+    async def connect(self, ws: WebSocket, team_id: str):
+        await ws.accept()
+        self._connections.setdefault(team_id, set()).add(ws)
+
+    def disconnect(self, ws: WebSocket, team_id: str):
+        if team_id in self._connections:
+            self._connections[team_id].discard(ws)
+
+    async def broadcast(self, team_id: str, payload: dict, exclude: WebSocket = None):
+        dead = set()
+        for ws in list(self._connections.get(team_id, [])):
+            if ws is exclude:
+                continue
+            try:
+                await ws.send_json(payload)
+            except Exception:
+                dead.add(ws)
+        for ws in dead:
+            self._connections[team_id].discard(ws)
+
+ws_manager = ConnectionManager()
 
 # ─── App ─────────────────────────────────────────────────────────────────────
 app = FastAPI()
@@ -70,6 +109,7 @@ async def startup():
     await db.password_reset_tokens.create_index("token")
     await db.password_reset_tokens.create_index("expires_at", expireAfterSeconds=0)
     await db.login_attempts.create_index([("identifier", 1), ("attempted_at", -1)])
+    await db.push_subscriptions.create_index([("user_id", 1)], unique=False)
     await seed_admin()
     print("NxGenSports backend started")
 
@@ -638,7 +678,33 @@ async def create_entity(entity_name: str, body: dict, user: dict = Depends(get_c
         body["created_date"] = now
     result = await collection.insert_one(body)
     doc = await collection.find_one({"_id": result.inserted_id})
-    return serialize_doc(doc)
+    serialized = serialize_doc(doc)
+
+    # ── Real-time: broadcast new messages via WebSocket + push ────────────────
+    if entity_name == "Message":
+        team_id = body.get("team_id") or user.get("team_id", "")
+        user_id = user.get("id") or user.get("_id", "")
+        ws_payload = {"type": "new_message", "data": serialized}
+        asyncio.create_task(ws_manager.broadcast(team_id, ws_payload))
+
+        # Push notification to other team members
+        sender_name = user.get("full_name") or user.get("email", "Someone")
+        content_preview = (body.get("content", "") or "")[:80]
+        push_payload = {
+            "type": "new_message",
+            "title": f"NxMessage from {sender_name}",
+            "body": content_preview,
+            "icon": "/logo192.png",
+            "conversation_id": body.get("conversation_id"),
+        }
+        asyncio.create_task(broadcast_push(team_id, str(user_id), push_payload))
+
+    # ── Real-time: broadcast new/updated conversations ────────────────────────
+    elif entity_name == "Conversation":
+        team_id = body.get("team_id") or user.get("team_id", "")
+        asyncio.create_task(ws_manager.broadcast(team_id, {"type": "new_conversation", "data": serialized}))
+
+    return serialized
 
 @app.patch("/api/entities/{entity_name}/{doc_id}")
 async def update_entity(entity_name: str, doc_id: str, body: dict, user: dict = Depends(get_current_user)):
@@ -903,3 +969,105 @@ async def llm_proxy(body: dict, user: dict = Depends(get_current_user)):
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
+
+# ─── WebSocket ────────────────────────────────────────────────────────────────
+@app.websocket("/api/ws/messages/{token}")
+async def websocket_endpoint(websocket: WebSocket, token: str):
+    """Authenticated WebSocket for real-time messaging."""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_doc = await db.users.find_one({"_id": ObjectId(payload["sub"])})
+        if not user_doc:
+            await websocket.close(code=4001)
+            return
+    except Exception:
+        await websocket.close(code=4001)
+        return
+
+    team_id = user_doc.get("team_id") or str(user_doc["_id"])
+    await ws_manager.connect(websocket, team_id)
+    try:
+        while True:
+            # Keep alive — client sends periodic pings
+            msg = await websocket.receive_text()
+            if msg == "ping":
+                await websocket.send_text("pong")
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket, team_id)
+    except Exception:
+        ws_manager.disconnect(websocket, team_id)
+
+# ─── Push Notification Helpers ────────────────────────────────────────────────
+async def _send_push(subscription_doc: dict, payload: dict):
+    """Send a Web Push notification to a single subscription."""
+    pem = _vapid_private_pem()
+    if not pem or not VAPID_PUBLIC_KEY:
+        return
+    try:
+        sub_info = {
+            "endpoint": subscription_doc["endpoint"],
+            "keys": {
+                "p256dh": subscription_doc["p256dh"],
+                "auth": subscription_doc["auth"],
+            },
+        }
+        await asyncio.to_thread(
+            webpush,
+            subscription_info=sub_info,
+            data=json.dumps(payload),
+            vapid_private_key=pem,
+            vapid_claims={"sub": VAPID_CONTACT},
+        )
+    except WebPushException as e:
+        if e.response and e.response.status_code in (404, 410):
+            # Subscription expired — remove it
+            await db.push_subscriptions.delete_one({"_id": subscription_doc["_id"]})
+    except Exception as e:
+        print(f"[PUSH] Error: {e}")
+
+async def broadcast_push(team_id: str, user_id: str, payload: dict):
+    """Send push notification to all team members except the sender."""
+    if not _vapid_private_pem():
+        return
+    subs = await db.push_subscriptions.find({
+        "team_id": team_id,
+        "user_id": {"$ne": user_id},
+    }).to_list(length=500)
+    for sub in subs:
+        asyncio.create_task(_send_push(sub, payload))
+
+# ─── Push Subscription Endpoints ─────────────────────────────────────────────
+@app.get("/api/push/vapid-public-key")
+async def get_vapid_public_key():
+    return {"publicKey": VAPID_PUBLIC_KEY}
+
+@app.post("/api/push/subscribe")
+async def push_subscribe(body: dict, user: dict = Depends(get_current_user)):
+    endpoint = body.get("endpoint")
+    p256dh   = body.get("p256dh")
+    auth     = body.get("auth")
+    if not endpoint or not p256dh or not auth:
+        raise HTTPException(status_code=400, detail="endpoint, p256dh, auth required")
+
+    user_id = user.get("id") or user.get("_id")
+    team_id = user.get("team_id", "")
+
+    await db.push_subscriptions.update_one(
+        {"user_id": user_id, "endpoint": endpoint},
+        {"$set": {
+            "user_id": user_id,
+            "team_id": team_id,
+            "endpoint": endpoint,
+            "p256dh": p256dh,
+            "auth": auth,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }},
+        upsert=True,
+    )
+    return {"success": True}
+
+@app.delete("/api/push/subscribe")
+async def push_unsubscribe(body: dict, user: dict = Depends(get_current_user)):
+    user_id = user.get("id") or user.get("_id")
+    await db.push_subscriptions.delete_many({"user_id": user_id})
+    return {"success": True}
