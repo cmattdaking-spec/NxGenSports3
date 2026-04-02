@@ -65,6 +65,7 @@ export default function Messages() {
   const [isAnnouncement, setIsAnnouncement] = useState(false);
   const wsRef     = useRef(null);
   const wsAlive   = useRef(false);
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
   const { supported: pushSupported, permission, subscribed, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
   const [showPushBanner, setShowPushBanner] = useState(false);
 
@@ -116,20 +117,30 @@ export default function Messages() {
           if (e.data === 'pong') return;
           try {
             const payload = JSON.parse(e.data);
+
+            // ── Presence ──────────────────────────────────────────────────
+            if (payload.type === 'presence_init') {
+              setOnlineUsers(new Set(payload.online_users || []));
+              return;
+            }
+            if (payload.type === 'user_online') {
+              setOnlineUsers(prev => new Set([...prev, payload.user_id]));
+              return;
+            }
+            if (payload.type === 'user_offline') {
+              setOnlineUsers(prev => { const s = new Set(prev); s.delete(payload.user_id); return s; });
+              return;
+            }
+
+            // ── Messages ──────────────────────────────────────────────────
             if (payload.type === 'new_message') {
               const msg = payload.data;
-              setMessages(prev => {
-                if (prev.find(m => m.id === msg.id)) return prev;
-                // Only append if this conversation is open
-                setActiveConvo(current => {
-                  if (current?.id === msg.conversation_id) {
-                    setMessages(p => p.find(m => m.id === msg.id) ? p : [...p, msg]);
-                  }
-                  return current;
-                });
-                return prev;
+              setActiveConvo(current => {
+                if (current?.id === msg.conversation_id) {
+                  setMessages(p => p.find(m => m.id === msg.id) ? p : [...p, msg]);
+                }
+                return current;
               });
-              // Refresh conversation list for last_message preview
               setUser(u => { if (u) loadConversations(u); return u; });
             }
             if (payload.type === 'new_conversation') {
@@ -379,8 +390,13 @@ export default function Messages() {
                   if (newConvoType === "direct") setSelectedUsers([u]);
                   else setSelectedUsers(prev => prev.find(p => p.id === u.id) ? prev.filter(p => p.id !== u.id) : [...prev, u]);
                 }} className={`w-full flex items-center gap-2 p-2 rounded-lg text-left transition-all ${selectedUsers.find(p => p.id === u.id) ? "bg-[var(--color-primary,#3b82f6)]/20" : "hover:bg-white/5"}`}>
-                  <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center text-xs text-white flex-shrink-0 font-bold">
-                    {(u.full_name || u.email)?.[0]?.toUpperCase()}
+                  <div className="relative w-7 h-7 flex-shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center text-xs text-white font-bold">
+                      {(u.full_name || u.email)?.[0]?.toUpperCase()}
+                    </div>
+                    {onlineUsers.has(u.id) && (
+                      <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-400 rounded-full border border-[#141414]" />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1 flex-wrap">
@@ -438,7 +454,7 @@ export default function Messages() {
           {groupConvos.length > 0 && (
             <>
               <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-1 mb-1">Groups</p>
-              {groupConvos.map(convo => <ConvoItem key={convo.id} convo={convo} active={activeConvo?.id === convo.id} user={user} getDisplayName={getConvoDisplayName} onClick={() => openConversation(convo)} />)}
+              {groupConvos.map(convo => <ConvoItem key={convo.id} convo={convo} active={activeConvo?.id === convo.id} user={user} getDisplayName={getConvoDisplayName} onClick={() => openConversation(convo)} onlineUsers={onlineUsers} allUsers={allUsers} />)}
               <div className="my-1 border-t border-gray-800/50" />
             </>
           )}
@@ -446,7 +462,7 @@ export default function Messages() {
           {directConvos.length > 0 && (
             <>
               <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider px-1 mb-1">Direct Messages</p>
-              {directConvos.map(convo => <ConvoItem key={convo.id} convo={convo} active={activeConvo?.id === convo.id} user={user} getDisplayName={getConvoDisplayName} onClick={() => openConversation(convo)} />)}
+              {directConvos.map(convo => <ConvoItem key={convo.id} convo={convo} active={activeConvo?.id === convo.id} user={user} getDisplayName={getConvoDisplayName} onClick={() => openConversation(convo)} onlineUsers={onlineUsers} allUsers={allUsers} />)}
             </>
           )}
         </div>
@@ -483,6 +499,14 @@ export default function Messages() {
                 <div className="flex items-center gap-1">
                   <Lock className="w-3 h-3 text-green-500" />
                   <p className="text-xs text-gray-500">{activeConvo?.type === "group" ? `${activeConvo.participants?.length} members · private group` : "Private · End-to-end secured"}</p>
+                  {/* Live presence for direct messages */}
+                  {activeConvo?.type === "direct" && (() => {
+                    const otherEmail = activeConvo.participants?.find(p => p !== user?.email);
+                    const otherUser  = allUsers.find(u => u.email === otherEmail);
+                    return otherUser && onlineUsers.has(otherUser.id)
+                      ? <span className="flex items-center gap-1 text-green-400 text-xs"><span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block animate-pulse" /> online</span>
+                      : null;
+                  })()}
                 </div>
               </div>
               {/* Announcement button for coaches/admins in group chats */}
@@ -583,15 +607,39 @@ export default function Messages() {
   );
 }
 
-function ConvoItem({ convo, active, user, getDisplayName, onClick }) {
+function ConvoItem({ convo, active, user, getDisplayName, onClick, onlineUsers = new Set(), allUsers = [] }) {
+  // For direct convos, check if the other participant is online
+  let isOtherOnline = false;
+  if (convo.type === "direct") {
+    const otherEmail = convo.participants?.find(p => p !== user?.email);
+    const otherUser  = allUsers.find(u => u.email === otherEmail);
+    if (otherUser) isOtherOnline = onlineUsers.has(otherUser.id);
+  }
+  // For group convos, check if any participant (other than self) is online
+  if (convo.type !== "direct") {
+    const otherEmails = (convo.participants || []).filter(p => p !== user?.email);
+    isOtherOnline = otherEmails.some(email => {
+      const u = allUsers.find(u => u.email === email);
+      return u && onlineUsers.has(u.id);
+    });
+  }
+
   return (
     <button onClick={onClick}
       className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg mb-0.5 transition-all text-left ${active ? "bg-[var(--color-primary,#3b82f6)]/15" : "hover:bg-white/5"}`}>
-      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs" style={{ backgroundColor: "var(--color-primary,#3b82f6)33" }}>
-        {convo.type === "group" ? <Users className="w-4 h-4 text-[var(--color-primary,#3b82f6)]" /> : <span style={{ color: "var(--color-primary,#3b82f6)" }}>{getDisplayName(convo)[0]?.toUpperCase()}</span>}
+      <div className="relative w-8 h-8 flex-shrink-0">
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs" style={{ backgroundColor: "var(--color-primary,#3b82f6)33" }}>
+          {convo.type === "group" ? <Users className="w-4 h-4 text-[var(--color-primary,#3b82f6)]" /> : <span style={{ color: "var(--color-primary,#3b82f6)" }}>{getDisplayName(convo)[0]?.toUpperCase()}</span>}
+        </div>
+        {isOtherOnline && (
+          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-[#111111]" title="Online" />
+        )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-white text-xs font-semibold truncate">{getDisplayName(convo)}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-white text-xs font-semibold truncate">{getDisplayName(convo)}</p>
+          {isOtherOnline && <span className="text-green-400 text-[10px] font-medium flex-shrink-0">● online</span>}
+        </div>
         <p className="text-gray-500 text-xs truncate">{convo.last_message || "No messages yet"}</p>
       </div>
     </button>

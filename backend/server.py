@@ -52,17 +52,50 @@ LOCKOUT_MINUTES = 15
 
 # ─── WebSocket connection manager ─────────────────────────────────────────────
 class ConnectionManager:
-    """Tracks active WebSocket connections keyed by team_id."""
+    """
+    Tracks active WebSocket connections and per-team user presence.
+    team_id → {ws, ...}
+    team_id → {user_id, ...}   (presence)
+    ws      → (team_id, user_id)
+    """
     def __init__(self):
         self._connections: Dict[str, Set[WebSocket]] = {}
+        self._presence:    Dict[str, Set[str]]       = {}   # team_id → online user_ids
+        self._ws_meta:     Dict[int, tuple]           = {}   # id(ws) → (team_id, user_id)
 
-    async def connect(self, ws: WebSocket, team_id: str):
+    async def connect(self, ws: WebSocket, team_id: str, user_id: str):
         await ws.accept()
         self._connections.setdefault(team_id, set()).add(ws)
+        self._presence.setdefault(team_id, set()).add(user_id)
+        self._ws_meta[id(ws)] = (team_id, user_id)
 
-    def disconnect(self, ws: WebSocket, team_id: str):
-        if team_id in self._connections:
-            self._connections[team_id].discard(ws)
+        # Tell the new client who is currently online
+        await ws.send_json({
+            "type": "presence_init",
+            "online_users": list(self._presence[team_id]),
+        })
+        # Announce this user to everyone else on the team
+        await self.broadcast(team_id, {"type": "user_online", "user_id": user_id}, exclude=ws)
+
+    def disconnect(self, ws: WebSocket):
+        meta = self._ws_meta.pop(id(ws), None)
+        if not meta:
+            return None, None
+        team_id, user_id = meta
+        self._connections.get(team_id, set()).discard(ws)
+
+        # Only mark offline if no other connections from this user remain
+        still_here = any(
+            self._ws_meta.get(id(w), (None,))[1] == user_id
+            for w in self._connections.get(team_id, set())
+        )
+        if not still_here:
+            self._presence.get(team_id, set()).discard(user_id)
+            return team_id, user_id   # caller should broadcast user_offline
+        return team_id, None
+
+    def online_users(self, team_id: str) -> list:
+        return list(self._presence.get(team_id, set()))
 
     async def broadcast(self, team_id: str, payload: dict, exclude: WebSocket = None):
         dead = set()
@@ -75,6 +108,7 @@ class ConnectionManager:
                 dead.add(ws)
         for ws in dead:
             self._connections[team_id].discard(ws)
+            self._ws_meta.pop(id(ws), None)
 
 ws_manager = ConnectionManager()
 
@@ -970,6 +1004,10 @@ async def llm_proxy(body: dict, user: dict = Depends(get_current_user)):
 async def health():
     return {"status": "ok"}
 
+@app.get("/api/presence/{team_id}")
+async def get_presence(team_id: str, user: dict = Depends(get_current_user)):
+    return {"online_users": ws_manager.online_users(team_id)}
+
 # ─── WebSocket ────────────────────────────────────────────────────────────────
 @app.websocket("/api/ws/messages/{token}")
 async def websocket_endpoint(websocket: WebSocket, token: str):
@@ -985,17 +1023,22 @@ async def websocket_endpoint(websocket: WebSocket, token: str):
         return
 
     team_id = user_doc.get("team_id") or str(user_doc["_id"])
-    await ws_manager.connect(websocket, team_id)
+    user_id = str(user_doc["_id"])
+
+    await ws_manager.connect(websocket, team_id, user_id)
     try:
         while True:
-            # Keep alive — client sends periodic pings
             msg = await websocket.receive_text()
             if msg == "ping":
                 await websocket.send_text("pong")
     except WebSocketDisconnect:
-        ws_manager.disconnect(websocket, team_id)
+        gone_team, gone_uid = ws_manager.disconnect(websocket)
+        if gone_team and gone_uid:
+            await ws_manager.broadcast(gone_team, {"type": "user_offline", "user_id": gone_uid})
     except Exception:
-        ws_manager.disconnect(websocket, team_id)
+        gone_team, gone_uid = ws_manager.disconnect(websocket)
+        if gone_team and gone_uid:
+            await ws_manager.broadcast(gone_team, {"type": "user_offline", "user_id": gone_uid})
 
 # ─── Push Notification Helpers ────────────────────────────────────────────────
 async def _send_push(subscription_doc: dict, payload: dict):
