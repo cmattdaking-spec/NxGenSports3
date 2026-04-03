@@ -1,0 +1,46 @@
+{
+  "name": "NxGenSports",
+  "short_name": "NxGenSports",
+  "description": "NxGeneration Multi-Sports Athletic Intelligence Platform — coaching, scheduling, messaging, film room, analytics and more.",
+  "start_url": "/Dashboard",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait-primary",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "scope": "/",
+  "lang": "en-US",
+  "categories": ["sports", "education", "productivity"],
+  "icons": [
+    {
+      "src": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/29e077944_generated_image.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/29e077944_generated_image.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Messages",
+      "short_name": "NxMessage",
+      "description": "Open secure team messaging",
+      "url": "/Messages",
+      "icons": [{ "src": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/29e077944_generated_image.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Team command center",
+      "url": "/Dashboard",
+      "icons": [{ "src": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69a9060b8860c90c81d2e1c7/29e077944_generated_image.png", "sizes": "192x192" }]
+    }
+  ],
+  "prefer_related_applications": false
+}
