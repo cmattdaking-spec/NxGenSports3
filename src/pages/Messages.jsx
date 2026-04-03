@@ -233,6 +233,8 @@ export default function Messages() {
         sender_name:     user?.full_name || user?.email,
         content,
         attachment_url:  attachmentUrl || null,
+        team_id:         user?.team_id || null,    // required for RLS filter
+        school_id:       user?.school_id || null,
       });
       setMessages(prev => [...prev, msg]);
       setConversations(prev => prev.map(c =>
@@ -272,7 +274,15 @@ export default function Messages() {
       if (existing) { openConversation(existing); setShowNewConvo(false); setSelectedUsers([]); return; }
     }
 
-    const convo = await base44.entities.Conversation.create({ type: newConvoType, name, participants, participant_names: participantNames, created_by: user?.email });
+    const convo = await base44.entities.Conversation.create({
+      type:             newConvoType,
+      name,
+      participants,
+      participant_names: participantNames,
+      created_by:       user?.email,
+      team_id:          user?.team_id || null,   // required for RLS filter
+      school_id:        user?.school_id || null,
+    });
     setConversations(prev => [convo, ...prev]);
     setShowNewConvo(false);
     setSelectedUsers([]);
