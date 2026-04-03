@@ -30,7 +30,7 @@ body {
 }
 
 /* Safe area insets for iPhone notch / Dynamic Island / home indicator */
-/* NOTE: These ONLY work when viewport-fit=cover is set in index.html */
+/* These work because viewport-fit=cover is now in index.html */
 .safe-area-top {
   padding-top: env(safe-area-inset-top, 0px);
 }
@@ -38,9 +38,12 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Ensure full-height layout accounts for safe areas on iOS */
+/* Ensure full-height layout accounts for safe areas on iOS & Android.
+   100dvh = dynamic viewport height: shrinks when the browser chrome
+   (URL bar) is visible — avoids the iOS Safari 100vh overflow bug. */
 #root {
-  min-height: 100dvh; /* dvh = dynamic viewport height, respects iOS browser chrome */
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .nxdown-gradient {
@@ -130,6 +133,21 @@ button, a, nav, [role="button"], [role="navigation"] {
 /* Bottom nav safe area */
 .bottom-nav-safe {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 64px);
+}
+
+/* Extend the bottom nav background beneath the Android gesture bar / iOS home indicator.
+   This ensures there is no transparent gap under the nav on devices where
+   env(safe-area-inset-bottom) > 0. */
+.mobile-bottom-nav-fill::after {
+  content: "";
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-bottom, 0px);
+  background-color: #111111;
+  z-index: 49;  /* just below the nav (z-50) */
+  pointer-events: none;
 }
 
 /* ── Sticky header / footer helpers ── */

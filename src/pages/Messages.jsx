@@ -84,6 +84,7 @@ export default function Messages() {
   const wsRef          = useRef(null);
   const wsAlive        = useRef(false);
   const activeConvoRef = useRef(null); // mirror of activeConvo for WS callback
+  const [keyboardOffset, setKeyboardOffset] = useState(0); // iOS keyboard height
 
   const { supported: pushSupported, permission, subscribed, subscribe: subscribePush } = usePushNotifications();
   const myType         = user?.user_type || "coach";
@@ -99,12 +100,44 @@ export default function Messages() {
     }).catch(() => setLoading(false));
   }, []);
 
+  // ─── iOS keyboard offset via visualViewport API ──────────────────────────
+  // When the soft keyboard opens on iOS, the visual viewport shrinks but the
+  // layout viewport doesn't. We track the difference and push the input bar up.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => {
+      // keyboardOffset = how many px the keyboard is covering from the bottom
+      const offset = Math.max(0,
+        window.innerHeight - vv.height - vv.offsetTop
+      );
+      setKeyboardOffset(offset);
+    };
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, []);
+
+  // ─── Re-fetch messages when app returns to foreground (iOS background) ────
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && activeConvoRef.current && user) {
+        base44.entities.Message.filter(
+          { conversation_id: activeConvoRef.current.id }, 'created_at', 500
+        ).then(msgs => setMessages(msgs)).catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [user?.email]);
+
   // ─── Auto-scroll to latest message ────────────────────────────────────────
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  // ─── Push notification banner (show after 3s if not subscribed) ────────────
   useEffect(() => {
     if (!user) return;
     if (pushSupported && permission === "default" && !subscribed) {
@@ -192,7 +225,7 @@ export default function Messages() {
     return () => clearInterval(interval);
   }, [activeConvo?.id, user?.email]);
 
-  // ─── Keep ref in sync with state ────────────────────────────────────────────
+  // ─── Push notification banner (show after 3s if not subscribed) ────────────
   useEffect(() => { activeConvoRef.current = activeConvo; }, [activeConvo]);
 
   // ─── Data helpers ─────────────────────────────────────────────────────────
@@ -311,8 +344,10 @@ export default function Messages() {
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    // Use min-h-0 + flex instead of h-full so mobile keyboard doesn't break layout
-    <div className="bg-[#0a0a0a] flex overflow-hidden" style={{ height: "100%", minHeight: 0 }}>
+    // Use explicit dvh height so iOS URL-bar changes don't collapse the layout.
+    // Do NOT use overflow:hidden at this level — it prevents iOS keyboard from
+    // pushing the viewport up (which is the mechanism that keeps the input visible).
+    <div className="bg-[#0a0a0a] flex" style={{ height: "100%", minHeight: 0 }}>
 
       {/* ── Conversation Sidebar ─────────────────────────────────────────── */}
       <div className={`flex-shrink-0 bg-[#111111] border-r border-gray-800 flex flex-col transition-all duration-200
@@ -539,8 +574,15 @@ export default function Messages() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Message input — stays at bottom, accessible above mobile keyboard */}
-            <div className="flex-shrink-0 bg-[#111111] border-t border-gray-800 p-3">
+            {/* Message input — stays at bottom, accessible above mobile keyboard.
+                 keyboardOffset is set by the visualViewport API on iOS when the
+                 soft keyboard opens; on Android/desktop it is always 0. */}
+            <div className="flex-shrink-0 bg-[#111111] border-t border-gray-800 p-3"
+              style={{
+                paddingBottom: keyboardOffset > 0
+                  ? `${keyboardOffset + 12}px`
+                  : 'env(safe-area-inset-bottom, 12px)',
+              }}>
               {isAnnouncement && (
                 <div className="mb-2 flex items-center gap-2 px-2 py-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                   <Megaphone className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />

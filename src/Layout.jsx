@@ -523,7 +523,7 @@ export default function Layout({ children, currentPageName }) {
       {showOnboarding && user && (
         <OnboardingWizard user={user} onComplete={() => { setShowOnboarding(false); setUser(u => ({ ...u, onboarding_completed: true })); }} />
       )}
-      <div className="flex h-screen bg-[#0a0a0a] overflow-hidden">
+      <div className="flex bg-[#0a0a0a] overflow-hidden" style={{ height: "100dvh" }}>
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col flex-shrink-0 bg-[#111111] border-r border-gray-800 transition-all duration-300 relative ${collapsed ? "w-16" : "w-56"}`}>
         {sidebarContent}
@@ -568,42 +568,45 @@ export default function Layout({ children, currentPageName }) {
           {showMobileBack && <div className="w-8" />}
         </header>
 
-        {/* Mobile Bottom Tab Bar */}
+        {/* Mobile Bottom Tab Bar
+             — position: fixed, sits above the Android system nav bar.
+             The paddingBottom fills the safe-area-inset-bottom zone (Android gesture bar
+             / iOS home indicator). A matching background-colour div is rendered below via
+             the ::after equivalent so the gap under the bar is never transparent. */}
         {!isPlayer && !isParent && !isSuperAdmin && (
-          <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-gray-800 z-50 flex items-stretch"
-            style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+          <nav
+            className="md:hidden fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-gray-800 z-50 flex items-stretch mobile-bottom-nav-fill"
+            style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+          >
             {[
-            { label: "Home", page: isAD ? "ADPortal" : "Dashboard", icon: Home },
-            { label: "NxLab", page: "NxLab", icon: Clapperboard },
-            { label: "Messages", page: "Messages", icon: MessageSquare },
-            { label: "Settings", page: "Settings", icon: Settings },
+            { label: "Home",     page: isAD ? "ADPortal" : "Dashboard", icon: Home         },
+            { label: "NxLab",    page: "NxLab",                          icon: Clapperboard  },
+            { label: "Messages", page: "Messages",                        icon: MessageSquare },
+            { label: "Settings", page: "Settings",                        icon: Settings      },
             ].map(({ label, page, icon: Icon }) => {
-            const active = currentPageName === page;
-            return (
-              <Link key={page} to={createPageUrl(page)}
-                onClick={(e) => {
-                  // If already on this tab, scroll to top (reset-to-root feel)
-                  if (active) {
-                    e.preventDefault();
+              const active = currentPageName === page;
+              return (
+                <Link key={page} to={createPageUrl(page)}
+                  onClick={(e) => {
+                    if (active) {
+                      e.preventDefault();
+                      const container = document.getElementById("main-scroll-container");
+                      if (container) container.scrollTo({ top: 0, behavior: "smooth" });
+                      return;
+                    }
                     const container = document.getElementById("main-scroll-container");
-                    if (container) container.scrollTo({ top: 0, behavior: "smooth" });
-                    return;
-                  }
-                  // Save scroll position before leaving
-                  const container = document.getElementById("main-scroll-container");
-                  if (container) scrollPositions.current[currentPageName] = container.scrollTop;
-                  // Restore scroll position for destination tab
-                  requestAnimationFrame(() => {
-                    const next = document.getElementById("main-scroll-container");
-                    if (next) next.scrollTop = scrollPositions.current[page] || 0;
-                  });
-                }}
-                className="flex-1 flex flex-col items-center justify-center min-h-[56px] py-2 gap-0.5 transition-all"
-                style={active ? { color: "var(--color-primary,#3b82f6)" } : { color: "#6b7280" }}>
-                <Icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{label}</span>
-              </Link>
-            );
+                    if (container) scrollPositions.current[currentPageName] = container.scrollTop;
+                    requestAnimationFrame(() => {
+                      const next = document.getElementById("main-scroll-container");
+                      if (next) next.scrollTop = scrollPositions.current[page] || 0;
+                    });
+                  }}
+                  className="flex-1 flex flex-col items-center justify-center min-h-[56px] py-2 gap-0.5 transition-all active:opacity-70"
+                  style={active ? { color: "var(--color-primary,#3b82f6)" } : { color: "#6b7280" }}>
+                  <Icon className="w-5 h-5" />
+                  <span className="text-[10px] font-medium">{label}</span>
+                </Link>
+              );
             })}
           </nav>
         )}
@@ -611,8 +614,22 @@ export default function Layout({ children, currentPageName }) {
         <main className="flex-1 overflow-y-auto relative safe-area-bottom"
           ref={el => {
             if (!el) return;
-            // Add bottom padding on mobile so content isn't hidden behind the tab bar
-            el.style.paddingBottom = window.innerWidth < 768 ? 'calc(env(safe-area-inset-bottom, 0px) + 64px)' : '';
+            // Reactive bottom padding: updates when viewport height changes (keyboard, rotation, etc.)
+            // On mobile, reserve space for the fixed bottom nav (56px) + safe-area inset.
+            // We write directly to style so it reacts to layout changes without re-renders.
+            const update = () => {
+              const isMobile = window.innerWidth < 768;
+              el.style.paddingBottom = isMobile
+                ? 'calc(env(safe-area-inset-bottom, 0px) + 64px)'
+                : '';
+            };
+            update();
+            // Use ResizeObserver so rotation / keyboard events trigger an update
+            if (window.ResizeObserver && !el._nxResizeObserver) {
+              const ro = new ResizeObserver(update);
+              ro.observe(document.documentElement);
+              el._nxResizeObserver = ro;
+            }
           }}
           onScroll={e => { scrollPositions.current[currentPageName] = e.currentTarget.scrollTop; }}
           id="main-scroll-container"
