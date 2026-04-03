@@ -50,7 +50,29 @@ def _vapid_private_pem() -> str:
 
 resend.api_key = RESEND_API_KEY
 
-ALLOWED_ORIGINS = [APP_URL, "http://localhost:3000", "http://0.0.0.0:3000"]
+# CORS: allow all origins — safe because we use Bearer tokens (not cookies).
+# APP_URL is the preview/sandbox URL; production domains vary so we can't
+# enumerate them here.  Since every authenticated request requires a
+# JWT Bearer header (not a cookie), wildcard CORS poses no security risk.
+ALLOWED_ORIGINS = ["*"]
+
+def _public_base_url(request: Request) -> str:
+    """
+    Return the public base URL seen by the browser.
+
+    When running behind a reverse proxy (K8s ingress, nginx, etc.) the
+    internal request URL is not the public one.  Check the standard
+    forwarded headers first; fall back to APP_URL if they are absent.
+    This ensures invite links and password-reset links always point to
+    whichever domain the request came from — preview *or* production —
+    without any extra configuration.
+    """
+    proto = request.headers.get("X-Forwarded-Proto") or request.url.scheme
+    host  = (request.headers.get("X-Forwarded-Host")
+             or request.headers.get("Host", ""))
+    if host:
+        return f"{proto}://{host}"
+    return APP_URL
 
 # ─── Rate limit constants ─────────────────────────────────────────────────────
 MAX_LOGIN_ATTEMPTS = 5
@@ -609,7 +631,7 @@ async def change_password(body: dict, user: dict = Depends(get_current_user)):
 
 # ─── Password Reset ───────────────────────────────────────────────────────────
 @app.post("/api/auth/forgot-password")
-async def forgot_password(body: dict):
+async def forgot_password(request: Request, body: dict):
     email = body.get("email", "").lower().strip()
     if not email:
         raise HTTPException(status_code=400, detail="Email required")
@@ -631,7 +653,7 @@ async def forgot_password(body: dict):
         "used": False,
     })
 
-    reset_url = f"{APP_URL}/ResetPassword?token={token}"
+    reset_url = f"{_public_base_url(request)}/ResetPassword?token={token}"
     print(f"[RESET] {email} — {reset_url}")
 
     asyncio.create_task(send_email(
@@ -665,7 +687,7 @@ async def reset_password(body: dict):
 
 # ─── File Upload ──────────────────────────────────────────────────────────────
 @app.post("/api/upload")
-async def upload_file(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+async def upload_file(request: Request, file: UploadFile = File(...), user: dict = Depends(get_current_user)):
     ext = os.path.splitext(file.filename or "")[1].lower() or ".bin"
     allowed = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".mp4", ".mov", ".avi",
                ".pdf", ".doc", ".docx", ".txt", ".csv", ".json"}
@@ -678,7 +700,7 @@ async def upload_file(file: UploadFile = File(...), user: dict = Depends(get_cur
     with open(filepath, "wb") as f:
         f.write(content)
 
-    file_url = f"{APP_URL}/static/uploads/{filename}"
+    file_url = f"{_public_base_url(request)}/static/uploads/{filename}"
     return {"file_url": file_url, "filename": filename}
 
 # ─── Entity CRUD ─────────────────────────────────────────────────────────────
@@ -878,7 +900,7 @@ async def fn_list_all_schools(body: dict = None, user: dict = Depends(get_curren
     return {"schools": [serialize_doc(s) for s in schools]}
 
 @app.post("/api/functions/sendInvite")
-async def fn_send_invite(body: dict, user: dict = Depends(get_current_user)):
+async def fn_send_invite(request: Request, body: dict, user: dict = Depends(get_current_user)):
     _check_invite_permission(user)
 
     email      = body.get("email", "").strip().lower()
@@ -916,7 +938,7 @@ async def fn_send_invite(body: dict, user: dict = Depends(get_current_user)):
         email, team_id, school_id, school_name, school_code, coaching_role, assigned_sports
     )
 
-    invite_url = f"{APP_URL}/Login?invite_token={invite_token}"
+    invite_url = f"{_public_base_url(request)}/Login?invite_token={invite_token}"
     asyncio.create_task(send_email(
         to_email=email,
         subject=f"You've been invited to {school_name or 'NxGenSports'}",
