@@ -608,15 +608,15 @@ export default function Layout({ children, currentPageName }) {
           </nav>
         )}
 
-        <main className="flex-1 overflow-y-auto relative safe-area-bottom" style={{ paddingBottom: undefined }}
+        <main className="flex-1 overflow-y-auto relative safe-area-bottom"
           ref={el => {
-            if (el) {
-              if (window.innerWidth < 768) el.style.paddingBottom = 'calc(env(safe-area-inset-bottom, 0px) + 64px)';
-              else el.style.paddingBottom = '';
-            }
+            if (!el) return;
+            // Add bottom padding on mobile so content isn't hidden behind the tab bar
+            el.style.paddingBottom = window.innerWidth < 768 ? 'calc(env(safe-area-inset-bottom, 0px) + 64px)' : '';
           }}
           onScroll={e => { scrollPositions.current[currentPageName] = e.currentTarget.scrollTop; }}
           id="main-scroll-container"
+          style={{ display: "flex", flexDirection: "column" }}
         >
           {pageLoading && (
             <div className="absolute inset-0 bg-[#0a0a0a] z-50 flex items-center justify-center">
@@ -628,11 +628,14 @@ export default function Layout({ children, currentPageName }) {
           )}
           {isMobileTabPage ? (
             mobileTabPages.map((page) => {
-              if (!mobileTabCache[page]) return null;
+              // On first visit, cache may not have this page yet — render children directly
+              // so the page is never blank. The cache will be populated by the useEffect below.
+              const content = mobileTabCache[page] ?? (page === currentPageName ? children : null);
+              if (!content) return null;
               const active = page === currentPageName;
               return (
                 <section key={page} className={active ? "page-transition min-h-full block" : "min-h-full hidden"}>
-                  {mobileTabCache[page]}
+                  {content}
                 </section>
               );
             })
