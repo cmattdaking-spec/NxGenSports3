@@ -1,87 +1,45 @@
 # NxGenSports PRD
 
 ## Problem Statement
-Build the NxGenSports app from the Base44 repository with a standalone FastAPI + MongoDB backend, replacing the Base44 SDK dependency. Expand into a comprehensive School Management System with student records, faculty, athletics, and more.
+Build the NxGenSports app from the Base44 repository with a standalone FastAPI + MongoDB backend. Expand into a comprehensive School Management System.
 
 ## Architecture
-- **Frontend**: React + Vite (at /app, served from /app/frontend wrapper)
-- **Backend**: FastAPI (Python) with modular routers at /app/backend/
-- **Database**: MongoDB (motor async driver)
-- **Auth**: JWT Bearer token (PyJWT + bcrypt)
+- **Frontend**: React + Vite | **Backend**: FastAPI + MongoDB (motor) | **Auth**: JWT (PyJWT + bcrypt)
 
 ## Backend Module Structure
 ```
 /app/backend/
-├── server.py          # Slim entry point (~50 lines)
-├── config.py          # All environment variables and constants
-├── database.py        # MongoDB connection, indexes, admin seed
-├── utils.py           # Shared helpers (auth, JWT, serialization, email, LLM)
-├── ws_manager.py      # WebSocket ConnectionManager
+├── server.py, config.py, database.py, utils.py, ws_manager.py
 ├── routers/
-│   ├── auth.py        # Auth endpoints
-│   ├── entities.py    # Generic entity CRUD with team-based RLS
-│   ├── functions.py   # Business logic (sendInvite, getTeamUsers, etc.)
-│   ├── messages.py    # WebSocket, presence, push notifications
-│   ├── upload.py      # File upload
-│   ├── llm.py         # LLM proxy, health check
-│   ├── students.py    # Student Records module
-│   └── faculty.py     # Faculty & Staff module
-├── requirements.txt
+│   ├── auth.py, entities.py, functions.py, messages.py
+│   ├── upload.py, llm.py, students.py, faculty.py
 └── tests/
 ```
 
 ## What's Been Implemented
 
 ### Phase 1: Base44 Migration (Complete)
-- JWT auth, Generic entity CRUD, Resend email invites, Password reset, Rate limiting
-- File upload, LLM proxy, WebSocket messaging with presence, Push notifications (PWA)
-- All 28 original pages functional, Mobile-optimized layout
+- JWT auth, Entity CRUD, Resend invites, Password reset, Rate limiting, WebSocket messaging, Push notifications (PWA), 28+ pages, Mobile-optimized
 
 ### Phase 2: Refactoring + Student Records (Complete - 2026-04-09)
-- Backend Refactoring: Split monolithic server.py into modular routers
-- Student Records Module: CRUD, grades (auto GPA), attendance, assignments, discipline, transcripts, stats
+- Backend modular routers, Student CRUD, Grades (auto GPA), Attendance, Assignments, Discipline, Transcripts, Stats
 
 ### Phase 3: Faculty & Staff Module (Complete - 2026-04-09)
-- Faculty CRUD (profiles with position, department, subjects, qualifications, bio)
-- Departments CRUD (name, head, description)
-- Subjects CRUD (name, code, department, credits)
-- Classrooms CRUD (room number, building, capacity, type)
-- Class Schedule management (per-faculty: subject, day, period, times, classroom)
-- Master schedule (all classes with faculty name enrichment)
-- Faculty stats aggregation
-- Frontend: FacultyStaff.jsx with Directory tab (list/search/filter), Manage tab (depts/subjects/classrooms), Detail view (profile + schedule grid)
+- Faculty CRUD, Departments, Subjects, Classrooms, Class Schedules, Stats
+
+### Phase 4: Enhancements (Complete - 2026-04-09)
+- **Master Schedule Calendar**: Visual weekly timetable grid (Period x Day) with color-coded cells per faculty, faculty legend badges, room/time info in cells. Accessible via "Schedule" tab on Faculty & Staff page.
+- **Faculty-Student Linkage**: 
+  - Backend: `GET /api/faculty/member/{id}/students` resolves students via `faculty_id` or `teacher_name` in grades
+  - Backend: `POST /api/students/{id}/grades` now accepts optional `faculty_id` for direct teacher linkage
+  - Frontend: Faculty detail shows "Linked Students" section with student names, grade levels, GPA, and courses with grades
+  - Frontend: GradeForm in Student Records has faculty dropdown selector that auto-fills teacher_name
 
 ## Key DB Collections
-- `users`, `schools`, `invites` — Core auth/org
-- `students`, `grades`, `attendance_records`, `student_assignments`, `discipline_records` — Student Records
+- `users`, `schools`, `invites` — Auth/org
+- `students`, `grades` (now with `faculty_id`), `attendance_records`, `student_assignments`, `discipline_records` — Student Records
 - `faculty`, `departments`, `subjects`, `classrooms`, `class_schedules` — Faculty & Staff
-- `conversations`, `messages` — Real-time messaging
-- `push_subscriptions` — PWA push notifications
-
-## Key API Endpoints
-### Auth
-- POST /api/auth/login, /register, GET /me, PATCH /me, POST /change-password, /forgot-password, /reset-password
-
-### Students (/api/students)
-- GET/POST /, GET/PATCH/DELETE /{id}
-- GET/POST/DELETE /{id}/grades, /attendance, /assignments, /discipline
-- GET /{id}/transcript, /{id}/stats
-- POST /attendance/bulk
-
-### Faculty (/api/faculty)
-- GET/POST /, GET /stats
-- GET/PATCH/DELETE /member/{id}
-- GET/POST /departments, DELETE /departments/{id}
-- GET/POST /subjects, DELETE /subjects/{id}
-- GET/POST /classrooms, DELETE /classrooms/{id}
-- GET/POST /member/{id}/schedule, DELETE /member/{id}/schedule/{entry_id}
-- GET /schedule/all
-
-### Other
-- Entities: GET/POST/PATCH/DELETE /api/entities/{name}
-- Functions: POST /api/functions/{name}
-- WS /api/ws/messages/{token}
-- GET /api/presence/{team_id}, GET /api/push/vapid-public-key, POST /api/push/subscribe
+- `conversations`, `messages`, `push_subscriptions` — Messaging/PWA
 
 ## Prioritized Backlog
 
@@ -89,16 +47,13 @@ Build the NxGenSports app from the Base44 repository with a standalone FastAPI +
 - Enhanced Parent Portal (progress reports, meeting scheduling)
 
 ### P2 - Future
-- Clubs & Committees module (membership, events)
-- School Admin reporting module (announcements, calendar, documents)
-- Dashboard analytics summary (engagement metrics)
+- Clubs & Committees module
+- School Admin reporting (announcements, calendar, documents)
+- Dashboard analytics summary
 - Two-factor auth, Data export/import
 
 ## 3rd Party Integrations
-- Resend (transactional emails) — requires user API Key
-- PyWebPush (push notifications) — VAPID keys in env
-- OpenAI GPT-4o-mini (via Emergent LLM Key) — for AI features
+- Resend (emails), PyWebPush (push), OpenAI GPT-4o-mini (Emergent LLM Key)
 
 ## Test Credentials
 - Super Admin: admin@nxgensports.com / Admin123!
-- See /app/memory/test_credentials.md for additional accounts
