@@ -16,6 +16,7 @@ from routers.students import router as students_router
 from routers.faculty import router as faculty_router
 from routers.parents import router as parents_router
 from routers.clubs import router as clubs_router
+from routers.admin_reports import router as admin_reports_router
 
 app = FastAPI()
 
@@ -41,6 +42,7 @@ app.include_router(students_router)
 app.include_router(faculty_router)
 app.include_router(parents_router)
 app.include_router(clubs_router)
+app.include_router(admin_reports_router)
 
 
 @app.on_event("startup")

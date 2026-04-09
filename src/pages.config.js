@@ -78,6 +78,7 @@ import FacultyStaff from './pages/FacultyStaff.jsx';
 import ClubsCommittees from './pages/ClubsCommittees.jsx';
 import PlayerPortal from './pages/PlayerPortal.jsx';
 import ParentPortal from './pages/ParentPortal.jsx';
+import SchoolAdminReporting from './pages/SchoolAdminReporting.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import __Layout from './Layout.jsx';
 
@@ -114,6 +115,7 @@ export const PAGES = {
     "ClubsCommittees": ClubsCommittees,
     "PlayerPortal": PlayerPortal,
     "ParentPortal": ParentPortal,
+    "SchoolAdminReporting": SchoolAdminReporting,
     "ResetPassword": ResetPassword,
 }
 
