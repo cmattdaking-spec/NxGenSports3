@@ -1,109 +1,106 @@
 # NxGenSports PRD
 
 ## Problem Statement
-Build the NxGenSports app from the Base44 repository with a standalone FastAPI + MongoDB backend, replacing the Base44 SDK dependency. Clean up the invite flow so users and schools can be invited and are visible in their proper locations.
+Build the NxGenSports app from the Base44 repository with a standalone FastAPI + MongoDB backend, replacing the Base44 SDK dependency. Expand into a comprehensive School Management System with student records, faculty, athletics, and more.
 
 ## Architecture
 - **Frontend**: React + Vite (at /app, served from /app/frontend wrapper)
-- **Backend**: FastAPI (Python) at /app/backend/server.py
+- **Backend**: FastAPI (Python) with modular routers at /app/backend/
 - **Database**: MongoDB (motor async driver)
 - **Auth**: JWT Bearer token (PyJWT + bcrypt)
 
-## Core Requirements (Static)
-1. Multi-sport athletic intelligence platform
+## Backend Module Structure (Refactored 2026-04-09)
+```
+/app/backend/
+├── server.py          # Slim entry point (~45 lines)
+├── config.py          # All environment variables and constants
+├── database.py        # MongoDB connection, indexes, admin seed
+├── utils.py           # Shared helpers (auth, JWT, serialization, email, LLM)
+├── ws_manager.py      # WebSocket ConnectionManager
+├── routers/
+│   ├── auth.py        # Auth endpoints (login, register, accept-invite, me, password reset, etc.)
+│   ├── entities.py    # Generic entity CRUD with team-based RLS
+│   ├── functions.py   # Business logic (sendInvite, getTeamUsers, listAllSchools, etc.)
+│   ├── messages.py    # WebSocket, presence, push notification endpoints
+│   ├── upload.py      # File upload
+│   ├── llm.py         # LLM proxy, health check
+│   └── students.py    # Student Records module (CRUD, grades, attendance, assignments, discipline, transcript)
+├── requirements.txt
+└── tests/
+```
+
+## Core Requirements
+1. Multi-sport athletic intelligence platform + school management
 2. Role-based access (super_admin, admin/head_coach, staff, player, parent)
-3. School-level data isolation (team_id based)
-4. Invite flow: admin invites users → pending invites → acceptance → visible in proper lists
-5. All 28+ pages functional via new API client replacing Base44 SDK
+3. School-level data isolation (team_id based RLS)
+4. Invite flow: admin invites users → acceptance → visible in proper lists
+5. All 28+ pages functional via API client replacing Base44 SDK
+6. Student Records: grades, attendance, assignments, discipline, transcripts
 
-## What's Been Implemented (2026-04-02)
+## What's Been Implemented
 
-### Backend (FastAPI + MongoDB)
-- JWT auth (login, register, logout, me, accept-invite)
-- Generic entity CRUD with team-based RLS
-- Functions: sendInvite, getTeamUsers, listAllSchools, updateTeamUser, createParentUser, joinSchoolByCode, listMasterTeams
-- LLM proxy (Emergent LLM key)
-- Admin seed on startup (admin@nxgensports.com / Admin123!)
-- **Resend email integration** — invite emails + password reset emails (noreply@nxgen-sports.com)
-- **Password reset flow** — forgot-password + reset-password endpoints with 1hr token TTL
-- **Rate limiting** — 5 failed login attempts by email = 15min lockout (HTTP 429)
-- **File upload** — POST /api/upload → stores in /app/static/uploads/, returns file_url
-- **Static file serving** — /static/* served by FastAPI
+### Phase 1: Base44 Migration (Complete)
+- JWT auth, Generic entity CRUD, Resend email invites, Password reset, Rate limiting
+- File upload, LLM proxy, WebSocket messaging with presence, Push notifications (PWA)
+- All 28 original pages functional, Mobile-optimized layout
 
-### Frontend
-- New API client (apiClient.js) replacing Base44 SDK
-  - Same interface: base44.auth.*, base44.entities.*, base44.functions.invoke()
-  - JWT Bearer token stored in localStorage
-  - **UploadFile** implemented via POST /api/upload
-  - 401 redirect excludes /Login and /ResetPassword
-- Updated Login page: email/password login, **Forgot password? link**, invite acceptance, parent signup
-- **ForgotPasswordForm** — submits email → Resend sends reset link
-- **ResetPassword page** (/ResetPassword?token=xxx) — public route, set new password
-- Updated AuthContext: simple JWT-based auth check
-- Simplified EnrollmentCheck (enrollment at account creation)
-- Fixed vite.config.js (removed @base44/vite-plugin, added path aliases + proxy)
-- Frontend package.json wrapper to run Vite from /app/frontend
+### Phase 2: Refactoring + Student Records (Complete - 2026-04-09)
+- **Backend Refactoring**: Split monolithic server.py (1100+ lines) into modular routers
+- **Student Records Module**: Full CRUD for students with sub-records
+  - Student profiles (name, grade level, guardian info, enrollment status)
+  - Grades with auto GPA recalculation (supports all letter grades A+ through F)
+  - Attendance tracking (present, absent, tardy, excused) with bulk recording
+  - Assignments (pending, submitted, graded, late, missing)
+  - Discipline records (warning, detention, suspension, expulsion)
+  - Unofficial transcript generation (grouped by semester with semester/cumulative GPA)
+  - Student stats aggregation (GPA, attendance rate, assignment completion, discipline count)
+- **Frontend**: StudentRecords page with list view (search/filter), detail view with tabbed interface
 
-### Invite Flow Fix
-- sendInvite creates invite record with unique invite_token + sends Resend email
-- Invite URL: /Login?invite_token=<token>
-- InviteAcceptForm pre-fills user data from invite
-- After acceptance: user gets team_id assigned → appears in getTeamUsers
-- Schools immediately visible in listAllSchools after creation
-- PendingInvites shows invites with status="pending" filtered by team_id
+## Key DB Schema
+- `users`: auth accounts with team_id isolation
+- `schools`: school profiles with team_id
+- `invites`: invite records with tokens
+- `students`: student profiles (team_id, grade_level, gpa, guardian info, enrollment)
+- `grades`: individual course grades (student_id, course, semester, letter grade, credits)
+- `attendance_records`: daily attendance (student_id, date, status)
+- `student_assignments`: assignment tracking (student_id, title, course, status)
+- `discipline_records`: discipline incidents (student_id, type, description, resolved)
+- `conversations`, `messages`: real-time messaging
+- `push_subscriptions`: PWA push notification subscriptions
 
-### Bug Fixes Applied
-- ParentPortal: removed base44.asServiceRole reference
-- CORS: configured explicit allowed origins
-- Vite: allowedHosts set to true
-- ResetPassword: public route added to App.jsx; apiClient.js 401-redirect exclusion added
-
-## Bug Fixes
-- **NxMessages messages not showing after send** (2026-04-03): Backend RLS adds `{team_id: user.team_id}` filter to all entity queries for authenticated non-super-admin users. `Message` and `Conversation` documents were created without `team_id`, so every query from a real coach returned 0 results. Fix: added `team_id` and `school_id` to both `Message.create` and `Conversation.create` in Messages.jsx. (2026-04-03): Full rewrite of Messages.jsx. Root causes: (1) `isAfterMessageReset` filter rejected all messages because backend microsecond timestamp format (`+00:00`) parses as `Invalid Date` in some browsers. (2) `mobileTabCache` in Layout.jsx rendered `null` on first visit causing blank mobile page — now falls back to `children` directly. (3) `setMessages` was called inside `setActiveConvo` setState callback (stale closure anti-pattern) — fixed with `activeConvoRef`. (4) `h-full overflow-hidden` broke on mobile keyboard appearance — replaced with `flex-1 min-h-0` pattern. (root cause: `entity_to_collection("Invite")` resolved to `invite` singular while `sendInvite`/`accept-invite`/`get-invite` all used `db.invites` plural — two separate MongoDB collections). Fix: added `_COLLECTION_OVERRIDES = {"Invite": "invites"}` so entity CRUD and direct DB access use the same collection. PendingInvites now shows correctly; tokens are never accidentally expired.
-- Iteration 1: Backend 100% (18/18), Frontend 95%
-- Iteration 2: Backend 100% (29/29), Frontend 100% (all 28 pages)
-- Iteration 5: Backend 100% (7/7), Frontend 100% (live presence indicator — green dot in NxMessages)
-
-## Completed Features (All 4 Next Action Items)
-1. **Resend email** — invite + password reset emails via noreply@nxgen-sports.com (domain needs Resend verification)
-2. **Password reset** — /ResetPassword?token=xxx public route, Forgot password? on login, 1hr token expiry
-3. **Rate limiting** — 5 bad logins by email = 15min lockout (HTTP 429)
-4. **28-page sweep** — UploadFile wired, InvokeLLM works, asServiceRole fixed, all pages load
-
-## Completed Enhancement (Onboarding Wizard)
-- 5-step modal: Welcome → Add Player → Schedule Game → Create Play → Done
-- Shown to eligible coaches after ProfileVerify completes (profile_verified=true + no onboarding_completed)
-- Each step creates real data (Player, Opponent, Play entities)
-- Skip buttons on each step; "Skip setup" on welcome exits immediately
-- Sets onboarding_completed=true when finished
-- Not shown to super_admin, players, or parents
-
-## Other Improvements
-- NxMessages: replaced broken subscribe() with setInterval polling (4s messages, 10s convos)
-- Settings: Change Password fully wired with error handling
-- ProfileVerify: full page reload after completion so Layout re-initialises and wizard triggers
-- Resend domain banner in Super Admin view
+## Key API Endpoints
+- Auth: POST /api/auth/login, /register, GET /me, PATCH /me, POST /change-password, /forgot-password, /reset-password
+- Entities: GET/POST/PATCH/DELETE /api/entities/{name}
+- Functions: POST /api/functions/{name} (getTeamUsers, sendInvite, listAllSchools, etc.)
+- Students: GET/POST /api/students/, GET/PATCH/DELETE /api/students/{id}
+- Student Records: GET/POST/DELETE /api/students/{id}/grades, /attendance, /assignments, /discipline
+- Student Transcript: GET /api/students/{id}/transcript
+- Student Stats: GET /api/students/{id}/stats
+- Bulk Attendance: POST /api/students/attendance/bulk
+- WebSocket: WS /api/ws/messages/{token}
+- Presence: GET /api/presence/{team_id}
+- Push: GET /api/push/vapid-public-key, POST /api/push/subscribe
 
 ## Prioritized Backlog
 
-### P0 - Critical
-- Email sending for invites (currently logs to console)
-- Password reset flow
-- Data migration from Base44 (if needed)
+### P0 - In Progress
+- Student Records Module (DONE)
 
-### P1 - Important  
-- All 28 pages full testing
-- PlayerPortal and ParentPortal complete functionality
-- FilmRoom, Playbook, Game Plan features
-- Messages/channels
+### P1 - Next Up
+- Faculty & Staff management module (classrooms, schedules, subjects)
+- Enhanced Parent Portal (progress reports, meeting scheduling)
 
-### P2 - Nice to Have
-- Two-factor auth
-- Export/import data
-- Advanced analytics
+### P2 - Future
+- Clubs & Committees module (membership, events)
+- School Admin reporting module (announcements, calendar, documents)
+- Dashboard analytics summary (engagement metrics)
+- Two-factor auth, Data export/import
 
-## Next Tasks
-1. Test all pages and fix any remaining Base44 SDK usage
-2. Add email sending (Resend integration)
-3. Add password reset flow
-4. Full regression test of all 28 pages
+## 3rd Party Integrations
+- Resend (transactional emails) — requires user API Key
+- PyWebPush (push notifications) — VAPID keys in env
+- OpenAI GPT-4o-mini (via Emergent LLM Key) — for AI features
+
+## Test Credentials
+- Super Admin: admin@nxgensports.com / Admin123!
+- See /app/memory/test_credentials.md for additional accounts
