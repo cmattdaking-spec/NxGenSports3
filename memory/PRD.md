@@ -56,7 +56,16 @@ Migrate a React app using the Base44 SDK to a standalone FastAPI + MongoDB backe
 | player        | NxAnnouncement          | Announcements, Schedule, Game Plan, NxPlay, etc.       |
 | parent        | ParentPortal            | Portal, Announcements, Roster, Eligibility, etc.       |
 
+### P3: Grade Book (DONE — Feb 2026)
+- Spreadsheet-style grade view: students as rows, assignments as columns
+- Inline grade editing (click cell to edit, Enter/Escape to save/cancel)
+- Add Assignment modal with bulk grade entry for all students
+- Subject filter dropdown
+- Student average calculation with color-coded grades
+- Backend CRUD: single entry, bulk entry, update, delete
+- RBAC enforced: only teachers can access gradebook APIs
+
 ## Backlog / Future Tasks
 - P4: Student/parent mobile dashboard (daily schedules, upcoming assignments, recent grades)
 - P5: Class assignment management for teachers (add/remove students from classes)
-- P6: Grade book feature for teachers (bulk grade entry, grade history)
+- P6: Grade history / audit trail and progress tracking over time
