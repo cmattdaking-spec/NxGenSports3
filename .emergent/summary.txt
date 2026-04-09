@@ -1,0 +1,19 @@
+<analysis>server.pyapiClient.jsfn_send_inviteaccept_inviteMessages.jsxmanifest.jsonsw.jsLayout.jsxglobals.cssteam_idrequirements.txtAPP_URL.subscribe()Settings.jsx
+/app/
+├── backend/
+│   ├── server.py           # Monolithic FastAPI application (1100+ lines)
+│   ├── requirements.txt    # Python dependencies
+│   ├── .env                # Backend environment variables
+│   └── tests/              # Pytest files
+├── src/                    # React Frontend
+│   ├── api/
+│   │   └── apiClient.js    # Custom API client replacing Base44 SDK
+│   ├── components/         # UI Components and Contexts (AuthContext, SportContext)
+│   ├── pages/              # Page views (Messages, Settings, NxPlay, etc.)
+│   ├── Layout.jsx          # Main application layout and mobile wrappers
+│   └── main.jsx            # Entry point with Service Worker registration
+├── public/                 # Static assets, sw.js, manifest.json
+├── package.json            # Node dependencies
+├── vite.config.js          # Vite configuration
+└── index.html              # HTML entry point
+team_idusers{_id, email, password_hash, role, team_id, full_name, profile_verified, coaching_role, user_type}schools{_id, school_name, school_code, team_id}invites{_id, email, team_id, status, invite_token, invite_type}conversations{_id, type, participants, participant_names, team_id}messages{_id, conversation_id, sender_name, content, team_id, created_at}login_attempts{_id, identifier, success, attempted_at}push_subscriptions{_id, user_id, team_id, subscription}Base44 SDKwebsocketspywebpushpy-vapidresend/app/backend/server.py/app/src/api/apiClient.js.subscribe()/app/src/pages/Messages.jsx/app/src/Layout.jsx100dvh/app/backend/tests/*os.environ.get/app/public/sw.js/app/public/manifest.json/app/backend/server.pyserver.pyrouters/auth.pyrouters/messages.pyrouters/students.pyPOST /api/auth/loginPOST /api/auth/registerGET /api/auth/mePOST /api/auth/forgot-passwordPOST /api/auth/reset-passwordWS /api/ws/messages/{token}GET /api/presence/{team_id}POST /api/functions/sendInvitePOST /api/entities/{entity_name}GET /api/entities/{entity_name}POST /api/entities/{entity_name}/filterStudent Recordsserver.pyrequest.headers.get(host)APP_URL.envteam_idschool_idos.environ.get()/app/memory/PRD.md/app/memory/test_credentials.md/app/test_reports/iteration_1.json/app/test_reports/iteration_6.jsoninvoke_llm/app/backend/tests/*admin@nxgensports.comAdmin123!/app/memory/test_credentials.md</analysis>

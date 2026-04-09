@@ -22,7 +22,7 @@
 - Reset Password: POST /api/auth/reset-password
 
 ## Backend URL
-- External: https://3d75ab2d-b815-4b14-9357-7971866ab07b.preview.emergentagent.com
+- External: https://school-management-49.preview.emergentagent.com
 - Backend port: 8001 (internal)
 - Frontend port: 3000 (internal)
 
