@@ -9,33 +9,26 @@ Build the NxGenSports app from the Base44 repository with a standalone FastAPI +
 - **Database**: MongoDB (motor async driver)
 - **Auth**: JWT Bearer token (PyJWT + bcrypt)
 
-## Backend Module Structure (Refactored 2026-04-09)
+## Backend Module Structure
 ```
 /app/backend/
-├── server.py          # Slim entry point (~45 lines)
+├── server.py          # Slim entry point (~50 lines)
 ├── config.py          # All environment variables and constants
 ├── database.py        # MongoDB connection, indexes, admin seed
 ├── utils.py           # Shared helpers (auth, JWT, serialization, email, LLM)
 ├── ws_manager.py      # WebSocket ConnectionManager
 ├── routers/
-│   ├── auth.py        # Auth endpoints (login, register, accept-invite, me, password reset, etc.)
+│   ├── auth.py        # Auth endpoints
 │   ├── entities.py    # Generic entity CRUD with team-based RLS
-│   ├── functions.py   # Business logic (sendInvite, getTeamUsers, listAllSchools, etc.)
-│   ├── messages.py    # WebSocket, presence, push notification endpoints
+│   ├── functions.py   # Business logic (sendInvite, getTeamUsers, etc.)
+│   ├── messages.py    # WebSocket, presence, push notifications
 │   ├── upload.py      # File upload
 │   ├── llm.py         # LLM proxy, health check
-│   └── students.py    # Student Records module (CRUD, grades, attendance, assignments, discipline, transcript)
+│   ├── students.py    # Student Records module
+│   └── faculty.py     # Faculty & Staff module
 ├── requirements.txt
 └── tests/
 ```
-
-## Core Requirements
-1. Multi-sport athletic intelligence platform + school management
-2. Role-based access (super_admin, admin/head_coach, staff, player, parent)
-3. School-level data isolation (team_id based RLS)
-4. Invite flow: admin invites users → acceptance → visible in proper lists
-5. All 28+ pages functional via API client replacing Base44 SDK
-6. Student Records: grades, attendance, assignments, discipline, transcripts
 
 ## What's Been Implemented
 
@@ -45,49 +38,54 @@ Build the NxGenSports app from the Base44 repository with a standalone FastAPI +
 - All 28 original pages functional, Mobile-optimized layout
 
 ### Phase 2: Refactoring + Student Records (Complete - 2026-04-09)
-- **Backend Refactoring**: Split monolithic server.py (1100+ lines) into modular routers
-- **Student Records Module**: Full CRUD for students with sub-records
-  - Student profiles (name, grade level, guardian info, enrollment status)
-  - Grades with auto GPA recalculation (supports all letter grades A+ through F)
-  - Attendance tracking (present, absent, tardy, excused) with bulk recording
-  - Assignments (pending, submitted, graded, late, missing)
-  - Discipline records (warning, detention, suspension, expulsion)
-  - Unofficial transcript generation (grouped by semester with semester/cumulative GPA)
-  - Student stats aggregation (GPA, attendance rate, assignment completion, discipline count)
-- **Frontend**: StudentRecords page with list view (search/filter), detail view with tabbed interface
+- Backend Refactoring: Split monolithic server.py into modular routers
+- Student Records Module: CRUD, grades (auto GPA), attendance, assignments, discipline, transcripts, stats
 
-## Key DB Schema
-- `users`: auth accounts with team_id isolation
-- `schools`: school profiles with team_id
-- `invites`: invite records with tokens
-- `students`: student profiles (team_id, grade_level, gpa, guardian info, enrollment)
-- `grades`: individual course grades (student_id, course, semester, letter grade, credits)
-- `attendance_records`: daily attendance (student_id, date, status)
-- `student_assignments`: assignment tracking (student_id, title, course, status)
-- `discipline_records`: discipline incidents (student_id, type, description, resolved)
-- `conversations`, `messages`: real-time messaging
-- `push_subscriptions`: PWA push notification subscriptions
+### Phase 3: Faculty & Staff Module (Complete - 2026-04-09)
+- Faculty CRUD (profiles with position, department, subjects, qualifications, bio)
+- Departments CRUD (name, head, description)
+- Subjects CRUD (name, code, department, credits)
+- Classrooms CRUD (room number, building, capacity, type)
+- Class Schedule management (per-faculty: subject, day, period, times, classroom)
+- Master schedule (all classes with faculty name enrichment)
+- Faculty stats aggregation
+- Frontend: FacultyStaff.jsx with Directory tab (list/search/filter), Manage tab (depts/subjects/classrooms), Detail view (profile + schedule grid)
+
+## Key DB Collections
+- `users`, `schools`, `invites` — Core auth/org
+- `students`, `grades`, `attendance_records`, `student_assignments`, `discipline_records` — Student Records
+- `faculty`, `departments`, `subjects`, `classrooms`, `class_schedules` — Faculty & Staff
+- `conversations`, `messages` — Real-time messaging
+- `push_subscriptions` — PWA push notifications
 
 ## Key API Endpoints
-- Auth: POST /api/auth/login, /register, GET /me, PATCH /me, POST /change-password, /forgot-password, /reset-password
+### Auth
+- POST /api/auth/login, /register, GET /me, PATCH /me, POST /change-password, /forgot-password, /reset-password
+
+### Students (/api/students)
+- GET/POST /, GET/PATCH/DELETE /{id}
+- GET/POST/DELETE /{id}/grades, /attendance, /assignments, /discipline
+- GET /{id}/transcript, /{id}/stats
+- POST /attendance/bulk
+
+### Faculty (/api/faculty)
+- GET/POST /, GET /stats
+- GET/PATCH/DELETE /member/{id}
+- GET/POST /departments, DELETE /departments/{id}
+- GET/POST /subjects, DELETE /subjects/{id}
+- GET/POST /classrooms, DELETE /classrooms/{id}
+- GET/POST /member/{id}/schedule, DELETE /member/{id}/schedule/{entry_id}
+- GET /schedule/all
+
+### Other
 - Entities: GET/POST/PATCH/DELETE /api/entities/{name}
-- Functions: POST /api/functions/{name} (getTeamUsers, sendInvite, listAllSchools, etc.)
-- Students: GET/POST /api/students/, GET/PATCH/DELETE /api/students/{id}
-- Student Records: GET/POST/DELETE /api/students/{id}/grades, /attendance, /assignments, /discipline
-- Student Transcript: GET /api/students/{id}/transcript
-- Student Stats: GET /api/students/{id}/stats
-- Bulk Attendance: POST /api/students/attendance/bulk
-- WebSocket: WS /api/ws/messages/{token}
-- Presence: GET /api/presence/{team_id}
-- Push: GET /api/push/vapid-public-key, POST /api/push/subscribe
+- Functions: POST /api/functions/{name}
+- WS /api/ws/messages/{token}
+- GET /api/presence/{team_id}, GET /api/push/vapid-public-key, POST /api/push/subscribe
 
 ## Prioritized Backlog
 
-### P0 - In Progress
-- Student Records Module (DONE)
-
 ### P1 - Next Up
-- Faculty & Staff management module (classrooms, schedules, subjects)
 - Enhanced Parent Portal (progress reports, meeting scheduling)
 
 ### P2 - Future
