@@ -1,7 +1,7 @@
 # NxGenSports PRD
 
 ## Problem Statement
-Build NxGenSports school management app with standalone FastAPI + MongoDB backend. Comprehensive modules for students, faculty, parents, clubs, athletics, and more.
+Build NxGenSports school management app with standalone FastAPI + MongoDB backend. Comprehensive modules for students, faculty, parents, clubs, athletics, school admin, and more.
 
 ## Architecture
 - **Frontend**: React + Vite | **Backend**: FastAPI + MongoDB (motor) | **Auth**: JWT (PyJWT + bcrypt)
@@ -10,7 +10,8 @@ Build NxGenSports school management app with standalone FastAPI + MongoDB backen
 ```
 /app/backend/routers/
 ├── auth.py, entities.py, functions.py, messages.py
-├── upload.py, llm.py, students.py, faculty.py, parents.py, clubs.py
+├── upload.py, llm.py, students.py, faculty.py
+├── parents.py, clubs.py, admin_reports.py
 ```
 
 ## Implemented Features
@@ -27,33 +28,44 @@ Build NxGenSports school management app with standalone FastAPI + MongoDB backen
 
 ### Phase 4: Parent Portal (Complete)
 - Parent-student linking, Progress reports, Meeting scheduling with email notifications
-- Meetings email: Faculty gets notified on new request, both parties notified on status changes (confirmed/cancelled/completed)
+- Meetings email: Faculty gets notified on new request, both parties notified on status changes
 
 ### Phase 5: Clubs & Committees (Complete - 2026-04-09)
-- Club/committee CRUD (name, description, type, category, advisor, meeting schedule, max members)
-- Membership management (add/remove students, role assignment: president, VP, secretary, treasurer, officer, member)
-- Event management (title, date, time, location, type: meeting/workshop/competition/fundraiser/social)
-- Club stats (total clubs, active, total members, upcoming events)
+- Club/committee CRUD, Membership management, Event management, Club stats
 - Upcoming events endpoint with club name enrichment
-- Frontend: 2-column card grid with search/filter by type & category, detail view with Members/Events tabs
+- Frontend: 2-column card grid with search/filter, detail view with Members/Events tabs
+
+### Phase 6: School Admin Reporting (Complete - 2026-04-09)
+- **Announcements**: CRUD with priority (low/medium/high/urgent), audience targeting (all/staff/students/parents), email broadcast via Resend
+- **School Calendar**: CRUD with month grid view & list view, event types (academic/sports/meeting/holiday/exam/other), date navigation
+- **Document Center**: File upload (stored on server) + link references, category filtering (policy/handbook/form/report/curriculum/other), search
+- **Enrollment Stats**: Dashboard with stat cards (students, faculty, clubs, users, announcements, events, documents), user type breakdown, student grade distribution bar chart
+- Backend: `/api/admin/*` (announcements, calendar, documents, documents/upload, stats)
+- Frontend: `SchoolAdminReporting.jsx` with 4-tab interface
 
 ## Key API Endpoints
+### Admin Reports (/api/admin)
+- GET/POST /announcements, PATCH/DELETE /announcements/{id}
+- GET/POST /calendar, PATCH/DELETE /calendar/{id}
+- GET/POST /documents, POST /documents/upload, DELETE /documents/{id}
+- GET /stats
+
 ### Clubs (/api/clubs)
 - GET/POST /, GET /stats, GET/PATCH/DELETE /{id}
 - GET/POST /members, PATCH/DELETE /members/{mid}
-- GET/POST /events, DELETE /events/{eid}
-- GET /events/upcoming
+- GET/POST /events, DELETE /events/{eid}, GET /events/upcoming
 
 ### Parents (/api/parents)
 - GET /my-students, POST /link-student, DELETE /unlink-student/{id}
 - GET /progress/{student_id}
-- GET/POST /meetings, PATCH/DELETE /meetings/{id} (+ email notifications)
+- GET/POST /meetings, PATCH/DELETE /meetings/{id}
 - GET /available-faculty
 
 ### Students, Faculty, Auth, Entities, Functions, Messages
-(See previous versions)
+(See respective router files)
 
 ## Key DB Collections
+- `announcements`, `school_events`, `school_documents` — School Admin
 - `clubs`, `club_memberships`, `club_events` — Clubs & Committees
 - `parent_student_links`, `meetings` — Parent Portal
 - `students`, `grades`, `attendance_records`, `student_assignments`, `discipline_records` — Students
@@ -62,9 +74,8 @@ Build NxGenSports school management app with standalone FastAPI + MongoDB backen
 
 ## Prioritized Backlog
 
-### P2 - Next
-- School Admin reporting (announcements, calendar, documents)
-- Dashboard analytics summary
+### P1 - Next
+- Dashboard analytics summary (engagement metrics for coaches/staff)
 
 ### P3 - Future
 - Two-factor auth, Data export/import
