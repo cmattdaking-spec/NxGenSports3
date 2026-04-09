@@ -494,7 +494,21 @@ export default function Login() {
     if (user?.profile_verified === false) {
       navigate(createPageUrl("ProfileVerify"), { replace: true });
     } else {
-      navigate(createPageUrl("Dashboard"), { replace: true });
+      // Route to role-appropriate dashboard
+      const ut = user?.user_type;
+      if (ut === "teacher") {
+        navigate(createPageUrl("TeacherDashboard"), { replace: true });
+      } else if (ut === "school_admin") {
+        navigate(createPageUrl("SchoolAdminDashboard"), { replace: true });
+      } else if (ut === "player") {
+        navigate(createPageUrl("NxAnnouncement"), { replace: true });
+      } else if (ut === "parent") {
+        navigate(createPageUrl("NxAnnouncement"), { replace: true });
+      } else if (user?.coaching_role === "athletic_director" && user?.coaching_role !== "head_coach") {
+        navigate(createPageUrl("ADPortal"), { replace: true });
+      } else {
+        navigate(createPageUrl("Dashboard"), { replace: true });
+      }
     }
     window.location.reload();
   };

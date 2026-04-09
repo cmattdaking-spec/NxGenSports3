@@ -165,6 +165,27 @@ const parentNavItems = [
   { label: "Analytics",       page: "PerformanceAnalytics", icon: BarChart2 },
 ];
 
+// School Admin nav (academic-only, no sports features)
+const schoolAdminNavItems = [
+  { label: "Dashboard",       page: "SchoolAdminDashboard", icon: Home },
+  { label: "Students",        page: "StudentRecords",       icon: BookOpen },
+  { label: "Faculty",         page: "FacultyStaff",         icon: Briefcase },
+  { label: "Clubs",           page: "ClubsCommittees",      icon: Layers },
+  { label: "Admin",           page: "SchoolAdminReporting",  icon: ShieldCheck },
+  { label: "Users",           page: "UserManagement",       icon: UserCog },
+  { label: "NxMessages",      page: "Messages",             icon: MessageSquare },
+];
+
+// Teacher nav (academic, class-focused)
+const teacherNavItems = [
+  { label: "Dashboard",       page: "TeacherDashboard",     icon: Home },
+  { label: "My Students",     page: "StudentRecords",       icon: BookOpen },
+  { label: "Announcements",   page: "NxAnnouncement",       icon: MessageSquare },
+  { label: "Schedule",        page: "GameSchedule",         icon: CalendarDays },
+  { label: "Eligibility",     page: "AcademicEligibility",  icon: GraduationCap },
+  { label: "NxMessages",      page: "Messages",             icon: MessageSquare },
+];
+
 // Inject critical mobile meta tags at runtime (since index.html can't be edited directly)
 function useMobileMeta(brandName) {
   useEffect(() => {
@@ -239,7 +260,7 @@ export default function Layout({ children, currentPageName }) {
       setActiveSport(saved);
 
       // Show onboarding for coaches with school who haven't completed it
-      const isCoach = u?.user_type !== "player" && u?.user_type !== "parent" && u?.role !== "super_admin";
+      const isCoach = u?.user_type !== "player" && u?.user_type !== "parent" && u?.user_type !== "teacher" && u?.user_type !== "school_admin" && u?.role !== "super_admin";
       if (isCoach && u?.team_id && u?.profile_verified === true && !u?.onboarding_completed) {
         setShowOnboarding(true);
       }
@@ -265,6 +286,8 @@ export default function Layout({ children, currentPageName }) {
   const userType = user?.user_type || "coach";
   const isPlayer = userType === "player";
   const isParent = userType === "parent" || user?.parent_role;
+  const isTeacher = userType === "teacher";
+  const isSchoolAdmin = userType === "school_admin";
 
   const brandName = SPORT_NAMES[activeSport] || "NxDown";
   const [brandPrefix, brandSuffix] = brandName.startsWith("Nx") ? ["Nx", brandName.slice(2)] : [brandName, ""];
@@ -370,6 +393,8 @@ export default function Layout({ children, currentPageName }) {
     ? [{ label: "Teams", page: "UserManagement", icon: UserCog, roles: null }]
     : isPlayer ? playerNavItems
     : isParent ? parentNavItems
+    : isTeacher ? teacherNavItems
+    : isSchoolAdmin ? schoolAdminNavItems
     : navItems.filter((item) => {
         if (item.hideSports?.includes(activeSport)) return false;
         if (!item.roles) return true;
@@ -498,6 +523,10 @@ export default function Layout({ children, currentPageName }) {
   if (location.pathname === "/" || location.pathname === "") {
     if (isPlayer || isParent) {
       rootRedirectTo = createPageUrl("NxAnnouncement");
+    } else if (isTeacher) {
+      rootRedirectTo = createPageUrl("TeacherDashboard");
+    } else if (isSchoolAdmin) {
+      rootRedirectTo = createPageUrl("SchoolAdminDashboard");
     } else if (isAD && !isHeadCoach) {
       rootRedirectTo = createPageUrl("ADPortal");
     } else {
@@ -577,7 +606,7 @@ export default function Layout({ children, currentPageName }) {
              The paddingBottom fills the safe-area-inset-bottom zone (Android gesture bar
              / iOS home indicator). A matching background-colour div is rendered below via
              the ::after equivalent so the gap under the bar is never transparent. */}
-        {!isPlayer && !isParent && !isSuperAdmin && (
+        {!isPlayer && !isParent && !isSuperAdmin && !isTeacher && !isSchoolAdmin && (
           <nav
             className="md:hidden fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-gray-800 z-50 flex items-stretch mobile-bottom-nav-fill"
             style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}

@@ -79,6 +79,8 @@ import ClubsCommittees from './pages/ClubsCommittees.jsx';
 import PlayerPortal from './pages/PlayerPortal.jsx';
 import ParentPortal from './pages/ParentPortal.jsx';
 import SchoolAdminReporting from './pages/SchoolAdminReporting.jsx';
+import TeacherDashboard from './pages/TeacherDashboard.jsx';
+import SchoolAdminDashboard from './pages/SchoolAdminDashboard.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import __Layout from './Layout.jsx';
 
@@ -116,6 +118,8 @@ export const PAGES = {
     "PlayerPortal": PlayerPortal,
     "ParentPortal": ParentPortal,
     "SchoolAdminReporting": SchoolAdminReporting,
+    "TeacherDashboard": TeacherDashboard,
+    "SchoolAdminDashboard": SchoolAdminDashboard,
     "ResetPassword": ResetPassword,
 }
 

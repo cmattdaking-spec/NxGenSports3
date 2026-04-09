@@ -1,47 +1,51 @@
 # NxGenSports Test Credentials
 
-## Super Admin (Platform-Level)
+## Super Admin
 - Email: admin@nxgensports.com
 - Password: Admin123!
 - Role: super_admin
-- Access: All schools, team management
 
-## Lincoln High School (Test School)
-All accounts below use password: **Test1234!**
+## Lincoln High School Test Accounts (Password for all: Test1234!)
 
-### School Admin / Head Coach
+### School Admin / Head Coach (Full Access - Sports + Academic)
 - Email: principal@lincoln.edu
-- Role: Admin, Head Coach
-- Access: Full academic + sports (Students, Faculty, Clubs, School Admin, Schedule, Roster, etc.)
+- Password: Test1234!
+- Role: admin, coaching_role: head_coach
+
+### School Admin (Academic Only - No Sports)
+- Email: office@lincoln.edu
+- Password: Test1234!
+- Role: admin, user_type: school_admin, coaching_role: school_admin
 
 ### Athletic Director
 - Email: athletics@lincoln.edu
-- Role: Admin, Athletic Director
-- Access: Full academic + sports
+- Password: Test1234!
+- Role: admin, coaching_role: athletic_director
 
-### Assistant Coach
+### Coach
 - Email: coach.williams@lincoln.edu
-- Role: User, Assistant Coach
-- Access: Sports features + limited academic
+- Password: Test1234!
+- Role: user, coaching_role: position_coach
+
+### Teacher (Math)
+- Email: s.mitchell@lincoln.edu
+- Password: Test1234!
+- Role: user, user_type: teacher, department: Mathematics
+
+### Teacher (Science)
+- Email: r.park@lincoln.edu
+- Password: Test1234!
+- Role: user, user_type: teacher, department: Science
 
 ### Student / Player
-- Email: marcus.j@lincoln.edu (Marcus Johnson, Grade 11, QB)
-- Email: aisha.t@lincoln.edu (Aisha Thompson, Grade 11, Point Guard)
-- Email: tyler.c@lincoln.edu (Tyler Chen, Grade 10, Wide Receiver)
-- Role: Player
-- Access: Student view, player features
+- Email: marcus.j@lincoln.edu
+- Password: Test1234!
+- Role: user, user_type: player
 
 ### Parent
-- Email: d.johnson@email.com (David Johnson, parent of Marcus)
-- Email: l.thompson@email.com (Lisa Thompson, parent of Aisha)
-- Role: Parent
-- Access: Parent portal, progress reports, meeting scheduling
+- Email: d.johnson@email.com
+- Password: Test1234!
+- Role: user, user_type: parent
 
-## Seeded Test Data
-- 8 students (grades 9-12), 5 faculty, 4 clubs, 200 grades
-- 176 attendance records, 40 assignments, 3 discipline records
-- 5 announcements, 7 calendar events, 4 documents
-- 2 parent-student links, 2 meetings, 6 class schedules
-
-## Email Integration
-- Resend domain: nxgen-sports.com (must verify at resend.com/domains)
+## Resend
+- Domain: nxgen-sports.com (must verify at resend.com/domains)

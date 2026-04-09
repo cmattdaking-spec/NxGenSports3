@@ -19,6 +19,8 @@ const ROLES = [
   { value: "strength_conditioning_coordinator", label: "S&C Coordinator" },
   { value: "position_coach", label: "Position Coach" },
   { value: "trainer", label: "Trainer" },
+  { value: "teacher", label: "Teacher" },
+  { value: "school_admin", label: "School Admin" },
 ];
 
 const ALL_POSITIONS = ["QB","RB","FB","WR","TE","OL","DL","LB","CB","S","K","P","LS","DB","DE","DT","NT","OLB","MLB","ILB","SS","FS","LT","LG","C","RG","RT"];
@@ -39,6 +41,8 @@ const roleColors = {
   strength_conditioning_coordinator: "bg-emerald-500/20 text-emerald-400",
   position_coach: "bg-gray-500/20 text-gray-400",
   trainer: "bg-teal-500/20 text-teal-400",
+  teacher: "bg-indigo-500/20 text-indigo-400",
+  school_admin: "bg-violet-500/20 text-violet-400",
 };
 
 const SPORT_LABELS = {
@@ -85,8 +89,8 @@ function UserManagementContent() {
   // AD = explicitly assigned as athletic_director coaching role (not just platform admin)
   const isAD = coachRole === "athletic_director";
   const isHeadCoach = coachRole === "head_coach";
-  // Only Head Coach and Athletic Director can invite/remove
-  const canManageStaff = isSuperAdmin || isAD || isHeadCoach;
+  // Only Head Coach, Athletic Director, and School Admin can invite/remove
+  const canManageStaff = isSuperAdmin || isAD || isHeadCoach || coachRole === "school_admin";
   const currentAC = allUsers.find(u => u.is_associate_head_coach);
 
   if (isSuperAdmin) {

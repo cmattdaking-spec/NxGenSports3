@@ -23,7 +23,7 @@ def _platform_role(coaching_role: str) -> str:
 
 
 def _check_invite_permission(user: dict) -> None:
-    allowed = {"admin", "super_admin", "head_coach", "athletic_director"}
+    allowed = {"admin", "super_admin", "head_coach", "athletic_director", "school_admin"}
     effective_role = user.get("coaching_role") or user.get("role", "")
     if user.get("role") not in allowed and effective_role not in allowed:
         raise HTTPException(status_code=403, detail="Forbidden")
@@ -42,7 +42,7 @@ async def _resolve_school_context(invite_type, team_id, school_id, school_name, 
 
 
 def _resolve_coaching_role(invite_type: str, raw_role: str) -> str:
-    return {"player": "player", "parent": "parent"}.get(invite_type, raw_role)
+    return {"player": "player", "parent": "parent", "teacher": "teacher", "school_admin": "school_admin"}.get(invite_type, raw_role)
 
 
 def _generate_player_id(last_name: str) -> str:
@@ -74,6 +74,11 @@ def _build_invite_record(email, team_id, school_id, school_name, school_code,
                       "subscription_term", "location_city", "location_state"):
             if body.get(field) is not None:
                 record[field] = body[field]
+    if invite_type == "teacher":
+        if body.get("department"):
+            record["department"] = body["department"]
+        if body.get("subjects"):
+            record["subjects"] = body["subjects"]
     return record
 
 

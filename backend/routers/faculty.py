@@ -18,7 +18,7 @@ def _team_filter(user: dict) -> dict:
 
 def _require_admin(user: dict):
     allowed_roles = {"admin", "super_admin"}
-    allowed_coaching = {"head_coach", "athletic_director"}
+    allowed_coaching = {"head_coach", "athletic_director", "school_admin"}
     if user.get("role") not in allowed_roles and user.get("coaching_role") not in allowed_coaching:
         raise HTTPException(status_code=403, detail="Admin access required")
 

@@ -101,9 +101,11 @@ export default function InviteForm({ user, onClose, onInvited }) {
 
     const effectiveSports = inviteType === "parent"
       ? [selectedPlayer?.sport || defaultSport].filter(Boolean)
-      : form.sports;
+      : (inviteType === "teacher" || inviteType === "school_admin")
+        ? []
+        : form.sports;
 
-    if (effectiveSports.length === 0) {
+    if (inviteType !== "teacher" && inviteType !== "school_admin" && effectiveSports.length === 0) {
       setMsg({ text: "At least one sport must be assigned to this invite.", type: "error" });
       return;
     }
@@ -126,6 +128,7 @@ export default function InviteForm({ user, onClose, onInvited }) {
         assigned_sports: effectiveSports,
         invite_type: inviteType,
         child_player_id: inviteType === "parent" ? form.child_player_id : null,
+        department: inviteType === "teacher" ? (form.department || "") : undefined,
       });
       if (response.data?.error) throw new Error(response.data.error);
       if (inviteType === "player" && response.data?.player_id) {
@@ -170,24 +173,32 @@ export default function InviteForm({ user, onClose, onInvited }) {
       </div>
 
       {/* Invite type */}
-      <div className="flex gap-2">
-        {[{ id: "staff", label: "Staff Member" }, { id: "player", label: "Player" }, { id: "parent", label: "Parent" }].map(t => (
+      <div className="flex gap-2 flex-wrap">
+        {[
+          { id: "staff", label: "Coach/Staff" },
+          { id: "teacher", label: "Teacher" },
+          { id: "school_admin", label: "School Admin" },
+          { id: "player", label: "Player" },
+          { id: "parent", label: "Parent" },
+        ].map(t => (
           <button key={t.id} onClick={() => {
             setInviteType(t.id);
-            // Reset all type-specific fields when switching invite type
             setForm(p => ({
               ...p,
               coaching_role: STAFF_ROLES[0]?.value || "head_coach",
               positions: [],
               phases: [],
-              sports: user?.assigned_sports?.length ? [...user.assigned_sports] : [defaultSport],
+              sports: (t.id === "teacher" || t.id === "school_admin") ? [] : (user?.assigned_sports?.length ? [...user.assigned_sports] : [defaultSport]),
               child_player_id: "",
+              department: "",
+              subjects: [],
             }));
             setMsg({ text: "", type: "" });
             setGeneratedPlayerId(null);
           }}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${inviteType === t.id ? "text-white" : "bg-gray-800 text-gray-400 hover:text-white"}`}
-            style={inviteType === t.id ? { backgroundColor: "var(--color-primary,#3b82f6)" } : {}}>
+            style={inviteType === t.id ? { backgroundColor: "var(--color-primary,#3b82f6)" } : {}}
+            data-testid={`invite-type-${t.id}`}>
             {t.label}
           </button>
         ))}
@@ -222,6 +233,14 @@ export default function InviteForm({ user, onClose, onInvited }) {
             </select>
           </div>
         )}
+        {inviteType === "teacher" && (
+          <div className="md:col-span-2">
+            <label className="text-gray-400 text-xs mb-1 block">Department</label>
+            <input type="text" value={form.department || ""} onChange={e => setForm(p => ({ ...p, department: e.target.value }))}
+              placeholder="e.g. Mathematics, Science, English"
+              className="w-full bg-[#1e1e1e] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm placeholder-gray-500 outline-none" />
+          </div>
+        )}
       </div>
 
       {inviteType === "parent" && (
@@ -247,7 +266,7 @@ export default function InviteForm({ user, onClose, onInvited }) {
       )}
 
       {/* Sports */}
-      {inviteType !== "parent" ? (
+      {inviteType !== "parent" && inviteType !== "teacher" && inviteType !== "school_admin" ? (
         <div>
           <label className="text-gray-400 text-xs mb-2 block">Assigned Sport(s) <span className="text-red-400">*</span></label>
           <div className="flex flex-wrap gap-1.5">
@@ -323,9 +342,10 @@ export default function InviteForm({ user, onClose, onInvited }) {
       )}
 
       <div className="flex gap-2">
-        <button onClick={handleInvite} disabled={submitting || !form.email.trim() || !form.first_name.trim() || !form.last_name.trim() || (inviteType === "parent" ? !form.child_player_id : form.sports.length === 0)}
+        <button onClick={handleInvite} disabled={submitting || !form.email.trim() || !form.first_name.trim() || !form.last_name.trim() || (inviteType === "parent" ? !form.child_player_id : (inviteType !== "teacher" && inviteType !== "school_admin" && form.sports.length === 0))}
           className="px-5 py-2 rounded-xl text-white text-sm font-semibold disabled:opacity-50 transition-all"
-          style={{ backgroundColor: "var(--color-primary,#3b82f6)" }}>
+          style={{ backgroundColor: "var(--color-primary,#3b82f6)" }}
+          data-testid="send-invite-btn">
           {submitting ? "Sending..." : "Send Invitation"}
         </button>
         <button onClick={onClose} className="px-5 py-2 rounded-xl bg-gray-800 text-gray-300 text-sm hover:bg-gray-700">

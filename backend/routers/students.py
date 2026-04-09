@@ -20,6 +20,7 @@ def _require_staff(user: dict):
     blocked = {"player", "parent"}
     if user.get("user_type") in blocked and user.get("role") != "super_admin":
         raise HTTPException(status_code=403, detail="Staff access required")
+    # teachers are staff
 
 
 # ─── Students CRUD ────────────────────────────────────────────────────────────

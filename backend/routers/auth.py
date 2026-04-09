@@ -60,6 +60,18 @@ def _build_profile_from_invite(invite: dict) -> dict:
         if invite.get("child_player_id"):
             update["linked_player_id"] = invite["child_player_id"]
             update["linked_player_ids"] = [invite["child_player_id"]]
+    elif invite_type == "teacher":
+        update["user_type"] = "teacher"
+        update["role"] = "user"
+        update["coaching_role"] = "teacher"
+        if invite.get("department"):
+            update["department"] = invite["department"]
+        if invite.get("subjects"):
+            update["subjects"] = invite["subjects"]
+    elif invite_type == "school_admin":
+        update["user_type"] = "school_admin"
+        update["role"] = "admin"
+        update["coaching_role"] = "school_admin"
     return update
 
 

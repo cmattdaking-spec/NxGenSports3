@@ -171,10 +171,56 @@ async def seed_test_school(user: dict = Depends(get_current_user)):
         "admin": "principal@lincoln.edu",
         "athletic_director": "athletics@lincoln.edu",
         "coach": "coach.williams@lincoln.edu",
+        "school_admin": "office@lincoln.edu",
+        "teachers": ["s.mitchell@lincoln.edu", "r.park@lincoln.edu"],
         "players": [p[0] for p in player_data],
         "parents": [p[0] for p in parent_data],
         "password_for_all": PASSWORD,
     }
+
+    # School Admin (office administrator, non-coaching)
+    await db.users.insert_one({
+        "email": "office@lincoln.edu",
+        "password_hash": pw_hash,
+        "full_name": "Karen White",
+        "first_name": "Karen",
+        "last_name": "White",
+        "role": "admin",
+        "coaching_role": "school_admin",
+        "user_type": "school_admin",
+        "team_id": TEAM_ID,
+        "school_id": TEAM_ID,
+        "school_name": SCHOOL_NAME,
+        "school_code": SCHOOL_CODE,
+        "assigned_sports": [],
+        "profile_verified": True,
+        "created_at": _ts(-45),
+    })
+
+    # Teacher accounts (linked to faculty by email)
+    teacher_accounts = [
+        ("s.mitchell@lincoln.edu", "Sarah", "Mitchell", "Mathematics"),
+        ("r.park@lincoln.edu", "Robert", "Park", "Science"),
+    ]
+    for email, first, last, dept in teacher_accounts:
+        await db.users.insert_one({
+            "email": email,
+            "password_hash": pw_hash,
+            "full_name": f"{first} {last}",
+            "first_name": first,
+            "last_name": last,
+            "role": "user",
+            "coaching_role": "teacher",
+            "user_type": "teacher",
+            "department": dept,
+            "team_id": TEAM_ID,
+            "school_id": TEAM_ID,
+            "school_name": SCHOOL_NAME,
+            "school_code": SCHOOL_CODE,
+            "assigned_sports": [],
+            "profile_verified": True,
+            "created_at": _ts(-42),
+        })
 
     # ══════════════════════════════════════════════════════════════════════════
     # 3. FACULTY
@@ -551,12 +597,14 @@ async def seed_test_school(user: dict = Depends(get_current_user)):
     # 15. CLASS SCHEDULES
     # ══════════════════════════════════════════════════════════════════════════
     schedules = [
-        {"faculty_id": faculty_ids[0], "faculty_name": "Sarah Mitchell", "subject": "AP Calculus", "day": "Monday", "start_time": "08:00", "end_time": "09:00", "room": "301"},
-        {"faculty_id": faculty_ids[0], "faculty_name": "Sarah Mitchell", "subject": "Algebra II", "day": "Monday", "start_time": "09:15", "end_time": "10:15", "room": "301"},
-        {"faculty_id": faculty_ids[1], "faculty_name": "Robert Park", "subject": "Biology Honors", "day": "Tuesday", "start_time": "08:00", "end_time": "09:30", "room": "Lab A"},
-        {"faculty_id": faculty_ids[2], "faculty_name": "Jennifer Cruz", "subject": "English 11", "day": "Wednesday", "start_time": "10:30", "end_time": "11:30", "room": "205"},
-        {"faculty_id": faculty_ids[3], "faculty_name": "Michael Brown", "subject": "AP US History", "day": "Thursday", "start_time": "13:00", "end_time": "14:30", "room": "108"},
-        {"faculty_id": faculty_ids[4], "faculty_name": "Lisa Nguyen", "subject": "Physical Education", "day": "Friday", "start_time": "11:00", "end_time": "12:00", "room": "Gymnasium"},
+        {"faculty_id": faculty_ids[0], "faculty_name": "Sarah Mitchell", "subject_name": "AP Calculus", "subject": "AP Calculus", "day_of_week": "Monday", "start_time": "08:00", "end_time": "09:00", "classroom": "301", "grade_level": "12"},
+        {"faculty_id": faculty_ids[0], "faculty_name": "Sarah Mitchell", "subject_name": "Algebra II", "subject": "Algebra II", "day_of_week": "Monday", "start_time": "09:15", "end_time": "10:15", "classroom": "301", "grade_level": "10"},
+        {"faculty_id": faculty_ids[0], "faculty_name": "Sarah Mitchell", "subject_name": "Mathematics", "subject": "Mathematics", "day_of_week": "Wednesday", "start_time": "08:00", "end_time": "09:00", "classroom": "301", "grade_level": "11"},
+        {"faculty_id": faculty_ids[1], "faculty_name": "Robert Park", "subject_name": "Biology Honors", "subject": "Biology Honors", "day_of_week": "Tuesday", "start_time": "08:00", "end_time": "09:30", "classroom": "Lab A", "grade_level": "11"},
+        {"faculty_id": faculty_ids[1], "faculty_name": "Robert Park", "subject_name": "Biology", "subject": "Biology", "day_of_week": "Thursday", "start_time": "10:00", "end_time": "11:00", "classroom": "Lab A", "grade_level": "10"},
+        {"faculty_id": faculty_ids[2], "faculty_name": "Jennifer Cruz", "subject_name": "English 11", "subject": "English 11", "day_of_week": "Wednesday", "start_time": "10:30", "end_time": "11:30", "classroom": "205", "grade_level": "11"},
+        {"faculty_id": faculty_ids[3], "faculty_name": "Michael Brown", "subject_name": "AP US History", "subject": "AP US History", "day_of_week": "Thursday", "start_time": "13:00", "end_time": "14:30", "classroom": "108", "grade_level": "12"},
+        {"faculty_id": faculty_ids[4], "faculty_name": "Lisa Nguyen", "subject_name": "Physical Education", "subject": "Physical Education", "day_of_week": "Friday", "start_time": "11:00", "end_time": "12:00", "classroom": "Gymnasium", "grade_level": "All"},
     ]
     for s in schedules:
         s["team_id"] = TEAM_ID
@@ -569,9 +617,12 @@ async def seed_test_school(user: dict = Depends(get_current_user)):
         "message": f"Test school '{SCHOOL_NAME}' seeded successfully!",
         "data": results,
         "login_credentials": {
-            "school_admin": {"email": "principal@lincoln.edu", "password": PASSWORD, "role": "Admin / Head Coach"},
+            "school_admin_coach": {"email": "principal@lincoln.edu", "password": PASSWORD, "role": "Admin / Head Coach"},
+            "school_admin_office": {"email": "office@lincoln.edu", "password": PASSWORD, "role": "School Admin (Academic)"},
             "athletic_director": {"email": "athletics@lincoln.edu", "password": PASSWORD, "role": "Athletic Director"},
             "assistant_coach": {"email": "coach.williams@lincoln.edu", "password": PASSWORD, "role": "Assistant Coach"},
+            "teacher_math": {"email": "s.mitchell@lincoln.edu", "password": PASSWORD, "role": "Teacher (Math)"},
+            "teacher_science": {"email": "r.park@lincoln.edu", "password": PASSWORD, "role": "Teacher (Science)"},
             "student_player": {"email": "marcus.j@lincoln.edu", "password": PASSWORD, "role": "Student / Player"},
             "parent": {"email": "d.johnson@email.com", "password": PASSWORD, "role": "Parent"},
         },
