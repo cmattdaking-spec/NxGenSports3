@@ -150,17 +150,17 @@ const playerNavItems = [
 
 // Parent nav
 const parentNavItems = [
-  { label: "Home",           page: "NxAnnouncement",       icon: Home },
-  { label: "Announcements",  page: "NxAnnouncement",       icon: MessageSquare },
-  { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays },
-  { label: "NxPlay",         page: "NxPlay",               icon: Gamepad2 },
-  { label: "Roster",         page: "Roster",               icon: Users },
-  { label: "Eligibility",    page: "AcademicEligibility",  icon: GraduationCap },
-  { label: "Health",         page: "PlayerHealth",         icon: Activity },
-  { label: "Film",           page: "FilmRoom",             icon: Clapperboard },
-  { label: "Recruiting",     page: "Recruiting",           icon: Star },
-  { label: "NxMessages",     page: "Messages",             icon: MessageSquare },
-  { label: "Analytics",      page: "PerformanceAnalytics", icon: BarChart2 },
+  { label: "Portal",          page: "ParentPortal",         icon: Home },
+  { label: "Announcements",   page: "NxAnnouncement",       icon: MessageSquare },
+  { label: "Schedule",        page: "GameSchedule",         icon: CalendarDays },
+  { label: "NxPlay",          page: "NxPlay",               icon: Gamepad2 },
+  { label: "Roster",          page: "Roster",               icon: Users },
+  { label: "Eligibility",     page: "AcademicEligibility",  icon: GraduationCap },
+  { label: "Health",          page: "PlayerHealth",         icon: Activity },
+  { label: "Film",            page: "FilmRoom",             icon: Clapperboard },
+  { label: "Recruiting",      page: "Recruiting",           icon: Star },
+  { label: "NxMessages",      page: "Messages",             icon: MessageSquare },
+  { label: "Analytics",       page: "PerformanceAnalytics", icon: BarChart2 },
 ];
 
 // Inject critical mobile meta tags at runtime (since index.html can't be edited directly)
