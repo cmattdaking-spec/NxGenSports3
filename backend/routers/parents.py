@@ -1,10 +1,47 @@
 from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends
+import asyncio
 
-from utils import get_current_user, serialize_doc
+from utils import get_current_user, serialize_doc, send_email
 
 router = APIRouter(prefix="/api/parents", tags=["parents"])
+
+
+def _meeting_email_html(recipient_name, other_party, action, date, time, student, subject_line, notes):
+    student_line = f"<p style='color:#9ca3af;font-size:14px;margin:0 0 8px'>Student: <strong style='color:#e8e8e8'>{student}</strong></p>" if student else ""
+    subject_line_html = f"<p style='color:#9ca3af;font-size:14px;margin:0 0 8px'>Subject: <strong style='color:#e8e8e8'>{subject_line}</strong></p>" if subject_line else ""
+    notes_html = f"<p style='color:#9ca3af;font-size:13px;margin:12px 0 0;font-style:italic'>\"{notes}\"</p>" if notes else ""
+    time_str = f" at {time}" if time else ""
+
+    return f"""
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;padding:40px 20px">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto"><tr><td>
+    <div style="background:#111111;border:1px solid #1f2937;border-radius:16px;padding:40px">
+      <h1 style="color:#ffffff;font-size:22px;font-weight:900;margin:0 0 4px">Nx<span style="color:#00f2ff">GenSports</span></h1>
+      <p style="color:#6b7280;font-size:13px;margin:0 0 32px">Parent-Teacher Meetings</p>
+
+      <p style="color:#e8e8e8;font-size:16px;font-weight:700;margin:0 0 12px">Hi {recipient_name},</p>
+      <p style="color:#9ca3af;font-size:14px;line-height:1.6;margin:0 0 20px">
+        <strong style="color:#e8e8e8">{other_party}</strong> has {action}.
+      </p>
+
+      <div style="background:#0a0a0a;border:1px solid #1f2937;border-radius:12px;padding:16px;margin:0 0 20px">
+        <p style="color:#00f2ff;font-size:14px;font-weight:700;margin:0 0 8px">Meeting Details</p>
+        <p style="color:#9ca3af;font-size:14px;margin:0 0 8px">Date: <strong style="color:#e8e8e8">{date}{time_str}</strong></p>
+        {student_line}
+        {subject_line_html}
+      </div>
+      {notes_html}
+
+      <hr style="border:none;border-top:1px solid #1f2937;margin:24px 0 16px">
+      <p style="color:#4b5563;font-size:12px;margin:0">Log in to NxGenSports to manage your meetings.</p>
+    </div>
+  </td></tr></table>
+</body></html>
+"""
 
 
 def _require_parent_or_admin(user: dict):
@@ -245,6 +282,26 @@ async def request_meeting(body: dict, user: dict = Depends(get_current_user)):
     }
     result = await db.meetings.insert_one(doc)
     created = await db.meetings.find_one({"_id": result.inserted_id})
+
+    # Send email notification to faculty
+    if faculty and faculty.get("email"):
+        student_line = f" regarding <strong>{student_name}</strong>" if student_name else ""
+        time_line = f" at {meeting_time}" if meeting_time else ""
+        asyncio.create_task(send_email(
+            to_email=faculty["email"],
+            subject=f"Meeting Request from {parent_name}",
+            html=_meeting_email_html(
+                recipient_name=faculty_name,
+                other_party=parent_name,
+                action="requested a meeting",
+                date=meeting_date,
+                time=meeting_time,
+                student=student_name,
+                subject_line=subject,
+                notes=notes,
+            ),
+        ))
+
     return serialize_doc(created)
 
 
@@ -254,11 +311,70 @@ async def update_meeting(meeting_id: str, body: dict, user: dict = Depends(get_c
     body.pop("id", None)
     body.pop("_id", None)
     body["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    # Get existing meeting for notification context
+    old_meeting = await db.meetings.find_one({"_id": ObjectId(meeting_id)})
+
     try:
         await db.meetings.update_one({"_id": ObjectId(meeting_id)}, {"$set": body})
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid ID")
     updated = await db.meetings.find_one({"_id": ObjectId(meeting_id)})
+
+    # Send email on status changes
+    new_status = body.get("status")
+    if new_status and old_meeting and new_status != old_meeting.get("status"):
+        updater_name = user.get("full_name") or user.get("email", "")
+        user_id = user.get("id") or user.get("_id")
+        parent_id = old_meeting.get("parent_id")
+        faculty_id_val = old_meeting.get("faculty_id")
+
+        # Determine who to notify (the other party)
+        notify_email = None
+        notify_name = ""
+        if user_id == parent_id:
+            # Parent changed status -> notify faculty
+            if faculty_id_val:
+                try:
+                    fac = await db.faculty.find_one({"_id": ObjectId(faculty_id_val)})
+                    if fac and fac.get("email"):
+                        notify_email = fac["email"]
+                        notify_name = fac.get("full_name", "")
+                except Exception:
+                    pass
+        else:
+            # Faculty/admin changed status -> notify parent
+            if parent_id:
+                try:
+                    parent = await db.users.find_one({"_id": ObjectId(parent_id)})
+                    if parent and parent.get("email"):
+                        notify_email = parent["email"]
+                        notify_name = parent.get("full_name", "")
+                except Exception:
+                    pass
+
+        if notify_email:
+            action_map = {
+                "confirmed": "confirmed your meeting",
+                "cancelled": "cancelled the meeting",
+                "completed": "marked the meeting as completed",
+            }
+            action = action_map.get(new_status, f"updated the meeting to {new_status}")
+            asyncio.create_task(send_email(
+                to_email=notify_email,
+                subject=f"Meeting {new_status.title()} — NxGenSports",
+                html=_meeting_email_html(
+                    recipient_name=notify_name,
+                    other_party=updater_name,
+                    action=action,
+                    date=old_meeting.get("meeting_date", ""),
+                    time=old_meeting.get("meeting_time", ""),
+                    student=old_meeting.get("student_name", ""),
+                    subject_line=old_meeting.get("subject", ""),
+                    notes="",
+                ),
+            ))
+
     return serialize_doc(updated)
 
 

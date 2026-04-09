@@ -11,7 +11,7 @@ import {
   ChevronLeft, ChevronRight, Home,
   Menu, X, TrendingUp, ClipboardList, Crosshair, BarChart2,
   MessageSquare, Settings, GraduationCap, UserCog, Gamepad2,
-  Dumbbell, CalendarDays, Clapperboard, Star, Globe, ChevronDown, ArrowLeft, Briefcase
+  Dumbbell, CalendarDays, Clapperboard, Star, Globe, ChevronDown, ArrowLeft, Briefcase, Layers
 } from "lucide-react";
 
 // Note: BookOpen is used twice (in import and for NxPrep icon)
@@ -121,6 +121,7 @@ const navItems = [
   { label: "Eligibility",    page: "AcademicEligibility",  icon: GraduationCap,  roles: null },
   { label: "Students",       page: "StudentRecords",       icon: BookOpen,       roles: null },
   { label: "Faculty",        page: "FacultyStaff",         icon: Briefcase,      roles: null },
+  { label: "Clubs",           page: "ClubsCommittees",      icon: Layers,         roles: null },
   { label: "Roster",         page: "Roster",               icon: Users,          roles: null },
   { label: "Health",         page: "PlayerHealth",         icon: Activity,       roles: null },
   { label: "NxMessages",     page: "Messages",             icon: MessageSquare,  roles: null },
