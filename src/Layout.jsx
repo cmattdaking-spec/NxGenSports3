@@ -179,7 +179,8 @@ const schoolAdminNavItems = [
 // Teacher nav (academic, class-focused)
 const teacherNavItems = [
   { label: "Dashboard",       page: "TeacherDashboard",     icon: Home },
-  { label: "My Students",     page: "StudentRecords",       icon: BookOpen },
+  { label: "Grade Book",      page: "GradeBook",            icon: BookOpen },
+  { label: "My Students",     page: "StudentRecords",       icon: Users },
   { label: "Announcements",   page: "NxAnnouncement",       icon: MessageSquare },
   { label: "Schedule",        page: "GameSchedule",         icon: CalendarDays },
   { label: "Eligibility",     page: "AcademicEligibility",  icon: GraduationCap },

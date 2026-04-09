@@ -157,10 +157,10 @@ export default function TeacherDashboard() {
       {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
+          { label: "Grade Book", page: "GradeBook", icon: BookOpen, desc: "Manage grades" },
           { label: "Student Records", page: "StudentRecords", icon: Users, desc: "View & manage students" },
           { label: "Announcements", page: "NxAnnouncement", icon: Calendar, desc: "School announcements" },
           { label: "Messages", page: "Messages", icon: ClipboardList, desc: "Send & receive messages" },
-          { label: "Settings", page: "Settings", icon: TrendingUp, desc: "Account settings" },
         ].map(({ label, page, icon: Icon, desc }) => (
           <Link key={page} to={createPageUrl(page)}
             className="bg-[#141414] border border-gray-800 rounded-xl p-4 hover:border-gray-600 transition-all group"

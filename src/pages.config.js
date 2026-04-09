@@ -81,6 +81,7 @@ import ParentPortal from './pages/ParentPortal.jsx';
 import SchoolAdminReporting from './pages/SchoolAdminReporting.jsx';
 import TeacherDashboard from './pages/TeacherDashboard.jsx';
 import SchoolAdminDashboard from './pages/SchoolAdminDashboard.jsx';
+import GradeBook from './pages/GradeBook.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import __Layout from './Layout.jsx';
 
@@ -120,6 +121,7 @@ export const PAGES = {
     "SchoolAdminReporting": SchoolAdminReporting,
     "TeacherDashboard": TeacherDashboard,
     "SchoolAdminDashboard": SchoolAdminDashboard,
+    "GradeBook": GradeBook,
     "ResetPassword": ResetPassword,
 }
 
