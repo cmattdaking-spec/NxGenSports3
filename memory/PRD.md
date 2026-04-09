@@ -1,42 +1,62 @@
-# NxGenSports PRD
+# NxGenSports PRD — School Management System
 
-## Problem Statement
-Build NxGenSports school management app with standalone FastAPI + MongoDB backend. Comprehensive modules for students, faculty, parents, clubs, athletics, school admin reporting, engagement analytics, weekly digest emails, 2FA, data export/import, and report card PDF generation.
+## Original Problem Statement
+Migrate a React app using the Base44 SDK to a standalone FastAPI + MongoDB backend, clean up the invite flow, make the app production-ready, and turn the app into a "total school management app" (grades, attendance, faculty, parents, clubs, etc.).
 
 ## Architecture
-- **Frontend**: React + Vite | **Backend**: FastAPI + MongoDB (motor) | **Auth**: JWT (PyJWT + bcrypt) + optional TOTP 2FA
+- **Backend:** FastAPI, Python 3, MongoDB (Motor Async), PyWebPush, Resend, WebSockets, `apscheduler`, `pyotp`, `reportlab`
+- **Frontend:** React, Vite, Tailwind CSS, Shadcn UI
+- **Auth:** JWT, Row-Level Security via `team_id`, 2FA via TOTP
+- **User Types:** super_admin, admin (head_coach/AD/school_admin), user (coach/teacher/player/parent)
 
-## Backend Routers
-```
-/app/backend/routers/
-├── auth.py, entities.py, functions.py, messages.py
-├── upload.py, llm.py, students.py, faculty.py
-├── parents.py, clubs.py, admin_reports.py
-├── data_export.py, report_cards.py, seed.py
-```
+## Completed Features
 
-## Implemented Features (All Complete)
+### P0 — Core Platform (DONE)
+- JWT Auth + Password Reset + Rate Limiting
+- School/Team CRUD, Invite Flow via Resend
+- Student Records, Faculty & Staff, Parent Portal, Clubs & Committees
+- Real-time WebSockets for NxMessages with Presence tracking
 
-### Phase 1: Base44 Migration - JWT auth, Entity CRUD, Resend invites, Password reset, WebSocket messaging, PWA
-### Phase 2: Student Records - CRUD, Grades (auto GPA), Attendance, Assignments, Discipline, Transcripts
-### Phase 3: Faculty & Staff - CRUD, Departments, Subjects, Classrooms, Schedules, Master Schedule
-### Phase 4: Parent Portal - Parent-student linking, Progress reports, Meeting scheduling with email
-### Phase 5: Clubs & Committees - CRUD, Membership, Events, Stats
-### Phase 6: School Admin Reporting - Announcements (CRUD + email broadcast), Calendar, Document Center (upload + links), Enrollment Stats, Engagement Analytics, Weekly Digest Email
-### Phase 7: P3 Features
-- **2FA**: TOTP-based via pyotp, QR code setup, backup codes, login challenge flow
-- **Data Export/Import**: CSV export (students, faculty, grades, attendance, clubs), CSV import (students, faculty) with validation
-- **Report Card PDF**: Per-student PDF with grades, attendance, discipline via reportlab
-### Test School Seed
-- Lincoln High School seeded with admin, faculty, students, grades, attendance, clubs, announcements, events, documents, parents, meetings, schedules
+### P1 — Advanced Features (DONE)
+- School Admin Reporting (Announcements, Calendar, Documents)
+- Dashboard Analytics & Weekly Digest Email
+- Push Notifications and PWA support
 
-## Key DB Collections
-announcements, school_events, school_documents, digest_settings, clubs, club_memberships, club_events, parent_student_links, meetings, students, grades, attendance_records, student_assignments, discipline_records, faculty, departments, subjects, classrooms, class_schedules, users, schools, invites, conversations, messages, push_subscriptions, login_attempts
+### P2 — Extended Features (DONE)
+- Two-Factor Authentication (2FA) via TOTP
+- Data Export (CSV) & Import
+- Report Card PDF Generation
 
-## Prioritized Backlog
-All features complete. No remaining backlog items.
+### P3 — Role-Based Access Control (DONE — Feb 2026)
+- **6 distinct role-based views** with separate navigation and dashboards:
+  - **School Admin**: Academic-only view (Students, Faculty, Clubs, Admin Reporting, Data Export, Report Cards, User Management) — NO sports features
+  - **Teacher**: Class-focused view (TeacherDashboard with class schedule, my students, grades, attendance) — teachers see only their assigned students by subject/department
+  - **Coach**: Full sports navigation (NxLab, Game Plans, Roster, S&C, Recruiting, Analytics, etc.)
+  - **Athletic Director**: AD Portal with cross-sport overview
+  - **Player**: Player-focused navigation (Announcements, Schedule, Game Plan, NxPlay, etc.)
+  - **Parent**: Parent portal with child tracking
+- Updated invite flow with 5 role types: Coach/Staff, Teacher, School Admin, Player, Parent
+- Teacher invites include Department field, no sports required
+- Login redirects to role-appropriate dashboard
+- Backend route protection per user_type
 
-## Test Credentials
-- Super Admin: admin@nxgensports.com / Admin123!
-- School Admin: principal@lincoln.edu / Test1234!
-- See /app/memory/test_credentials.md for full list
+### Test Data (DONE)
+- Lincoln High School seeded with 8 students, 5 faculty, 4 clubs, grades, attendance
+- Test accounts for all 6 role types (see test_credentials.md)
+
+## Key User Types & Navigation
+
+| User Type     | Dashboard               | Navigation                                             |
+|---------------|-------------------------|--------------------------------------------------------|
+| super_admin   | Teams Management        | UserManagement only                                    |
+| school_admin  | SchoolAdminDashboard    | Students, Faculty, Clubs, Admin, Users, NxMessages     |
+| teacher       | TeacherDashboard        | My Students, Announcements, Schedule, Eligibility, NxMessages |
+| coach/staff   | Dashboard               | Full sports nav (NxLab, Roster, S&C, etc.)             |
+| athletic_dir  | ADPortal                | Cross-sport overview + full sports nav                 |
+| player        | NxAnnouncement          | Announcements, Schedule, Game Plan, NxPlay, etc.       |
+| parent        | ParentPortal            | Portal, Announcements, Roster, Eligibility, etc.       |
+
+## Backlog / Future Tasks
+- P4: Student/parent mobile dashboard (daily schedules, upcoming assignments, recent grades)
+- P5: Class assignment management for teachers (add/remove students from classes)
+- P6: Grade book feature for teachers (bulk grade entry, grade history)
