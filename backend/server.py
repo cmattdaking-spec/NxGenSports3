@@ -17,6 +17,9 @@ from routers.faculty import router as faculty_router
 from routers.parents import router as parents_router
 from routers.clubs import router as clubs_router
 from routers.admin_reports import router as admin_reports_router
+from routers.data_export import router as data_export_router
+from routers.report_cards import router as report_cards_router
+from routers.seed import router as seed_router
 
 app = FastAPI()
 
@@ -43,6 +46,9 @@ app.include_router(faculty_router)
 app.include_router(parents_router)
 app.include_router(clubs_router)
 app.include_router(admin_reports_router)
+app.include_router(data_export_router)
+app.include_router(report_cards_router)
+app.include_router(seed_router)
 
 
 @app.on_event("startup")

@@ -4,7 +4,7 @@ import { useSport } from "@/components/SportContext";
 import {
   Search, Plus, ArrowLeft, GraduationCap, Calendar, BookOpen,
   AlertTriangle, FileText, Users, ChevronRight, Trash2, Edit2,
-  Check, X, Clock, UserCheck, UserX, AlertCircle
+  Check, X, Clock, UserCheck, UserX, AlertCircle, Download
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -278,6 +278,25 @@ function StudentDetail({ student, onBack, onUpdate }) {
             </Badge>
           </div>
         </div>
+        <button
+          onClick={async () => {
+            try {
+              const token = getToken();
+              const res = await fetch(`/api/reports/report-card/${student.id}`, { headers: { Authorization: `Bearer ${token}` } });
+              if (!res.ok) throw new Error("Failed to generate report card");
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `report_card_${student.last_name || "student"}_${student.first_name || ""}.pdf`;
+              a.click();
+              URL.revokeObjectURL(url);
+            } catch (e) { alert(e.message); }
+          }}
+          data-testid="download-report-card-btn"
+          className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium bg-cyan-600 hover:bg-cyan-500 text-white transition-colors flex-shrink-0">
+          <Download className="w-4 h-4" /> Report Card
+        </button>
       </div>
 
       {/* Stats Row */}

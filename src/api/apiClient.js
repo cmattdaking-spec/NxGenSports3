@@ -58,6 +58,25 @@ const auth = {
 
   async login(email, password) {
     const data = await apiFetch("POST", "/api/auth/login", { email, password });
+    if (data.requires_2fa) {
+      // Don't store temp token — return it for 2FA verification step
+      return { requires_2fa: true, temp_token: data.access_token };
+    }
+    if (data.access_token) setToken(data.access_token);
+    return data;
+  },
+
+  async verify2FA(tempToken, code) {
+    const res = await fetch("/api/auth/2fa/verify-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: tempToken, code }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Invalid 2FA code");
+    }
+    const data = await res.json();
     if (data.access_token) setToken(data.access_token);
     return data;
   },

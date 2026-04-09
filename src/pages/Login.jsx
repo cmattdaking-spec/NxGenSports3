@@ -40,6 +40,8 @@ function LoginForm({ onSuccess, onForgotPassword }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [twoFAToken, setTwoFAToken] = useState(null);
+  const [twoFACode, setTwoFACode] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -48,13 +50,76 @@ function LoginForm({ onSuccess, onForgotPassword }) {
     setError("");
     try {
       const data = await base44.auth.login(email, password);
-      onSuccess(data.user);
+      if (data.requires_2fa) {
+        setTwoFAToken(data.temp_token);
+      } else {
+        onSuccess(data.user);
+      }
     } catch (err) {
       setError(err.message || "Invalid email or password.");
     } finally {
       setLoading(false);
     }
   };
+
+  const handle2FAVerify = async (e) => {
+    e.preventDefault();
+    if (!twoFACode || twoFACode.length < 6) { setError("Enter a 6-digit code."); return; }
+    setLoading(true);
+    setError("");
+    try {
+      const data = await base44.auth.verify2FA(twoFAToken, twoFACode);
+      onSuccess(data.user);
+    } catch (err) {
+      setError(err.message || "Invalid 2FA code.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (twoFAToken) {
+    return (
+      <form onSubmit={handle2FAVerify} className="space-y-4">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-[#E8E8E8]">Two-Factor Authentication</p>
+          <p className="text-xs text-[#9CA3AF]">Enter the 6-digit code from your authenticator app, or use a backup code.</p>
+        </div>
+        <div>
+          <label className="text-xs text-gray-400 mb-1 block">Verification Code</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={8}
+            value={twoFACode}
+            onChange={e => { setTwoFACode(e.target.value.replace(/\s/g, "")); setError(""); }}
+            placeholder="000000"
+            className="w-full bg-[#181818] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white text-center tracking-[0.3em] font-mono outline-none focus:border-[#00F2FF] transition-colors"
+            data-testid="2fa-code-input"
+            autoFocus
+            required
+          />
+        </div>
+        {error && (
+          <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl px-3 py-2" data-testid="2fa-error">
+            {error}
+          </div>
+        )}
+        <button
+          type="submit"
+          disabled={loading}
+          data-testid="2fa-verify-button"
+          className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ background: "linear-gradient(135deg, #00F2FF, #1A4BBD)", color: "#121212" }}
+        >
+          {loading ? "Verifying..." : "Verify"}
+        </button>
+        <button type="button" onClick={() => { setTwoFAToken(null); setTwoFACode(""); setError(""); }}
+          className="w-full text-xs text-gray-400 hover:text-[#00F2FF] transition-colors">
+          Back to login
+        </button>
+      </form>
+    );
+  }
 
   return (
     <form onSubmit={handleLogin} className="space-y-4">

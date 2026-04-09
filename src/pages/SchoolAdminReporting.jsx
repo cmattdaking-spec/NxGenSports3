@@ -5,7 +5,8 @@ import {
   Calendar, FileText, BarChart3, Upload, Link2, ExternalLink,
   Users, GraduationCap, Briefcase, Layers, Clock, MapPin,
   AlertTriangle, Bell, ChevronRight, Download, File,
-  TrendingUp, Activity, MessageSquare, Mail, Settings2
+  TrendingUp, Activity, MessageSquare, Mail, Settings2,
+  Database, FileDown, FileUp, CheckCircle, XCircle
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -1023,6 +1024,148 @@ function DigestTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// DATA EXPORT / IMPORT TAB
+// ═══════════════════════════════════════════════════════════════════════════════
+function DataTab() {
+  const [importResult, setImportResult] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [importTarget, setImportTarget] = useState("");
+
+  const EXPORT_OPTIONS = [
+    { key: "students", label: "Students", icon: GraduationCap, color: "cyan" },
+    { key: "faculty", label: "Faculty", icon: Briefcase, color: "green" },
+    { key: "grades", label: "Grades", icon: FileText, color: "blue" },
+    { key: "attendance", label: "Attendance", icon: Calendar, color: "purple" },
+    { key: "clubs", label: "Clubs", icon: Layers, color: "amber" },
+  ];
+
+  const IMPORT_OPTIONS = [
+    { key: "students", label: "Students" },
+    { key: "faculty", label: "Faculty" },
+  ];
+
+  const handleExport = async (type) => {
+    try {
+      const token = getToken();
+      const res = await fetch(`/api/data/export/${type}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${type}_export.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) { alert(e.message); }
+  };
+
+  const handleImport = async (file) => {
+    if (!file || !importTarget) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const token = getToken();
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/data/import/${importTarget}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Import failed");
+      setImportResult(data);
+    } catch (e) { setImportResult({ success: false, error: e.message }); }
+    finally { setImporting(false); }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Export Section */}
+      <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <FileDown className="w-5 h-5 text-cyan-400" />
+          <h3 className="text-white font-semibold text-sm">Export Data</h3>
+        </div>
+        <p className="text-gray-400 text-xs mb-4">Download school data as CSV files for backup or analysis.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {EXPORT_OPTIONS.map(opt => (
+            <button key={opt.key} data-testid={`export-${opt.key}-btn`} onClick={() => handleExport(opt.key)}
+              className="flex flex-col items-center gap-2 p-4 bg-[#1a1a1a] border border-gray-700 rounded-xl hover:border-cyan-500/50 transition-colors group">
+              <opt.icon className="w-6 h-6 text-gray-400 group-hover:text-cyan-400 transition-colors" />
+              <span className="text-xs text-gray-300 font-medium">{opt.label}</span>
+              <Download className="w-3.5 h-3.5 text-gray-500 group-hover:text-cyan-400 transition-colors" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Import Section */}
+      <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <FileUp className="w-5 h-5 text-emerald-400" />
+          <h3 className="text-white font-semibold text-sm">Import Data</h3>
+        </div>
+        <p className="text-gray-400 text-xs mb-4">
+          Upload a CSV file to bulk import records. The CSV should have column headers matching the field names (First Name, Last Name, Email, etc.)
+        </p>
+        <div className="flex items-end gap-3 flex-wrap">
+          <div>
+            <label className="text-xs text-gray-400 block mb-1">Import Type</label>
+            <select data-testid="import-type-select" value={importTarget} onChange={e => setImportTarget(e.target.value)}
+              className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none">
+              <option value="">Select...</option>
+              {IMPORT_OPTIONS.map(opt => <option key={opt.key} value={opt.key}>{opt.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 block mb-1">CSV File</label>
+            <input data-testid="import-file-input" type="file" accept=".csv" disabled={!importTarget}
+              onChange={e => { if (e.target.files?.[0]) handleImport(e.target.files[0]); }}
+              className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-emerald-600 file:text-white disabled:opacity-50" />
+          </div>
+          {importing && <span className="text-sm text-gray-400">Importing...</span>}
+        </div>
+
+        {importResult && (
+          <div data-testid="import-result" className={`mt-4 p-4 rounded-xl border ${importResult.success !== false ? "bg-emerald-500/5 border-emerald-500/20" : "bg-red-500/5 border-red-500/20"}`}>
+            {importResult.success !== false ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
+                  <CheckCircle className="w-4 h-4" /> Import Complete
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div><span className="text-gray-400">Imported:</span> <span className="text-white font-semibold">{importResult.imported}</span></div>
+                  <div><span className="text-gray-400">Skipped:</span> <span className="text-amber-400 font-semibold">{importResult.skipped}</span></div>
+                  <div><span className="text-gray-400">Total Rows:</span> <span className="text-white font-semibold">{importResult.total_rows}</span></div>
+                </div>
+                {importResult.errors?.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs text-gray-400 mb-1">Errors:</p>
+                    <div className="max-h-32 overflow-y-auto space-y-1">
+                      {importResult.errors.map((err, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs text-red-400">
+                          <XCircle className="w-3 h-3 flex-shrink-0" />
+                          Row {err.row}: {err.error}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-red-400 text-sm">
+                <XCircle className="w-4 h-4" /> {importResult.error}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function SchoolAdminReporting() {
@@ -1053,6 +1196,9 @@ export default function SchoolAdminReporting() {
           <TabsTrigger data-testid="tab-digest" value="digest" className="flex-1 text-xs sm:text-sm data-[state=active]:bg-cyan-600 data-[state=active]:text-white rounded-lg">
             <Mail className="w-4 h-4 mr-1.5 hidden sm:inline" />Digest
           </TabsTrigger>
+          <TabsTrigger data-testid="tab-data" value="data" className="flex-1 text-xs sm:text-sm data-[state=active]:bg-cyan-600 data-[state=active]:text-white rounded-lg">
+            <Database className="w-4 h-4 mr-1.5 hidden sm:inline" />Data
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="announcements" className="mt-4"><AnnouncementsTab /></TabsContent>
@@ -1061,6 +1207,7 @@ export default function SchoolAdminReporting() {
         <TabsContent value="stats" className="mt-4"><StatsTab /></TabsContent>
         <TabsContent value="analytics" className="mt-4"><AnalyticsTab /></TabsContent>
         <TabsContent value="digest" className="mt-4"><DigestTab /></TabsContent>
+        <TabsContent value="data" className="mt-4"><DataTab /></TabsContent>
       </Tabs>
     </div>
   );

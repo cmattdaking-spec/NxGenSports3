@@ -1,5 +1,9 @@
 import secrets
 import asyncio
+import pyotp
+import qrcode
+import io
+import base64
 from datetime import datetime, timezone, timedelta
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Request, Depends
@@ -10,6 +14,8 @@ from utils import (
     check_rate_limit, record_login_attempt,
     send_email, reset_password_email_html,
 )
+from config import JWT_SECRET, JWT_ALGORITHM
+import jwt as pyjwt
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -73,6 +79,18 @@ async def login(request: Request, body: dict):
 
     await record_login_attempt(identifier, True)
     user_id = str(user["_id"])
+
+    # If 2FA is enabled, return a temporary token requiring TOTP verification
+    if user.get("two_factor_enabled"):
+        temp_payload = {
+            "sub": user_id,
+            "email": email,
+            "type": "2fa_pending",
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=5),
+        }
+        temp_token = pyjwt.encode(temp_payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        return {"access_token": temp_token, "token_type": "bearer_2fa", "requires_2fa": True}
+
     token = create_token(user_id, email)
     user["_id"] = user_id
     user.pop("password_hash", None)
@@ -259,3 +277,173 @@ async def reset_password(body: dict):
     )
     await db.password_reset_tokens.update_one({"token": token}, {"$set": {"used": True}})
     return {"success": True, "message": "Password updated successfully"}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TWO-FACTOR AUTHENTICATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _generate_qr_base64(secret: str, email: str) -> str:
+    totp = pyotp.TOTP(secret)
+    uri = totp.provisioning_uri(name=email, issuer_name="NxGenSports")
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+    qr.add_data(uri)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return base64.b64encode(buf.getvalue()).decode()
+
+
+def _generate_backup_codes(count: int = 8) -> list:
+    return [secrets.token_hex(4).upper() for _ in range(count)]
+
+
+@router.get("/2fa/status")
+async def twofa_status(user: dict = Depends(get_current_user)):
+    return {"two_factor_enabled": user.get("two_factor_enabled", False)}
+
+
+@router.post("/2fa/setup")
+async def twofa_setup(user: dict = Depends(get_current_user)):
+    from database import db
+    if user.get("two_factor_enabled"):
+        raise HTTPException(status_code=400, detail="2FA is already enabled")
+
+    secret = pyotp.random_base32()
+    email = user.get("email", "")
+    qr_b64 = _generate_qr_base64(secret, email)
+
+    user_id = user.get("id") or user.get("_id")
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"pending_totp_secret": secret}}
+    )
+
+    return {
+        "qr_code": f"data:image/png;base64,{qr_b64}",
+        "manual_key": secret,
+    }
+
+
+@router.post("/2fa/verify-setup")
+async def twofa_verify_setup(body: dict, user: dict = Depends(get_current_user)):
+    from database import db
+    code = body.get("code", "")
+    if not code or len(code) != 6 or not code.isdigit():
+        raise HTTPException(status_code=400, detail="Invalid code format (6 digits required)")
+
+    user_id = user.get("id") or user.get("_id")
+    db_user = await db.users.find_one({"_id": ObjectId(user_id)})
+
+    pending_secret = db_user.get("pending_totp_secret")
+    if not pending_secret:
+        raise HTTPException(status_code=400, detail="2FA setup not initiated. Call /2fa/setup first.")
+
+    totp = pyotp.TOTP(pending_secret)
+    if not totp.verify(code, valid_window=1):
+        raise HTTPException(status_code=401, detail="Invalid code. Please try again.")
+
+    # Generate backup codes
+    backup_codes = _generate_backup_codes()
+    hashed_codes = [hash_password(c) for c in backup_codes]
+
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {
+            "$set": {
+                "totp_secret": pending_secret,
+                "two_factor_enabled": True,
+                "backup_codes": hashed_codes,
+            },
+            "$unset": {"pending_totp_secret": ""},
+        }
+    )
+
+    return {
+        "success": True,
+        "backup_codes": backup_codes,
+        "message": "2FA enabled. Save your backup codes securely — they cannot be shown again.",
+    }
+
+
+@router.post("/2fa/verify-login")
+async def twofa_verify_login(body: dict):
+    from database import db
+    temp_token = body.get("token", "")
+    code = body.get("code", "")
+
+    if not temp_token or not code:
+        raise HTTPException(status_code=400, detail="token and code are required")
+
+    try:
+        payload = pyjwt.decode(temp_token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if payload.get("type") != "2fa_pending":
+            raise HTTPException(status_code=401, detail="Invalid 2FA token")
+    except pyjwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="2FA token expired. Please login again.")
+    except pyjwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    user_id = payload["sub"]
+    email = payload["email"]
+
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user or not user.get("two_factor_enabled") or not user.get("totp_secret"):
+        raise HTTPException(status_code=401, detail="Invalid 2FA state")
+
+    # Try TOTP code first
+    totp = pyotp.TOTP(user["totp_secret"])
+    code_valid = totp.verify(code, valid_window=1)
+
+    # Try backup code if TOTP fails
+    if not code_valid and user.get("backup_codes"):
+        for i, hashed_code in enumerate(user["backup_codes"]):
+            if verify_password(code, hashed_code):
+                code_valid = True
+                # Remove used backup code
+                await db.users.update_one(
+                    {"_id": ObjectId(user_id)},
+                    {"$pull": {"backup_codes": hashed_code}}
+                )
+                break
+
+    if not code_valid:
+        raise HTTPException(status_code=401, detail="Invalid 2FA code")
+
+    # Issue full access token
+    full_token = create_token(user_id, email)
+    user["_id"] = user_id
+    user.pop("password_hash", None)
+    user.pop("totp_secret", None)
+    user.pop("backup_codes", None)
+    user.pop("pending_totp_secret", None)
+    return {"access_token": full_token, "token_type": "bearer", "user": serialize_doc(user)}
+
+
+@router.post("/2fa/disable")
+async def twofa_disable(body: dict, user: dict = Depends(get_current_user)):
+    from database import db
+    code = body.get("code", "")
+    if not code:
+        raise HTTPException(status_code=400, detail="TOTP code required to disable 2FA")
+
+    user_id = user.get("id") or user.get("_id")
+    db_user = await db.users.find_one({"_id": ObjectId(user_id)})
+
+    if not db_user.get("two_factor_enabled"):
+        raise HTTPException(status_code=400, detail="2FA is not enabled")
+
+    totp = pyotp.TOTP(db_user["totp_secret"])
+    if not totp.verify(code, valid_window=1):
+        raise HTTPException(status_code=401, detail="Invalid TOTP code")
+
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {
+            "$set": {"two_factor_enabled": False},
+            "$unset": {"totp_secret": "", "backup_codes": "", "pending_totp_secret": ""},
+        }
+    )
+    return {"success": True, "message": "2FA disabled successfully"}

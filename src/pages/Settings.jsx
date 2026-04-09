@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Settings as SettingsIcon, LogOut, Palette, Check, User, Shield, Bell, BellOff, Lock, Eye, EyeOff, Upload, Building2, Trash2, Camera, Pencil } from "lucide-react";
+import { Settings as SettingsIcon, LogOut, Palette, Check, User, Shield, Bell, BellOff, Lock, Eye, EyeOff, Upload, Building2, Trash2, Camera, Pencil, Smartphone, Copy, CheckCircle } from "lucide-react";
 import TeamLanguagePanel from "../components/settings/TeamLanguagePanel";
 import SystemDesigner from "../components/settings/SystemDesigner";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -18,6 +18,189 @@ const COLOR_SCHEMES = [
   { name: "Black & Gold", primary: "#1a1a1a", secondary: "#FFD700", preview: "bg-yellow-500" },
   { name: "Custom", primary: "", secondary: "", preview: "" },
 ];
+
+// ─── Two-Factor Authentication Section ────────────────────────────────────────
+function TwoFactorSection() {
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [step, setStep] = useState("idle"); // idle | setup | verify | backup | disable
+  const [qrData, setQrData] = useState(null);
+  const [code, setCode] = useState("");
+  const [backupCodes, setBackupCodes] = useState([]);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = localStorage.getItem("nxgen_token");
+        if (!token) return;
+        const res = await fetch("/api/auth/2fa/status", { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) { const data = await res.json(); setStatus(data); }
+      } catch {}
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  const apiCall = async (method, path, body = null) => {
+    const token = localStorage.getItem("nxgen_token");
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Request failed");
+    }
+    return res.json();
+  };
+
+  const handleSetup = async () => {
+    setError("");
+    setSaving(true);
+    try {
+      const data = await apiCall("POST", "/api/auth/2fa/setup");
+      setQrData(data);
+      setStep("setup");
+    } catch (e) { setError(e.message); }
+    finally { setSaving(false); }
+  };
+
+  const handleVerifySetup = async () => {
+    if (!code || code.length !== 6) { setError("Enter a 6-digit code"); return; }
+    setError("");
+    setSaving(true);
+    try {
+      const data = await apiCall("POST", "/api/auth/2fa/verify-setup", { code });
+      setBackupCodes(data.backup_codes || []);
+      setStep("backup");
+      setStatus({ two_factor_enabled: true });
+    } catch (e) { setError(e.message); }
+    finally { setSaving(false); }
+  };
+
+  const handleDisable = async () => {
+    if (!code || code.length !== 6) { setError("Enter your current 6-digit code"); return; }
+    setError("");
+    setSaving(true);
+    try {
+      await apiCall("POST", "/api/auth/2fa/disable", { code });
+      setStatus({ two_factor_enabled: false });
+      setStep("idle");
+      setCode("");
+    } catch (e) { setError(e.message); }
+    finally { setSaving(false); }
+  };
+
+  const copyBackupCodes = () => {
+    navigator.clipboard.writeText(backupCodes.join("\n")).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+  };
+
+  if (loading) return null;
+
+  const enabled = status?.two_factor_enabled;
+
+  return (
+    <div className="bg-[#141414] border border-gray-800 rounded-2xl p-5" data-testid="2fa-section">
+      <h2 className="text-white font-bold mb-1 flex items-center gap-2">
+        <Smartphone className="w-4 h-4 text-[var(--color-primary,#3b82f6)]" /> Two-Factor Authentication
+      </h2>
+      <p className="text-gray-500 text-xs mb-4">
+        {enabled ? "2FA is enabled. Your account has an extra layer of protection." : "Add an extra layer of security using an authenticator app."}
+      </p>
+
+      {step === "idle" && !enabled && (
+        <button data-testid="2fa-enable-btn" onClick={handleSetup} disabled={saving}
+          className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50"
+          style={{ backgroundColor: "var(--color-primary, #3b82f6)" }}>
+          {saving ? "Setting up..." : "Enable 2FA"}
+        </button>
+      )}
+
+      {step === "idle" && enabled && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-emerald-400 text-sm">
+            <CheckCircle className="w-4 h-4" /> Two-factor authentication is active
+          </div>
+          <button data-testid="2fa-disable-start-btn" onClick={() => setStep("disable")}
+            className="px-4 py-2 rounded-xl text-sm font-medium text-red-400 border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 transition-all">
+            Disable 2FA
+          </button>
+        </div>
+      )}
+
+      {step === "setup" && qrData && (
+        <div className="space-y-4">
+          <p className="text-gray-300 text-xs">Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)</p>
+          <div className="flex justify-center">
+            <img src={qrData.qr_code} alt="2FA QR Code" className="w-48 h-48 rounded-xl border border-gray-700" data-testid="2fa-qr-code" />
+          </div>
+          <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-3 text-center">
+            <p className="text-gray-500 text-[10px] uppercase mb-1">Manual entry key</p>
+            <p className="text-white font-mono text-xs tracking-wider select-all" data-testid="2fa-manual-key">{qrData.manual_key}</p>
+          </div>
+          <div>
+            <label className="text-gray-400 text-xs mb-1 block">Enter the 6-digit code from your app</label>
+            <input type="text" inputMode="numeric" maxLength={6} value={code}
+              onChange={e => { setCode(e.target.value.replace(/\D/g, "")); setError(""); }}
+              className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm text-center font-mono tracking-[0.3em] focus:outline-none focus:border-[var(--color-primary,#3b82f6)]"
+              placeholder="000000" data-testid="2fa-setup-code-input" autoFocus />
+          </div>
+          {error && <p className="text-red-400 text-xs">{error}</p>}
+          <div className="flex gap-2">
+            <button data-testid="2fa-verify-setup-btn" onClick={handleVerifySetup} disabled={saving || code.length !== 6}
+              className="flex-1 py-2 rounded-xl font-semibold text-sm text-white disabled:opacity-50 transition-all"
+              style={{ backgroundColor: "var(--color-primary, #3b82f6)" }}>
+              {saving ? "Verifying..." : "Verify & Enable"}
+            </button>
+            <button onClick={() => { setStep("idle"); setCode(""); setError(""); }}
+              className="px-4 py-2 rounded-xl text-sm text-gray-400 border border-gray-700 hover:bg-gray-800 transition-all">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {step === "backup" && (
+        <div className="space-y-4">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+            <p className="text-emerald-400 text-sm font-semibold flex items-center gap-2"><CheckCircle className="w-4 h-4" /> 2FA enabled successfully!</p>
+          </div>
+          <p className="text-gray-300 text-xs">Save these backup codes in a safe place. You can use each code once if you lose access to your authenticator app.</p>
+          <div className="bg-[#1a1a1a] border border-gray-700 rounded-xl p-4 grid grid-cols-2 gap-2">
+            {backupCodes.map((c, i) => (
+              <span key={i} className="text-white font-mono text-xs text-center py-1 px-2 bg-gray-800 rounded">{c}</span>
+            ))}
+          </div>
+          <button data-testid="2fa-copy-backup" onClick={copyBackupCodes}
+            className="flex items-center gap-2 mx-auto px-4 py-2 rounded-xl text-sm text-gray-300 border border-gray-700 hover:bg-gray-800 transition-all">
+            {copied ? <><CheckCircle className="w-4 h-4 text-emerald-400" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy codes</>}
+          </button>
+          <button data-testid="2fa-backup-done" onClick={() => { setStep("idle"); setCode(""); setBackupCodes([]); }}
+            className="w-full py-2 rounded-xl font-semibold text-sm text-white transition-all"
+            style={{ backgroundColor: "var(--color-primary, #3b82f6)" }}>Done</button>
+        </div>
+      )}
+
+      {step === "disable" && (
+        <div className="space-y-4">
+          <p className="text-gray-300 text-xs">Enter your current authenticator code to disable 2FA.</p>
+          <input type="text" inputMode="numeric" maxLength={6} value={code}
+            onChange={e => { setCode(e.target.value.replace(/\D/g, "")); setError(""); }}
+            className="w-full bg-[#1a1a1a] border border-gray-700 text-white px-3 py-2 rounded-lg text-sm text-center font-mono tracking-[0.3em] focus:outline-none focus:border-red-500"
+            placeholder="000000" data-testid="2fa-disable-code-input" autoFocus />
+          {error && <p className="text-red-400 text-xs">{error}</p>}
+          <div className="flex gap-2">
+            <button data-testid="2fa-disable-confirm-btn" onClick={handleDisable} disabled={saving || code.length !== 6}
+              className="flex-1 py-2 rounded-xl font-semibold text-sm text-white bg-red-600 disabled:opacity-50 transition-all">
+              {saving ? "Disabling..." : "Disable 2FA"}
+            </button>
+            <button onClick={() => { setStep("idle"); setCode(""); setError(""); }}
+              className="px-4 py-2 rounded-xl text-sm text-gray-400 border border-gray-700 hover:bg-gray-800 transition-all">Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Settings() {
   const [user, setUser] = useState(null);
@@ -478,6 +661,9 @@ export default function Settings() {
           </button>
         </div>
       </div>
+
+      {/* Two-Factor Authentication */}
+      <TwoFactorSection />
 
       {/* System Designer — head coach only */}
       {user && user?.coaching_role === "head_coach" && (
