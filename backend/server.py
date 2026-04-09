@@ -13,6 +13,7 @@ from routers.messages import router as messages_router
 from routers.upload import router as upload_router
 from routers.llm import router as llm_router
 from routers.students import router as students_router
+from routers.faculty import router as faculty_router
 
 app = FastAPI()
 
@@ -35,6 +36,7 @@ app.include_router(messages_router)
 app.include_router(upload_router)
 app.include_router(llm_router)
 app.include_router(students_router)
+app.include_router(faculty_router)
 
 
 @app.on_event("startup")
