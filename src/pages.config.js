@@ -73,6 +73,7 @@ import Scouting from './pages/Scouting.jsx';
 import Settings from './pages/Settings.jsx';
 import StrengthConditioning from './pages/StrengthConditioning.jsx';
 import UserManagement from './pages/UserManagement.jsx';
+import StudentRecords from './pages/StudentRecords.jsx';
 import PlayerPortal from './pages/PlayerPortal.jsx';
 import ParentPortal from './pages/ParentPortal.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
@@ -106,6 +107,7 @@ export const PAGES = {
     "Settings": Settings,
     "StrengthConditioning": StrengthConditioning,
     "UserManagement": UserManagement,
+    "StudentRecords": StudentRecords,
     "PlayerPortal": PlayerPortal,
     "ParentPortal": ParentPortal,
     "ResetPassword": ResetPassword,

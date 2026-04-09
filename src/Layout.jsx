@@ -119,6 +119,7 @@ const navItems = [
   { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays,   roles: null },
   { label: "NxPlay",         page: "NxPlay",               icon: Gamepad2,       roles: null },
   { label: "Eligibility",    page: "AcademicEligibility",  icon: GraduationCap,  roles: null },
+  { label: "Students",       page: "StudentRecords",       icon: BookOpen,       roles: null },
   { label: "Roster",         page: "Roster",               icon: Users,          roles: null },
   { label: "Health",         page: "PlayerHealth",         icon: Activity,       roles: null },
   { label: "NxMessages",     page: "Messages",             icon: MessageSquare,  roles: null },
