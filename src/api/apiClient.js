@@ -131,6 +131,14 @@ function makeEntity(entityName) {
     async delete(id) {
       return apiFetch("DELETE", `${base}/${id}`);
     },
+
+    // subscribe() — not supported in the standalone backend.
+    // Returns a no-op cleanup so useEffect cleanups don't crash.
+    // Pages that relied on Base44's real-time subscription will load
+    // correctly on mount; live updates are handled by WebSocket/polling.
+    subscribe(_callback) {
+      return () => {};
+    },
   };
 }
 

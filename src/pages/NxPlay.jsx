@@ -246,11 +246,13 @@ export default function NxPlay() {
     }
   }, [opponents, selectedOpponentId]);
 
+  // Poll for live game record updates every 8 s (replaces broken subscribe call)
   useEffect(() => {
-    const unsub = base44.entities.GameRecord.subscribe(() => {
+    if (!selectedOpponentId) return;
+    const interval = setInterval(() => {
       loadSelectedGame(user);
-    });
-    return unsub;
+    }, 8000);
+    return () => clearInterval(interval);
   }, [selectedOpponentId, opponents, user?.id, parentTeamIds.join("|")]);
 
   const selectedOpponent = opponents.find(o => o.id === selectedOpponentId);
