@@ -4,7 +4,8 @@ import {
   Search, Plus, ArrowLeft, Trash2, Edit2, Send, Megaphone,
   Calendar, FileText, BarChart3, Upload, Link2, ExternalLink,
   Users, GraduationCap, Briefcase, Layers, Clock, MapPin,
-  AlertTriangle, Bell, ChevronRight, Download, File
+  AlertTriangle, Bell, ChevronRight, Download, File,
+  TrendingUp, Activity, MessageSquare, Mail, Settings2
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -763,6 +764,265 @@ function StatsTab() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// ANALYTICS TAB
+// ═══════════════════════════════════════════════════════════════════════════════
+function AnalyticsTab() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const d = await apiFetch("GET", `${API}/analytics`);
+        setData(d);
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  if (loading) return <div className="text-center py-12 text-gray-500">Loading analytics...</div>;
+  if (!data) return <div className="text-center py-12 text-gray-500">Could not load analytics</div>;
+
+  const maxLogin = data.login_activity?.reduce((m, d) => Math.max(m, d.logins), 0) || 1;
+  const maxMsg = data.message_activity?.reduce((m, d) => Math.max(m, d.messages), 0) || 1;
+
+  return (
+    <div className="space-y-6">
+      {/* Top metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <StatCard icon={Activity} label="Attendance Rate" value={`${data.attendance_rate}%`} color="cyan" />
+        <StatCard icon={FileText} label="Assignment Rate" value={`${data.assignment_completion_rate}%`} color="green" />
+        <StatCard icon={MessageSquare} label="Messages (Week)" value={data.messages_this_week} color="blue" />
+        <StatCard icon={Users} label="New Users (Week)" value={data.new_users_this_week} color="purple" />
+        <StatCard icon={Calendar} label="Meetings (Week)" value={data.meetings_this_week} color="amber" />
+        <StatCard icon={Megaphone} label="Announcements (Week)" value={data.announcements_this_week} color="red" />
+        <StatCard icon={MessageSquare} label="Conversations" value={data.conversations_total} color="blue" />
+        <StatCard icon={AlertTriangle} label="Discipline (Month)" value={data.discipline_incidents_this_month} color="red" />
+      </div>
+
+      {/* Login Activity Chart */}
+      <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
+        <h3 className="text-white font-semibold text-sm mb-4">Login Activity (Last 30 Days)</h3>
+        {data.login_activity?.length > 0 ? (
+          <div className="flex items-end gap-1 h-32 overflow-x-auto">
+            {data.login_activity.map((d, i) => (
+              <div key={i} className="flex flex-col items-center flex-shrink-0 group" style={{ width: "16px" }}>
+                <div className="relative w-full">
+                  <div
+                    className="w-full bg-gradient-to-t from-cyan-600 to-cyan-400 rounded-t transition-all hover:from-cyan-500 hover:to-cyan-300"
+                    style={{ height: `${Math.max((d.logins / maxLogin) * 100, 4)}px` }}
+                    title={`${d.date}: ${d.logins} logins`}
+                  />
+                </div>
+                {i % 5 === 0 && (
+                  <span className="text-[8px] text-gray-600 mt-1 whitespace-nowrap">{d.date.slice(5)}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : <p className="text-gray-500 text-sm">No login activity data</p>}
+      </div>
+
+      {/* Message Activity Chart */}
+      <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
+        <h3 className="text-white font-semibold text-sm mb-4">Message Activity (Last 30 Days)</h3>
+        {data.message_activity?.length > 0 ? (
+          <div className="flex items-end gap-1 h-32 overflow-x-auto">
+            {data.message_activity.map((d, i) => (
+              <div key={i} className="flex flex-col items-center flex-shrink-0" style={{ width: "16px" }}>
+                <div className="relative w-full">
+                  <div
+                    className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t transition-all hover:from-emerald-500 hover:to-emerald-300"
+                    style={{ height: `${Math.max((d.messages / maxMsg) * 100, 4)}px` }}
+                    title={`${d.date}: ${d.messages} messages`}
+                  />
+                </div>
+                {i % 5 === 0 && (
+                  <span className="text-[8px] text-gray-600 mt-1 whitespace-nowrap">{d.date.slice(5)}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : <p className="text-gray-500 text-sm">No message activity data</p>}
+      </div>
+
+      {/* Meeting Status Breakdown */}
+      {data.meeting_status_distribution?.length > 0 && (
+        <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
+          <h3 className="text-white font-semibold text-sm mb-4">Meetings by Status ({data.meetings_total} total)</h3>
+          <div className="flex gap-4 flex-wrap">
+            {data.meeting_status_distribution.map(m => {
+              const colors = { confirmed: "bg-emerald-500", pending: "bg-amber-500", cancelled: "bg-red-500", completed: "bg-blue-500" };
+              return (
+                <div key={m.status} className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${colors[m.status] || "bg-gray-500"}`} />
+                  <span className="text-sm text-gray-300 capitalize">{m.status}</span>
+                  <span className="text-sm text-white font-semibold">{m.count}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Quick Summaries */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
+          <h3 className="text-white font-semibold text-sm mb-3">Attendance Snapshot</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Records (30 days)</span>
+              <span className="text-white font-medium">{data.attendance_total}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Present</span>
+              <span className="text-emerald-400 font-medium">{data.attendance_present}</span>
+            </div>
+            <div className="w-full bg-gray-800 rounded-full h-3 mt-2">
+              <div className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full transition-all"
+                style={{ width: `${data.attendance_rate}%` }} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
+          <h3 className="text-white font-semibold text-sm mb-3">Assignment Completion</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Total Assignments</span>
+              <span className="text-white font-medium">{data.assignments_total}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Submitted/Graded</span>
+              <span className="text-emerald-400 font-medium">{data.assignments_submitted}</span>
+            </div>
+            <div className="w-full bg-gray-800 rounded-full h-3 mt-2">
+              <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all"
+                style={{ width: `${data.assignment_completion_rate}%` }} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DIGEST SETTINGS TAB
+// ═══════════════════════════════════════════════════════════════════════════════
+function DigestTab() {
+  const [settings, setSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendResult, setSendResult] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await apiFetch("GET", `${API}/digest/settings`);
+        setSettings(data);
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updated = await apiFetch("PATCH", `${API}/digest/settings`, settings);
+      setSettings(updated);
+    } catch (e) { console.error(e); }
+    finally { setSaving(false); }
+  };
+
+  const handleSendNow = async () => {
+    setSending(true);
+    setSendResult(null);
+    try {
+      const res = await apiFetch("POST", `${API}/digest/send`);
+      setSendResult(`Digest sent to ${res.recipients} recipient(s)`);
+    } catch (e) { setSendResult(`Error: ${e.message}`); }
+    finally { setSending(false); }
+  };
+
+  if (loading) return <div className="text-center py-12 text-gray-500">Loading settings...</div>;
+
+  const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+  const HOURS = Array.from({ length: 24 }, (_, i) => i);
+
+  return (
+    <div className="space-y-6 max-w-xl">
+      <div className="bg-[#141414] border border-gray-800 rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <Mail className="w-5 h-5 text-cyan-400" />
+          <h3 className="text-white font-semibold text-sm">Weekly Digest Email</h3>
+        </div>
+        <p className="text-gray-400 text-xs mb-5">
+          Automatically send a summary of announcements, upcoming events, and stats to staff members every week.
+        </p>
+
+        <div className="space-y-4">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input data-testid="digest-enabled" type="checkbox" checked={settings?.enabled || false}
+              onChange={e => setSettings(s => ({ ...s, enabled: e.target.checked }))}
+              className="w-5 h-5 rounded border-gray-600 bg-[#1a1a1a] text-cyan-500 focus:ring-cyan-500" />
+            <span className="text-sm text-white font-medium">Enable weekly digest</span>
+          </label>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Day</label>
+              <select data-testid="digest-day" value={settings?.day || "monday"}
+                onChange={e => setSettings(s => ({ ...s, day: e.target.value }))}
+                className="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none">
+                {DAYS.map(d => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">Hour (UTC)</label>
+              <select data-testid="digest-hour" value={settings?.hour ?? 8}
+                onChange={e => setSettings(s => ({ ...s, hour: Number(e.target.value) }))}
+                className="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none">
+                {HOURS.map(h => <option key={h} value={h}>{String(h).padStart(2, "0")}:00</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs text-gray-400 block mb-1">Audience</label>
+            <select data-testid="digest-audience" value={settings?.audience || "staff"}
+              onChange={e => setSettings(s => ({ ...s, audience: e.target.value }))}
+              className="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none">
+              <option value="staff">Staff Only</option>
+              <option value="all">Everyone</option>
+            </select>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button data-testid="digest-save-btn" onClick={handleSave} disabled={saving}
+              className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors">
+              {saving ? "Saving..." : "Save Settings"}
+            </button>
+            <button data-testid="digest-send-now-btn" onClick={handleSendNow} disabled={sending}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors">
+              <Send className="w-4 h-4" />
+              {sending ? "Sending..." : "Send Now"}
+            </button>
+          </div>
+
+          {sendResult && (
+            <div data-testid="digest-send-result"
+              className={`p-3 rounded-lg text-sm ${sendResult.startsWith("Error") ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"}`}>
+              {sendResult}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function SchoolAdminReporting() {
@@ -770,22 +1030,28 @@ export default function SchoolAdminReporting() {
     <div data-testid="school-admin-reporting" className="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
       <div>
         <h1 className="text-xl md:text-2xl font-bold text-white">School Admin</h1>
-        <p className="text-gray-400 text-sm mt-0.5">Announcements, calendar, documents & enrollment stats</p>
+        <p className="text-gray-400 text-sm mt-0.5">Announcements, calendar, documents, analytics & digest</p>
       </div>
 
       <Tabs defaultValue="announcements" className="w-full">
-        <TabsList className="bg-[#141414] border border-gray-800 p-1 rounded-xl w-full flex">
+        <TabsList className="bg-[#141414] border border-gray-800 p-1 rounded-xl w-full flex overflow-x-auto">
           <TabsTrigger data-testid="tab-announcements" value="announcements" className="flex-1 text-xs sm:text-sm data-[state=active]:bg-cyan-600 data-[state=active]:text-white rounded-lg">
-            <Megaphone className="w-4 h-4 mr-1.5 hidden sm:inline" />Announcements
+            <Megaphone className="w-4 h-4 mr-1.5 hidden sm:inline" />Announce
           </TabsTrigger>
           <TabsTrigger data-testid="tab-calendar" value="calendar" className="flex-1 text-xs sm:text-sm data-[state=active]:bg-cyan-600 data-[state=active]:text-white rounded-lg">
             <Calendar className="w-4 h-4 mr-1.5 hidden sm:inline" />Calendar
           </TabsTrigger>
           <TabsTrigger data-testid="tab-documents" value="documents" className="flex-1 text-xs sm:text-sm data-[state=active]:bg-cyan-600 data-[state=active]:text-white rounded-lg">
-            <FileText className="w-4 h-4 mr-1.5 hidden sm:inline" />Documents
+            <FileText className="w-4 h-4 mr-1.5 hidden sm:inline" />Docs
           </TabsTrigger>
           <TabsTrigger data-testid="tab-stats" value="stats" className="flex-1 text-xs sm:text-sm data-[state=active]:bg-cyan-600 data-[state=active]:text-white rounded-lg">
             <BarChart3 className="w-4 h-4 mr-1.5 hidden sm:inline" />Stats
+          </TabsTrigger>
+          <TabsTrigger data-testid="tab-analytics" value="analytics" className="flex-1 text-xs sm:text-sm data-[state=active]:bg-cyan-600 data-[state=active]:text-white rounded-lg">
+            <TrendingUp className="w-4 h-4 mr-1.5 hidden sm:inline" />Analytics
+          </TabsTrigger>
+          <TabsTrigger data-testid="tab-digest" value="digest" className="flex-1 text-xs sm:text-sm data-[state=active]:bg-cyan-600 data-[state=active]:text-white rounded-lg">
+            <Mail className="w-4 h-4 mr-1.5 hidden sm:inline" />Digest
           </TabsTrigger>
         </TabsList>
 
@@ -793,6 +1059,8 @@ export default function SchoolAdminReporting() {
         <TabsContent value="calendar" className="mt-4"><CalendarTab /></TabsContent>
         <TabsContent value="documents" className="mt-4"><DocumentsTab /></TabsContent>
         <TabsContent value="stats" className="mt-4"><StatsTab /></TabsContent>
+        <TabsContent value="analytics" className="mt-4"><AnalyticsTab /></TabsContent>
+        <TabsContent value="digest" className="mt-4"><DigestTab /></TabsContent>
       </Tabs>
     </div>
   );

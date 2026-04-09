@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 import os
@@ -367,4 +367,310 @@ async def enrollment_stats(user: dict = Depends(get_current_user)):
         "upcoming_events": upcoming_events,
         "total_documents": total_documents,
         "grade_distribution": [{"grade": g["_id"] or "Unknown", "count": g["count"]} for g in grade_dist],
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# WEEKLY DIGEST
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/digest/settings")
+async def get_digest_settings(user: dict = Depends(get_current_user)):
+    from database import db
+    _require_staff(user)
+    team_id = user.get("team_id", "")
+    settings = await db.digest_settings.find_one({"team_id": team_id})
+    if not settings:
+        return {"enabled": False, "day": "monday", "hour": 8, "audience": "staff", "team_id": team_id}
+    return serialize_doc(settings)
+
+
+@router.patch("/digest/settings")
+async def update_digest_settings(body: dict, user: dict = Depends(get_current_user)):
+    from database import db
+    _require_staff(user)
+    team_id = user.get("team_id", "")
+    now = datetime.now(timezone.utc).isoformat()
+    await db.digest_settings.update_one(
+        {"team_id": team_id},
+        {"$set": {
+            "team_id": team_id,
+            "enabled": body.get("enabled", False),
+            "day": body.get("day", "monday"),
+            "hour": body.get("hour", 8),
+            "audience": body.get("audience", "staff"),
+            "updated_at": now,
+        }},
+        upsert=True,
+    )
+    settings = await db.digest_settings.find_one({"team_id": team_id})
+    return serialize_doc(settings)
+
+
+@router.post("/digest/send")
+async def send_digest_now(user: dict = Depends(get_current_user)):
+    from database import db
+    _require_staff(user)
+    team_id = user.get("team_id", "")
+    count = await _send_weekly_digest(db, team_id, "staff")
+    return {"success": True, "recipients": count}
+
+
+async def _send_weekly_digest(db, team_id: str, audience: str = "staff"):
+    now = datetime.now(timezone.utc)
+    week_ago = (now - timedelta(days=7)).isoformat()
+    week_ahead = (now + timedelta(days=7)).isoformat()[:10]
+    today_str = now.isoformat()[:10]
+
+    filt = {"team_id": team_id} if team_id else {}
+
+    # Recent announcements
+    ann_docs = await db.announcements.find(
+        {**filt, "created_at": {"$gte": week_ago}}
+    ).sort("created_at", -1).to_list(length=10)
+
+    # Upcoming events
+    evt_docs = await db.school_events.find(
+        {**filt, "event_date": {"$gte": today_str, "$lte": week_ahead}}
+    ).sort("event_date", 1).to_list(length=10)
+
+    # Quick stats
+    total_students = await db.students.count_documents(filt)
+    total_faculty = await db.faculty.count_documents(filt)
+    total_clubs = await db.clubs.count_documents({**filt, "status": "active"})
+
+    # Build announcements HTML
+    ann_html = ""
+    for a in ann_docs:
+        priority = a.get("priority", "medium")
+        p_color = {"urgent": "#ef4444", "high": "#f59e0b", "medium": "#3b82f6", "low": "#6b7280"}.get(priority, "#3b82f6")
+        ann_html += f"""
+        <div style="background:#1a1a1a;border-radius:8px;padding:12px 16px;margin-bottom:8px">
+          <div style="display:inline-block;background:{p_color};color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase;margin-bottom:4px">{priority}</div>
+          <p style="color:#e8e8e8;font-size:14px;font-weight:600;margin:4px 0 2px">{a.get('title', '')}</p>
+          <p style="color:#9ca3af;font-size:12px;margin:0">{(a.get('content', '')[:100] + '...') if len(a.get('content', '')) > 100 else a.get('content', '')}</p>
+        </div>"""
+
+    if not ann_html:
+        ann_html = '<p style="color:#6b7280;font-size:13px">No new announcements this week.</p>'
+
+    # Build events HTML
+    evt_html = ""
+    for e in evt_docs:
+        evt_html += f"""
+        <div style="background:#1a1a1a;border-radius:8px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+          <div style="text-align:center;min-width:40px">
+            <div style="color:#fff;font-size:18px;font-weight:700">{e.get('event_date', '??')[-2:]}</div>
+            <div style="color:#6b7280;font-size:10px;text-transform:uppercase">{e.get('event_type', 'event')}</div>
+          </div>
+          <div>
+            <p style="color:#e8e8e8;font-size:14px;font-weight:600;margin:0">{e.get('title', '')}</p>
+            <p style="color:#6b7280;font-size:11px;margin:2px 0 0">{e.get('event_time', '')} {('@ ' + e.get('location')) if e.get('location') else ''}</p>
+          </div>
+        </div>"""
+
+    if not evt_html:
+        evt_html = '<p style="color:#6b7280;font-size:13px">No upcoming events this week.</p>'
+
+    html = f"""
+    <!DOCTYPE html>
+    <html><head><meta charset="UTF-8"></head>
+    <body style="background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;padding:40px 20px">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto">
+        <tr><td>
+          <div style="background:#111111;border:1px solid #1f2937;border-radius:16px;padding:40px">
+            <h1 style="color:#ffffff;font-size:22px;font-weight:900;margin:0 0 4px">
+              Nx<span style="color:#00f2ff">GenSports</span>
+            </h1>
+            <p style="color:#6b7280;font-size:13px;margin:0 0 28px">Weekly Digest &mdash; {now.strftime('%B %d, %Y')}</p>
+
+            <div style="display:flex;gap:12px;margin-bottom:28px">
+              <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:12px;text-align:center">
+                <div style="color:#00f2ff;font-size:22px;font-weight:700">{total_students}</div>
+                <div style="color:#6b7280;font-size:11px">Students</div>
+              </div>
+              <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:12px;text-align:center">
+                <div style="color:#10b981;font-size:22px;font-weight:700">{total_faculty}</div>
+                <div style="color:#6b7280;font-size:11px">Faculty</div>
+              </div>
+              <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:12px;text-align:center">
+                <div style="color:#8b5cf6;font-size:22px;font-weight:700">{total_clubs}</div>
+                <div style="color:#6b7280;font-size:11px">Active Clubs</div>
+              </div>
+            </div>
+
+            <h2 style="color:#e8e8e8;font-size:15px;font-weight:700;margin:0 0 12px;border-bottom:1px solid #1f2937;padding-bottom:8px">Recent Announcements</h2>
+            {ann_html}
+
+            <h2 style="color:#e8e8e8;font-size:15px;font-weight:700;margin:24px 0 12px;border-bottom:1px solid #1f2937;padding-bottom:8px">Upcoming Events</h2>
+            {evt_html}
+
+            <hr style="border:none;border-top:1px solid #1f2937;margin:28px 0 16px">
+            <p style="color:#4b5563;font-size:11px;margin:0;text-align:center">
+              This is your weekly school digest from NxGenSports. Manage digest settings in School Admin.
+            </p>
+          </div>
+        </td></tr>
+      </table>
+    </body></html>
+    """
+
+    # Determine recipients
+    user_filter = {"team_id": team_id} if team_id else {}
+    if audience == "staff":
+        user_filter["user_type"] = {"$nin": ["player", "parent"]}
+    elif audience == "all":
+        pass
+
+    recipients = await db.users.find(user_filter, {"email": 1}).to_list(length=500)
+    count = 0
+    for r in recipients:
+        email = r.get("email")
+        if email:
+            try:
+                await send_email(email, f"[NxGenSports] Weekly Digest - {now.strftime('%b %d')}", html)
+                count += 1
+            except Exception as e:
+                print(f"[DIGEST] Failed to send to {email}: {e}")
+
+    return count
+
+
+async def run_digest_scheduler():
+    """Background task that checks every hour if it's time to send digests."""
+    from database import db
+    while True:
+        try:
+            await asyncio.sleep(3600)  # Check every hour
+            now = datetime.now(timezone.utc)
+            day_name = now.strftime("%A").lower()
+
+            # Find all teams with enabled digests matching current day/hour
+            cursor = db.digest_settings.find({"enabled": True, "day": day_name, "hour": now.hour})
+            async for settings in cursor:
+                team_id = settings.get("team_id", "")
+                audience = settings.get("audience", "staff")
+                last_sent = settings.get("last_sent_at", "")
+                today_str = now.isoformat()[:10]
+                if last_sent and last_sent.startswith(today_str):
+                    continue  # Already sent today
+                print(f"[DIGEST] Sending weekly digest for team {team_id}")
+                count = await _send_weekly_digest(db, team_id, audience)
+                await db.digest_settings.update_one(
+                    {"_id": settings["_id"]},
+                    {"$set": {"last_sent_at": now.isoformat()}}
+                )
+                print(f"[DIGEST] Sent to {count} recipients for team {team_id}")
+        except Exception as e:
+            print(f"[DIGEST] Scheduler error: {e}")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENGAGEMENT ANALYTICS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/analytics")
+async def engagement_analytics(user: dict = Depends(get_current_user)):
+    from database import db
+    filt = _team_filter(user)
+    now = datetime.now(timezone.utc)
+    week_ago = (now - timedelta(days=7)).isoformat()
+    month_ago = (now - timedelta(days=30)).isoformat()
+
+    # ── Login activity (last 30 days) ──
+    login_pipeline = [
+        {"$match": {"success": True, "attempted_at": {"$gte": datetime.fromisoformat(month_ago)}}},
+        {"$group": {
+            "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$attempted_at"}},
+            "count": {"$sum": 1},
+        }},
+        {"$sort": {"_id": 1}},
+    ]
+    login_activity = await db.login_attempts.aggregate(login_pipeline).to_list(length=31)
+
+    # ── Message activity (last 30 days) ──
+    msg_filt = {**(filt if filt else {}), "created_at": {"$gte": month_ago}}
+    msg_pipeline = [
+        {"$match": msg_filt},
+        {"$addFields": {"date_str": {"$substr": ["$created_at", 0, 10]}}},
+        {"$group": {"_id": "$date_str", "count": {"$sum": 1}}},
+        {"$sort": {"_id": 1}},
+    ]
+    msg_activity = await db.messages.aggregate(msg_pipeline).to_list(length=31)
+
+    # ── Meeting activity ──
+    meetings_total = await db.meetings.count_documents(filt if filt else {})
+    meetings_week = await db.meetings.count_documents({**(filt if filt else {}), "created_at": {"$gte": week_ago}})
+    meetings_by_status = [
+        {"$match": filt if filt else {}},
+        {"$group": {"_id": "$status", "count": {"$sum": 1}}},
+    ]
+    meeting_status_dist = await db.meetings.aggregate(meetings_by_status).to_list(length=10)
+
+    # ── Attendance rate ──
+    today_str = now.isoformat()[:10]
+    month_ago_str = month_ago[:10]
+    att_total = await db.attendance_records.count_documents(
+        {**(filt if filt else {}), "date": {"$gte": month_ago_str}}
+    )
+    att_present = await db.attendance_records.count_documents(
+        {**(filt if filt else {}), "date": {"$gte": month_ago_str}, "status": "present"}
+    )
+    attendance_rate = round((att_present / att_total * 100), 1) if att_total > 0 else 0
+
+    # ── Assignment completion ──
+    assign_total = await db.student_assignments.count_documents(filt if filt else {})
+    assign_submitted = await db.student_assignments.count_documents(
+        {**(filt if filt else {}), "status": {"$in": ["submitted", "graded"]}}
+    )
+    assignment_rate = round((assign_submitted / assign_total * 100), 1) if assign_total > 0 else 0
+
+    # ── New users this week / month ──
+    new_users_week = await db.users.count_documents(
+        {**(filt if filt else {}), "created_at": {"$gte": week_ago}}
+    )
+    new_users_month = await db.users.count_documents(
+        {**(filt if filt else {}), "created_at": {"$gte": month_ago}}
+    )
+
+    # ── Announcements this week ──
+    ann_week = await db.announcements.count_documents(
+        {**(filt if filt else {}), "created_at": {"$gte": week_ago}}
+    )
+
+    # ── Messages this week ──
+    msgs_week = await db.messages.count_documents(
+        {**(filt if filt else {}), "created_at": {"$gte": week_ago}}
+    )
+    msgs_month = await db.messages.count_documents(
+        {**(filt if filt else {}), "created_at": {"$gte": month_ago}}
+    )
+
+    # ── Conversations count ──
+    convos_total = await db.conversations.count_documents(filt if filt else {})
+
+    # ── Discipline this month ──
+    discipline_month = await db.discipline_records.count_documents(
+        {**(filt if filt else {}), "date": {"$gte": month_ago_str}}
+    )
+
+    return {
+        "login_activity": [{"date": l["_id"], "logins": l["count"]} for l in login_activity],
+        "message_activity": [{"date": m["_id"], "messages": m["count"]} for m in msg_activity],
+        "attendance_rate": attendance_rate,
+        "attendance_total": att_total,
+        "attendance_present": att_present,
+        "assignment_completion_rate": assignment_rate,
+        "assignments_total": assign_total,
+        "assignments_submitted": assign_submitted,
+        "meetings_total": meetings_total,
+        "meetings_this_week": meetings_week,
+        "meeting_status_distribution": [{"status": m["_id"] or "unknown", "count": m["count"]} for m in meeting_status_dist],
+        "new_users_this_week": new_users_week,
+        "new_users_this_month": new_users_month,
+        "announcements_this_week": ann_week,
+        "messages_this_week": msgs_week,
+        "messages_this_month": msgs_month,
+        "conversations_total": convos_total,
+        "discipline_incidents_this_month": discipline_month,
     }

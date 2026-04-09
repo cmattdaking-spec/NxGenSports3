@@ -48,6 +48,10 @@ app.include_router(admin_reports_router)
 @app.on_event("startup")
 async def startup():
     await connect_db()
+    # Start weekly digest scheduler in background
+    from routers.admin_reports import run_digest_scheduler
+    import asyncio
+    asyncio.create_task(run_digest_scheduler())
 
 
 @app.on_event("shutdown")
