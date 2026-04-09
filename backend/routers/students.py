@@ -137,6 +137,7 @@ async def add_grade(student_id: str, body: dict, user: dict = Depends(get_curren
         "course_name": body.get("course_name", ""),
         "course_code": body.get("course_code", ""),
         "teacher_name": body.get("teacher_name", ""),
+        "faculty_id": body.get("faculty_id"),
         "semester": body.get("semester", ""),
         "grade_letter": body.get("grade_letter", ""),
         "grade_percent": body.get("grade_percent"),

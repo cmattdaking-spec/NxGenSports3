@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { getToken } from "@/api/apiClient";
 import {
   Search, Plus, ArrowLeft, Users, BookOpen, MapPin, Calendar,
-  Trash2, Edit2, ChevronRight, Clock, Building, Award, Briefcase
+  Trash2, Edit2, ChevronRight, Clock, Building, Award, Briefcase, GraduationCap
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -308,6 +308,12 @@ function FacultyDetail({ member, onBack, onRefresh }) {
         )}
         <ScheduleGrid entries={schedule} onDelete={delSchedule} />
       </div>
+
+      {/* Linked Students */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-white">Linked Students</h3>
+        <LinkedStudents facultyId={fid} />
+      </div>
     </div>
   );
 }
@@ -428,6 +434,172 @@ function ManagePanel({ departments, subjects, classrooms, onRefresh }) {
   );
 }
 
+// ─── Master Schedule Calendar ────────────────────────────────────────────────
+const DEPT_COLORS = [
+  { bg: "bg-cyan-500/15", border: "border-cyan-500/30", text: "text-cyan-300" },
+  { bg: "bg-purple-500/15", border: "border-purple-500/30", text: "text-purple-300" },
+  { bg: "bg-emerald-500/15", border: "border-emerald-500/30", text: "text-emerald-300" },
+  { bg: "bg-amber-500/15", border: "border-amber-500/30", text: "text-amber-300" },
+  { bg: "bg-rose-500/15", border: "border-rose-500/30", text: "text-rose-300" },
+  { bg: "bg-blue-500/15", border: "border-blue-500/30", text: "text-blue-300" },
+  { bg: "bg-orange-500/15", border: "border-orange-500/30", text: "text-orange-300" },
+  { bg: "bg-teal-500/15", border: "border-teal-500/30", text: "text-teal-300" },
+];
+
+function MasterScheduleCalendar() {
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await apiFetch("GET", `${API}/schedule/all`);
+        setEntries(data);
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  if (loading) return <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-gray-700 border-t-cyan-500 rounded-full animate-spin" /></div>;
+
+  // Build faculty color map
+  const facultyNames = [...new Set(entries.map(e => e.faculty_name).filter(Boolean))];
+  const colorMap = {};
+  facultyNames.forEach((name, i) => { colorMap[name] = DEPT_COLORS[i % DEPT_COLORS.length]; });
+
+  // Build grid: period x day
+  const usedPeriods = [...new Set(entries.map(e => e.period))].sort();
+  const periods = usedPeriods.length > 0 ? usedPeriods : PERIODS;
+
+  const getCell = (day, period) => entries.filter(e => e.day_of_week === day && e.period === period);
+
+  if (entries.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <Calendar className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+        <p className="text-gray-400 text-lg font-medium">No schedule entries yet</p>
+        <p className="text-gray-600 text-sm mt-1">Add schedule entries from faculty detail pages.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div data-testid="master-schedule-calendar" className="space-y-4">
+      {/* Legend */}
+      <div className="flex flex-wrap gap-2">
+        {facultyNames.map(name => {
+          const c = colorMap[name];
+          return (
+            <span key={name} className={`text-xs px-2 py-0.5 rounded-full border ${c.bg} ${c.border} ${c.text}`}>{name}</span>
+          );
+        })}
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="overflow-x-auto">
+        <div className="min-w-[700px]">
+          {/* Header Row */}
+          <div className="grid grid-cols-6 gap-px bg-gray-800 rounded-t-xl overflow-hidden">
+            <div className="bg-[#0d0d0d] p-2 text-center">
+              <span className="text-xs text-gray-500 uppercase tracking-wider font-medium">Period</span>
+            </div>
+            {DAYS.map(day => (
+              <div key={day} className="bg-[#0d0d0d] p-2 text-center">
+                <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">{day.slice(0, 3)}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Period Rows */}
+          {periods.map(period => (
+            <div key={period} className="grid grid-cols-6 gap-px bg-gray-800">
+              {/* Period label */}
+              <div className="bg-[#111] p-2 flex items-center justify-center">
+                <span className="text-xs text-cyan-400 font-mono font-bold">P{period}</span>
+              </div>
+              {/* Day cells */}
+              {DAYS.map(day => {
+                const cellEntries = getCell(day, period);
+                return (
+                  <div key={day} className="bg-[#111] p-1.5 min-h-[64px]">
+                    {cellEntries.length === 0 ? (
+                      <div className="h-full flex items-center justify-center">
+                        <span className="text-gray-800 text-xs">—</span>
+                      </div>
+                    ) : cellEntries.map((e, i) => {
+                      const c = colorMap[e.faculty_name] || DEPT_COLORS[0];
+                      return (
+                        <div key={i} data-testid={`schedule-cell-${day}-${period}`}
+                          className={`${c.bg} ${c.border} border rounded-lg p-1.5 mb-1 last:mb-0`}>
+                          <p className={`text-xs font-medium ${c.text} truncate`}>{e.subject_name}</p>
+                          <p className="text-[10px] text-gray-500 truncate">{e.faculty_name}</p>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            {e.classroom && <span className="text-[10px] text-gray-600">Rm {e.classroom}</span>}
+                            {e.start_time && <span className="text-[10px] text-gray-700">{e.start_time}</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Linked Students (Faculty Detail) ────────────────────────────────────────
+function LinkedStudents({ facultyId }) {
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await apiFetch("GET", `${API}/member/${facultyId}/students`);
+        setStudents(data);
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
+    })();
+  }, [facultyId]);
+
+  if (loading) return <div className="text-xs text-gray-500">Loading students...</div>;
+  if (students.length === 0) return <p className="text-xs text-gray-500 text-center py-3">No linked students. Assign this teacher when adding grades to students.</p>;
+
+  return (
+    <div data-testid="linked-students" className="space-y-2">
+      {students.map(s => (
+        <div key={s.student_id} className="bg-[#141414] border border-gray-800 rounded-lg p-3 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-cyan-600/20 flex items-center justify-center flex-shrink-0">
+            <GraduationCap className="w-4 h-4 text-cyan-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-white font-medium truncate">{s.full_name}</p>
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <span>Grade {s.grade_level}</span>
+              {s.student_code && <><span className="text-gray-700">|</span><span>{s.student_code}</span></>}
+              {s.gpa != null && <><span className="text-gray-700">|</span><span className="text-cyan-400">GPA: {s.gpa.toFixed(2)}</span></>}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1 max-w-[200px]">
+            {s.courses.map((c, i) => (
+              <span key={i} className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded-full">
+                {c.course_name} ({c.grade_letter})
+              </span>
+            ))}
+          </div>
+          <Badge variant="outline" className={`text-xs ${s.status === "active" ? "border-emerald-500/50 text-emerald-400" : "border-gray-600 text-gray-400"}`}>
+            {s.status}
+          </Badge>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function FacultyStaff() {
   const [faculty, setFaculty] = useState([]);
@@ -520,6 +692,7 @@ export default function FacultyStaff() {
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="bg-[#1a1a1a] border border-gray-800">
           <TabsTrigger value="directory" className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white text-gray-400 text-xs">Directory</TabsTrigger>
+          <TabsTrigger value="schedule" className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white text-gray-400 text-xs">Schedule</TabsTrigger>
           <TabsTrigger value="manage" className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white text-gray-400 text-xs">Manage</TabsTrigger>
         </TabsList>
 
@@ -590,6 +763,11 @@ export default function FacultyStaff() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        {/* Schedule Tab */}
+        <TabsContent value="schedule" className="mt-4">
+          <MasterScheduleCalendar />
         </TabsContent>
 
         {/* Manage Tab */}

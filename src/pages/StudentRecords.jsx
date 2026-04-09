@@ -141,7 +141,29 @@ function StudentForm({ student, onSave, onCancel }) {
 
 // ─── Grade Form (inline) ────────────────────────────────────────────────────
 function GradeForm({ onSave, onCancel }) {
-  const [form, setForm] = useState({ course_name: "", course_code: "", teacher_name: "", semester: SEMESTERS[2], grade_letter: "A", grade_percent: "", credit_hours: "3", notes: "" });
+  const [form, setForm] = useState({ course_name: "", course_code: "", teacher_name: "", faculty_id: "", semester: SEMESTERS[2], grade_letter: "A", grade_percent: "", credit_hours: "3", notes: "" });
+  const [facultyList, setFacultyList] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = getToken();
+        const res = await fetch("/api/faculty/", { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) setFacultyList(await res.json());
+      } catch (e) { /* ignore */ }
+    })();
+  }, []);
+
+  const handleFacultyChange = (e) => {
+    const fid = e.target.value;
+    if (!fid) {
+      setForm(f => ({ ...f, faculty_id: "", teacher_name: "" }));
+      return;
+    }
+    const fac = facultyList.find(f => f.id === fid);
+    setForm(f => ({ ...f, faculty_id: fid, teacher_name: fac?.full_name || "" }));
+  };
+
   return (
     <div className="bg-[#1a1a1a] border border-gray-700 rounded-xl p-4 space-y-3">
       <div className="grid grid-cols-2 gap-3">
@@ -168,9 +190,16 @@ function GradeForm({ onSave, onCancel }) {
           onChange={e => setForm(f => ({ ...f, credit_hours: e.target.value }))}
           className="bg-[#111] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white" />
       </div>
-      <input placeholder="Teacher Name" value={form.teacher_name}
-        onChange={e => setForm(f => ({ ...f, teacher_name: e.target.value }))}
-        className="w-full bg-[#111] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white" />
+      <div className="grid grid-cols-2 gap-3">
+        <select data-testid="grade-form-faculty" value={form.faculty_id} onChange={handleFacultyChange}
+          className="bg-[#111] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white">
+          <option value="">Select Teacher (optional)</option>
+          {facultyList.map(f => <option key={f.id} value={f.id}>{f.full_name}</option>)}
+        </select>
+        <input placeholder="Or type teacher name" value={form.teacher_name}
+          onChange={e => setForm(f => ({ ...f, teacher_name: e.target.value }))}
+          className="bg-[#111] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white" />
+      </div>
       <div className="flex gap-2">
         <button data-testid="grade-form-save" onClick={() => onSave({ ...form, grade_percent: form.grade_percent ? Number(form.grade_percent) : null, credit_hours: Number(form.credit_hours) || 1 })}
           disabled={!form.course_name}

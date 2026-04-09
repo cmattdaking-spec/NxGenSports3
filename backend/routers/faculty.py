@@ -308,3 +308,59 @@ async def master_schedule(user: dict = Depends(get_current_user)):
         s["faculty_name"] = faculty_map.get(d.get("faculty_id"), "")
         result.append(s)
     return result
+
+
+# ─── Faculty-Student Linkage ──────────────────────────────────────────────────
+@router.get("/member/{faculty_id}/students")
+async def faculty_students(faculty_id: str, user: dict = Depends(get_current_user)):
+    """Get students linked to a faculty member via grades (faculty_id or teacher_name)."""
+    from database import db
+
+    faculty = await db.faculty.find_one({"_id": ObjectId(faculty_id)})
+    if not faculty:
+        raise HTTPException(status_code=404, detail="Faculty not found")
+
+    # Find grades by faculty_id or teacher name match
+    query = {"$or": [{"faculty_id": faculty_id}]}
+    if faculty.get("full_name"):
+        query["$or"].append({"teacher_name": faculty["full_name"]})
+
+    grades = await db.grades.find(query).to_list(length=5000)
+
+    # Group by student_id, collect courses
+    student_map = {}
+    for g in grades:
+        sid = g.get("student_id")
+        if not sid:
+            continue
+        if sid not in student_map:
+            student_map[sid] = {
+                "student_id": sid,
+                "courses": [],
+            }
+        student_map[sid]["courses"].append({
+            "course_name": g.get("course_name", ""),
+            "semester": g.get("semester", ""),
+            "grade_letter": g.get("grade_letter", ""),
+        })
+
+    # Enrich with student names
+    result = []
+    for sid, info in student_map.items():
+        try:
+            student = await db.students.find_one({"_id": ObjectId(sid)})
+            if student:
+                result.append({
+                    "student_id": sid,
+                    "full_name": student.get("full_name", ""),
+                    "grade_level": student.get("grade_level", ""),
+                    "student_code": student.get("student_id", ""),
+                    "gpa": student.get("gpa"),
+                    "status": student.get("status", ""),
+                    "courses": info["courses"],
+                })
+        except Exception:
+            pass
+
+    return sorted(result, key=lambda x: x.get("full_name", ""))
+
