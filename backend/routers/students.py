@@ -23,6 +23,7 @@ def _require_staff(user: dict):
     # teachers are staff
 
 
+
 # ─── Students CRUD ────────────────────────────────────────────────────────────
 @router.get("/")
 async def list_students(user: dict = Depends(get_current_user)):
@@ -64,6 +65,102 @@ async def create_student(body: dict, user: dict = Depends(get_current_user)):
     result = await db.students.insert_one(doc)
     created = await db.students.find_one({"_id": result.inserted_id})
     return serialize_doc(created)
+
+
+
+# ─── Student Self-Portal ──────────────────────────────────────────────────────
+
+async def _find_student_record(user: dict):
+    """Find the student document linked to the current player/student user."""
+    from database import db
+    team_id = user.get("team_id")
+    email = user.get("email", "")
+    if email:
+        student = await db.students.find_one({"email": email, "team_id": team_id})
+        if student:
+            return student
+    player_id = user.get("player_id")
+    if player_id:
+        student = await db.students.find_one({"player_id": player_id, "team_id": team_id})
+        if student:
+            return student
+    first = user.get("first_name", "")
+    last = user.get("last_name", "")
+    if first and last:
+        student = await db.students.find_one({"first_name": first, "last_name": last, "team_id": team_id})
+        if student:
+            return student
+    return None
+
+
+@router.get("/my-portal")
+async def student_portal(user: dict = Depends(get_current_user)):
+    """Student self-service: grades, attendance, schedule, discipline."""
+    from database import db
+    team_id = user.get("team_id")
+    if not team_id:
+        raise HTTPException(status_code=403, detail="No team assigned")
+
+    student = await _find_student_record(user)
+    if not student:
+        return {"student": None, "grades": [], "attendance_summary": {}, "attendance_recent": [], "schedule": [], "discipline": [], "gpa": None}
+
+    sid = str(student["_id"])
+    student_doc = serialize_doc(student)
+    if not student_doc.get("full_name"):
+        student_doc["full_name"] = f"{student.get('first_name', '')} {student.get('last_name', '')}".strip()
+
+    # Grades
+    grades_raw = await db.grades.find({"student_id": sid}).sort("created_at", -1).to_list(length=500)
+    grades = [serialize_doc(g) for g in grades_raw]
+    for g in grades:
+        g["subject"] = g.get("subject") or g.get("course_name") or ""
+        g["letter_grade"] = g.get("letter_grade") or g.get("grade_letter") or ""
+        g["percentage"] = g.get("percentage") or g.get("grade_percent")
+
+    # GPA
+    gpa_map = {"A+": 4.0, "A": 4.0, "A-": 3.7, "B+": 3.3, "B": 3.0, "B-": 2.7, "C+": 2.3, "C": 2.0, "C-": 1.7, "D+": 1.3, "D": 1.0, "D-": 0.7, "F": 0.0}
+    gpa_values = [gpa_map.get(g["letter_grade"], 0) for g in grades if g.get("letter_grade")]
+    gpa = round(sum(gpa_values) / len(gpa_values), 2) if gpa_values else None
+
+    # Subject averages
+    subject_grades = {}
+    for g in grades:
+        subj = g.get("subject", "Unknown")
+        if subj not in subject_grades:
+            subject_grades[subj] = []
+        if g.get("percentage") is not None:
+            subject_grades[subj].append(g["percentage"])
+    subject_averages = [{"subject": s, "average": round(sum(p) / len(p), 1), "count": len(p)} for s, p in sorted(subject_grades.items()) if p]
+
+    # Attendance
+    att_all = await db.attendance_records.find({"student_id": sid}).sort("date", -1).to_list(length=365)
+    att_serialized = [serialize_doc(a) for a in att_all]
+    total_att = len(att_all)
+    present = sum(1 for a in att_all if a.get("status") == "present")
+    absent = sum(1 for a in att_all if a.get("status") == "absent")
+    late = sum(1 for a in att_all if a.get("status") == "late")
+    excused = sum(1 for a in att_all if a.get("status") == "excused")
+    att_rate = round(present / total_att * 100, 1) if total_att > 0 else 100
+
+    # Schedule
+    schedules = await db.class_schedules.find({"team_id": team_id}).sort([("day_of_week", 1), ("start_time", 1)]).to_list(length=200)
+    schedules = [serialize_doc(s) for s in schedules]
+
+    # Discipline
+    disc_raw = await db.discipline_records.find({"student_id": sid}).sort("created_at", -1).to_list(length=100)
+    discipline = [serialize_doc(d) for d in disc_raw]
+
+    return {
+        "student": student_doc,
+        "grades": grades[:50],
+        "subject_averages": subject_averages,
+        "gpa": gpa,
+        "attendance_summary": {"total": total_att, "present": present, "absent": absent, "late": late, "excused": excused, "rate": att_rate},
+        "attendance_recent": att_serialized[:20],
+        "schedule": schedules,
+        "discipline": discipline,
+    }
 
 
 @router.get("/{student_id}")
@@ -417,3 +514,5 @@ async def get_student_stats(student_id: str, user: dict = Depends(get_current_us
             "unresolved": sum(1 for d in discipline if not d.get("resolved")),
         },
     }
+
+
