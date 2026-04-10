@@ -139,9 +139,8 @@ const navItems = [
 
 // Player nav
 const playerNavItems = [
-  { label: "Home",           page: "NxAnnouncement",       icon: Home },
+  { label: "Announcements",  page: "NxAnnouncement",       icon: Home },
   { label: "My Academics",  page: "StudentPortal",        icon: GraduationCap },
-  { label: "Announcements",  page: "NxAnnouncement",       icon: MessageSquare },
   { label: "Schedule",       page: "GameSchedule",         icon: CalendarDays },
   { label: "NxPlay",         page: "NxPlay",               icon: Gamepad2 },
   { label: "Game Plan",      page: "GamePlan",             icon: Target },

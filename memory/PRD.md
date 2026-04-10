@@ -73,7 +73,16 @@ Migrate a React app using the Base44 SDK to a standalone FastAPI + MongoDB backe
 - Upsert save: creates new or updates existing records
 - RBAC enforced: only teachers can access attendance APIs
 
+### P4: Student Portal — My Academics (DONE — Feb 2026)
+- Students can view all their academic data in one place
+- GPA calculation with color coding, subject averages with item counts
+- Individual grade rows with assignment name, date, percentage, letter grade
+- Attendance summary (present/absent/late/excused counts + rate) and recent records
+- Full class schedule with teacher, room, day, times
+- Discipline records with status (active/resolved)
+- Collapsible sections for clean organization
+
 ## Backlog / Future Tasks
-- P4: Student/parent mobile dashboard (daily schedules, upcoming assignments, recent grades)
 - P5: Class assignment management for teachers (add/remove students from classes)
 - P6: Grade history / audit trail and progress tracking over time
+- P7: Parent portal academic view (see child's grades, attendance, discipline)
