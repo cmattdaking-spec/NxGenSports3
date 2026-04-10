@@ -82,6 +82,7 @@ import SchoolAdminReporting from './pages/SchoolAdminReporting.jsx';
 import TeacherDashboard from './pages/TeacherDashboard.jsx';
 import SchoolAdminDashboard from './pages/SchoolAdminDashboard.jsx';
 import GradeBook from './pages/GradeBook.jsx';
+import Attendance from './pages/Attendance.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import __Layout from './Layout.jsx';
 
@@ -122,6 +123,7 @@ export const PAGES = {
     "TeacherDashboard": TeacherDashboard,
     "SchoolAdminDashboard": SchoolAdminDashboard,
     "GradeBook": GradeBook,
+    "Attendance": Attendance,
     "ResetPassword": ResetPassword,
 }
 

@@ -201,6 +201,121 @@ async def teacher_classes(user: dict = Depends(get_current_user)):
     return [serialize_doc(s) for s in schedules]
 
 
+# ─── Attendance ───────────────────────────────────────────────────────────────
+
+@router.get("/attendance")
+async def teacher_attendance(date: str = None, user: dict = Depends(get_current_user)):
+    """Get attendance for all of teacher's students on a given date."""
+    _require_teacher(user)
+    from database import db
+    team_id = user.get("team_id")
+    if not team_id:
+        raise HTTPException(status_code=403, detail="No team assigned")
+
+    if not date:
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    student_ids, subject_names, faculty_id = await _get_teacher_student_ids(user)
+
+    # Fetch students
+    students = []
+    for sid in student_ids:
+        try:
+            st = await db.students.find_one({"_id": ObjectId(sid)})
+            if st:
+                s = serialize_doc(st)
+                if not s.get("full_name"):
+                    s["full_name"] = f"{st.get('first_name', '')} {st.get('last_name', '')}".strip()
+                students.append(s)
+        except Exception:
+            pass
+    students.sort(key=lambda s: s.get("last_name", ""))
+
+    # Fetch attendance records for that date
+    records = []
+    if student_ids:
+        records = await db.attendance_records.find({
+            "student_id": {"$in": list(student_ids)},
+            "date": date,
+        }).to_list(length=5000)
+        records = [serialize_doc(r) for r in records]
+
+    # Build lookup by student_id
+    att_by_student = {}
+    for r in records:
+        att_by_student[r["student_id"]] = r
+
+    return {
+        "date": date,
+        "students": students,
+        "records": att_by_student,
+    }
+
+
+@router.post("/attendance/bulk")
+async def bulk_attendance(body: dict, user: dict = Depends(get_current_user)):
+    """Submit attendance for all students at once."""
+    _require_teacher(user)
+    from database import db
+    team_id = user.get("team_id")
+
+    date = body.get("date")
+    if not date:
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    entries = body.get("entries", [])
+    if not entries:
+        raise HTTPException(status_code=400, detail="entries list is required")
+
+    faculty = await _get_faculty_record(user)
+    teacher_name = ""
+    if faculty:
+        teacher_name = faculty.get("full_name") or f"{faculty.get('first_name', '')} {faculty.get('last_name', '')}".strip()
+
+    now = datetime.now(timezone.utc).isoformat()
+    created = 0
+    updated = 0
+
+    for entry in entries:
+        student_id = entry.get("student_id")
+        status = entry.get("status", "present")
+        if not student_id:
+            continue
+
+        # Check if record already exists for this student+date
+        existing = await db.attendance_records.find_one({
+            "student_id": student_id,
+            "date": date,
+        })
+
+        if existing:
+            await db.attendance_records.update_one(
+                {"_id": existing["_id"]},
+                {"$set": {
+                    "status": status,
+                    "notes": entry.get("notes", existing.get("notes", "")),
+                    "recorded_by": teacher_name or user.get("email", ""),
+                    "updated_at": now,
+                }}
+            )
+            updated += 1
+        else:
+            await db.attendance_records.insert_one({
+                "student_id": student_id,
+                "team_id": team_id,
+                "school_id": user.get("school_id", ""),
+                "date": date,
+                "status": status,
+                "notes": entry.get("notes", ""),
+                "recorded_by": teacher_name or user.get("email", ""),
+                "created_at": now,
+            })
+            created += 1
+
+    return {"success": True, "created": created, "updated": updated, "date": date}
+
+
+
 
 # ─── Gradebook ────────────────────────────────────────────────────────────────
 

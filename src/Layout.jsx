@@ -180,6 +180,7 @@ const schoolAdminNavItems = [
 const teacherNavItems = [
   { label: "Dashboard",       page: "TeacherDashboard",     icon: Home },
   { label: "Grade Book",      page: "GradeBook",            icon: BookOpen },
+  { label: "Attendance",      page: "Attendance",            icon: ClipboardList },
   { label: "My Students",     page: "StudentRecords",       icon: Users },
   { label: "Announcements",   page: "NxAnnouncement",       icon: MessageSquare },
   { label: "Schedule",        page: "GameSchedule",         icon: CalendarDays },
