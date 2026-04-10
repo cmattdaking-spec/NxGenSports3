@@ -65,6 +65,14 @@ Migrate a React app using the Base44 SDK to a standalone FastAPI + MongoDB backe
 - Backend CRUD: single entry, bulk entry, update, delete
 - RBAC enforced: only teachers can access gradebook APIs
 
+### P3: Bulk Attendance (DONE — Feb 2026)
+- Full class attendance page: all students listed with Present/Absent/Late/Excused buttons
+- "Mark All" quick actions for one-click bulk marking
+- Date picker with prev/next navigation
+- Live summary stats (counts per status)
+- Upsert save: creates new or updates existing records
+- RBAC enforced: only teachers can access attendance APIs
+
 ## Backlog / Future Tasks
 - P4: Student/parent mobile dashboard (daily schedules, upcoming assignments, recent grades)
 - P5: Class assignment management for teachers (add/remove students from classes)
