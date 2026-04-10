@@ -290,7 +290,9 @@ export default function Layout({ children, currentPageName }) {
   const isTeacher = userType === "teacher";
   const isSchoolAdmin = userType === "school_admin";
 
-  const brandName = SPORT_NAMES[activeSport] || "NxDown";
+  const isAcademicUser = isTeacher || isSchoolAdmin;
+  const rawBrandName = SPORT_NAMES[activeSport] || "NxDown";
+  const brandName = isAcademicUser ? "NxGenAcademics" : rawBrandName;
   const [brandPrefix, brandSuffix] = brandName.startsWith("Nx") ? ["Nx", brandName.slice(2)] : [brandName, ""];
   useMobileMeta(brandName);
 
@@ -420,9 +422,9 @@ export default function Layout({ children, currentPageName }) {
         {!collapsed && (
           <div className="flex-1 min-w-0">
             <span className="text-white font-black text-xl tracking-tight">{brandPrefix}<span style={{ color: "var(--color-primary, #3b82f6)" }}>{brandSuffix}</span></span>
-            <p className="text-gray-500 text-xs capitalize">{SPORT_LABELS[activeSport] || "Football"} Systems</p>
+            <p className="text-gray-500 text-xs capitalize">{isAcademicUser ? "School Management" : `${SPORT_LABELS[activeSport] || "Football"} Systems`}</p>
             {/* Sport switcher */}
-            {(isAD || assignedSports.length > 1) && !user?.primary_sport && (
+            {!isAcademicUser && (isAD || assignedSports.length > 1) && !user?.primary_sport && (
               <div className="relative mt-1">
                 <button onClick={() => setShowSportPicker(v => !v)}
                   className="flex items-center gap-1 text-gray-500 hover:text-white text-xs transition-colors">
